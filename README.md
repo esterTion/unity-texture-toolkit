@@ -73,7 +73,7 @@ class `AssetFile($assetFileName)`:
 Accepts a filename, may throw exception if something is not supported  
 Can get resource info through property `preloadTable`  
 
-class `Texture2D($preloadData, $readSwitch = false)`:
+class `Texture2D($preloadData, $readSwitch = false)`:  
 Accepts an `AssetPreloadData` item from `preloadTable`, may throw an exception if format not supported  
 Second parameter determine weither read data or not, if you only want to get the information  
 Can call member function `exportTo($saveTo, $format = 'png', $extraEncodeParam = '')` to export supported texture
