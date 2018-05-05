@@ -56,23 +56,24 @@ They all share the same `UnityBundle.php`
 ### Implementation detail
 1. UnityBundle.php
 
-class `FileStream` and `MemoryStream`:  
+class `FileStream($filename)` and `MemoryStream($data)`:  
 Two similiar stream reader, FileStream accepts filename, MemoryStream accpets string as binary.  
 Reading value can perform either funciton `$stream->readInt32()` or property `$stream->ulong`  
-Property `position` can get current and set to seek point
+Property `position` can get current and set to seek point  
 Property `littleEndian` determine either use little endian reading or not  
 Function `write($newData)` will always write to the end for MemoryStream, but can overwrite current data position for FileStream  
 
-function `extractBundle`:  
+function `extractBundle($bundleStream)`:  
 Accepts a stream, may throw exception if is invalid file, or chunk is LZMA compressed, or something wrong happened  
 Returns a list of asset file names extracted
 
 2. UnityAsset.php
 
-class `AssetFile`:  
+class `AssetFile($assetFileName)`:  
 Accepts a filename, may throw exception if something is not supported  
 Can get resource info through property `preloadTable`  
 
-class `Texture2D`:
+class `Texture2D($preloadData, $readSwitch = false)`:
 Accepts an `AssetPreloadData` item from `preloadTable`, may throw an exception if format not supported  
+Second parameter determine weither read data or not, if you only want to get the information  
 Can call member function `exportTo($saveTo, $format = 'png', $extraEncodeParam = '')` to export supported texture
