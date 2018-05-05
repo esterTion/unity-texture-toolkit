@@ -57,8 +57,8 @@ They all share the same `UnityBundle.php`
 1. UnityBundle.php
 
 class `FileStream($filename)` and `MemoryStream($data)`:  
-Two similiar stream reader, FileStream accepts filename, MemoryStream accpets string as binary.  
-Reading value can perform either funciton `$stream->readInt32()` or property `$stream->ulong`  
+Two similar stream reader, FileStream accepts filename, MemoryStream accepts string as binary.  
+Reading value can perform either function `$stream->readInt32()` or property `$stream->ulong`  
 Property `position` can get current and set to seek point  
 Property `littleEndian` determine either use little endian reading or not  
 Function `write($newData)` will always write to the end for MemoryStream, but can overwrite current data position for FileStream  
