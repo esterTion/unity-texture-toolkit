@@ -1,0 +1,48 @@
+html,body{
+	background:#10100B;
+	color:#FFF;
+	margin:0;
+	font-family:-apple-system,Arial,'PingFang SC','STHeiti Light','Hiragino Kaku Gothic ProN','Microsoft YaHei',sans-serif;
+	cursor:default
+}
+.heading{
+	background:#474747;
+	height:40px;
+	width:100%;
+	position:fixed;
+	top:0;
+	left:0;
+	border-bottom:1px solid #333;
+	text-align:center;
+	z-index:1
+}
+.head_select {
+	color: #FFF;
+	padding: 5px;
+	border-radius: 2px;
+	background:#10100B;
+	height: 34px;
+	margin: 2px auto;
+	border: 1px solid #888;
+	display: inline-block;
+	font-size: 16px;
+	line-height: 34px;
+	white-space:pre;
+	max-width:calc(100% - 44px);
+	text-overflow:ellipsis;
+	overflow:hidden;
+	font-family:Arial,Meiryo
+}
+
+.content {
+	margin-top: 41px;
+	height: calc(100% - 41px);
+	position: fixed;
+	width: 100%;
+}
+
+@media screen and (max-width:800px){
+html,body{
+	height:calc(100% + 1px)
+}
+}
