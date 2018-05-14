@@ -629,6 +629,40 @@ class AssetPreloadData {
   public $uniqueID;
 }
 
+function swapRGB($format, $data) {
+  if ($format == TextureFormat::RGB24) {
+    return preg_replace('/([\x00-\xff])([\x00-\xff])([\x00-\xff])/',"$3$2$1\xff", $data);
+  } else if ($format == TextureFormat::RGBA32) {
+    return preg_replace('/([\x00-\xff])([\x00-\xff])([\x00-\xff])([\x00-\xff])/','$3$2$1$4', $data);
+  } else if ($format == TextureFormat::ARGB32) {
+    return preg_replace('/([\x00-\xff])([\x00-\xff])([\x00-\xff])([\x00-\xff])/','$4$3$2$1', $data);
+  } else if ($format == TextureFormat::RGB565) {
+    for ($i=0,$len=strlen($data),$out=str_repeat("\xff",$len*2); $i<$len; $i+=2) {
+      $pxl = ord($data[$i])+ord($data[$i+1])*256;
+      $r = ($pxl & 0xf800) >> 8;
+      $out[$i*2+2] = chr($r | (($r & 0xe0) >> 5));
+      $g = ($pxl & 0x7e0) >> 3;
+      $out[$i*2+1] = chr($g | (($g & 0xb0) >> 6));
+      $b = ($pxl & 0x1f) << 3;
+      $out[$i*2  ] = chr($b | (($b & 0xe0) >> 5));
+    }
+    return $out;
+  } else if ($format == TextureFormat::RGBA4444) {
+    for ($i=0,$len=strlen($data),$out=str_repeat("\xff",$len*2); $i<$len; $i+=2) {
+      $pxl = ord($data[$i])+ord($data[$i+1])*256;
+      $r = ($pxl & 0xf000) >> 8;
+      $out[$i*2+2] = chr($r | ($r >> 4));
+      $g = ($pxl &  0xf00) >> 8;
+      $out[$i*2+1] = chr($g | ($g >> 4));
+      $b = ($pxl &   0xf0);
+      $out[$i*2  ] = chr($b | ($b >> 4));
+      $a = ($pxl &    0xf);
+      $out[$i*2+3] = chr($a | ($a << 4));
+    }
+    return $out;
+  }
+}
+
 class Texture2D {
   public $dwFlags = 4103;
   public $dwCaps = 4096;
@@ -709,7 +743,7 @@ class Texture2D {
           throw new Exception('require resource not found: '. $this->path);
         }
       } else {
-        $this->imageData = $stream-readData($this->imageDataSize);
+        $this->imageData = $stream->readData($this->imageDataSize);
       }
       
 			switch ($this->textureFormat) {
@@ -725,13 +759,94 @@ class Texture2D {
         case TextureFormat::ASTC_RGBA_8x8:
         case TextureFormat::ASTC_RGBA_10x10:
         case TextureFormat::ASTC_RGBA_12x12:
-          //$this->pvrPixelFormat = 27;
+          $this->outputMethod = 'astcenc';
+          $this->transcodeFormat = 'tga';
           // use astcenc
+          break;
+        case TextureFormat::RGBA32:
+        case TextureFormat::ARGB32:
+          $this->outputMethod = 'bmp';
+          $this->transcodeFormat = 'bmp';
+          $this->bitDepth = 32;
+          break;
+        case TextureFormat::RGB24:
+          $this->outputMethod = 'bmp';
+          $this->transcodeFormat = 'bmp';
+          $this->bitDepth = 24;
+          break;
+        case TextureFormat::RGBA4444:
+        case TextureFormat::RGB565:
+          $this->outputMethod = 'bmp';
+          $this->transcodeFormat = 'bmp';
+          $this->bitDepth = 16;
           break;
         default:
         throw new Exception('not implemented: '.$this->textureFormat.' '.$this->textureFormatStr);
       }
     }
+  }
+
+  function exportTo($saveTo, $format = 'png', $extraEncodeParam = '') {
+    if ($this->outputMethod == 'astcenc') {
+      fclose(fopen('output.astc','wb'));
+      $astc = new FileStream('output.astc');
+      $astc->write(hex2bin('13ABA15C'));
+      $astc->write(array(
+        48 => chr(4).chr(4),
+        49 => chr(5).chr(5),
+        50 => chr(6).chr(6),
+        51 => chr(8).chr(8),
+        52 => chr(10).chr(10),
+        53 => chr(12).chr(12),
+        54 => chr(4).chr(4),
+        55 => chr(5).chr(5),
+        56 => chr(6).chr(6),
+        57 => chr(8).chr(8),
+        58 => chr(10).chr(10),
+        59 => chr(12).chr(12),
+      )[$this->textureFormat].chr(1));
+      $astc->write(substr(pack('V', $this->width), 0, 3));
+      $astc->write(substr(pack('V', $this->height), 0, 3));
+      $astc->write(hex2bin('010000'));
+      $astc->write($this->imageData);
+      unset($astc);
+      exec('astcenc -d output.astc output.tga -silentmode');
+      unlink('output.astc');
+      $transcodeFile = 'output.tga';
+    } else if ($this->outputMethod == 'bmp') {
+      $width = $this->width;
+      $height = $this->height;
+      $bmp = new MemoryStream('BM');
+      $bmp->write(pack('V', strlen($this->imageData)*32/$this->bitDepth + 54));
+      $bmp->write(hex2bin('0000000036000000'));
+
+      // DIB header
+      $bmp->write(hex2bin('28000000')); //header size
+      $bmp->write(pack('V', $width));
+      $bmp->write(pack('V', $height));
+      $bmp->write(hex2bin('0100'));     //channel
+      $bmp->write(hex2bin('2000'));     //bitdepth
+      $bmp->write(hex2bin('00000000')); //compression
+      $bmp->write(pack('V', strlen($this->imageData)*32/$this->bitDepth));
+      $bmp->write(hex2bin('00000000000000000000000000000000')); //hoz resolution + ver resolution + color num + important color num    
+      $bmp->write(
+        swapRGB($this->textureFormat, $this->imageData)
+      );
+      $bmp->position = 0;
+      file_put_contents('output.bmp', $bmp->readData($bmp->size));
+      unset($bmp);
+      $transcodeFile = 'output.bmp';
+    } else {
+      throw new Excpetion('not supported');
+    }
+
+    if ($this->transcodeFormat != $format) {
+      exec('ffmpeg -hide_banner -loglevel quiet -y -i '.$transcodeFile.' '.$extraEncodeParam.' output.'.$format);
+      unlink($transcodeFile);
+    }
+    $dir = pathinfo($saveTo, PATHINFO_DIRNAME);
+    if (!file_exists($dir)) mkdir($dir, 0777, true);
+    rename('output.'.$format, $saveTo.'.'.$format);
   }
 }
 
@@ -857,15 +972,20 @@ class TextureFormat {
 
 $resourceToExport = [
   'bg'=> [
-    [ 'bundleNameMatch'=>'/^a\/bg_still_unit_\d+\.unity3d$/',       'nameMatch'=>'/^still_unit_(\d+)$/',     'exportTo'=>'card/full/$1.webp' ]
+    [ 'bundleNameMatch'=>'/^a\/bg_still_unit_\d+\.unity3d$/',       'nameMatch'=>'/^still_unit_(\d+)$/',     'exportTo'=>'card/full/$1' ]
   ],
   'icon'=>[
-    [ 'bundleNameMatch'=>'/^a\/icon_icon_skill_\d+\.unity3d$/',     'nameMatch'=>'/^icon_skill_(\d+)$/',     'exportTo'=>'icon/skill/$1.webp' ],
-    [ 'bundleNameMatch'=>'/^a\/icon_icon_equipment_\d+\.unity3d$/', 'nameMatch'=>'/^icon_equipment_(\d+)$/', 'exportTo'=>'icon/equipment/$1.webp' ],
-    [ 'bundleNameMatch'=>'/^a\/icon_unit_plate_\d+\.unity3d$/',     'nameMatch'=>'/^unit_plate_(\d+)$/',     'exportTo'=>'icon/plate/$1.webp' ],
+    [ 'bundleNameMatch'=>'/^a\/icon_icon_skill_\d+\.unity3d$/',     'nameMatch'=>'/^icon_skill_(\d+)$/',     'exportTo'=>'icon/skill/$1' ],
+    [ 'bundleNameMatch'=>'/^a\/icon_icon_equipment_\d+\.unity3d$/', 'nameMatch'=>'/^icon_equipment_(\d+)$/', 'exportTo'=>'icon/equipment/$1' ],
+    [ 'bundleNameMatch'=>'/^a\/icon_icon_item_\d+\.unity3d$/', 'nameMatch'=>'/^icon_item_(\d+)$/', 'exportTo'=>'icon/item/$1' ],
+    [ 'bundleNameMatch'=>'/^a\/icon_unit_plate_\d+\.unity3d$/',     'nameMatch'=>'/^unit_plate_(\d+)$/',     'exportTo'=>'icon/plate/$1' ],
   ],
   'unit'=>[
-    [ 'bundleNameMatch'=>'/^a\/unit_icon_unit_\d+\.unity3d$/',      'nameMatch'=>'/^icon_unit_(\d+)$/',      'exportTo'=>'icon/unit/$1.webp' ],
+    [ 'bundleNameMatch'=>'/^a\/unit_icon_unit_\d+\.unity3d$/',      'nameMatch'=>'/^icon_unit_(\d+)$/',      'exportTo'=>'icon/unit/$1' ],
+    [ 'bundleNameMatch'=>'/^a\/unit_icon_shadow_\d+\.unity3d$/',    'nameMatch'=>'/^icon_shadow_(\d+)$/',    'exportTo'=>'icon/unit_shadow/$1' ],
+  ],
+  'comic'=>[
+    [ 'bundleNameMatch'=>'/^a\/comic_comic_l_\d+_\d+.unity3d$/',      'nameMatch'=>'/^comic_l_(\d+_\d+)$/',      'exportTo'=>'comic/$1', 'extraParam'=>'-s 682x512' ],
   ]
 ];
 
@@ -932,40 +1052,18 @@ function checkSubResource($manifest, $rules) {
               var_dump($item->name);
               continue;
             }
-            if (shouldExportFile($item->name, $rule)) {
-              if (in_array($item->textureFormat, [48,49,50,51,52,53,54,55,56,57,58,59]) === false) {
-                _log('Not supported pixel format: '. $item->textureFormat.' '.$item->textureFormatStr);
-                continue;
-              }
-              $f = fopen($item->name.'.astc','wb');
-              fwrite($f, hex2bin('13ABA15C'));
-              fwrite($f, array(
-                48 => chr(4).chr(4),
-                49 => chr(5).chr(5),
-                50 => chr(6).chr(6),
-                51 => chr(8).chr(8),
-                52 => chr(10).chr(10),
-                53 => chr(12).chr(12),
-                54 => chr(4).chr(4),
-                55 => chr(5).chr(5),
-                56 => chr(6).chr(6),
-                57 => chr(8).chr(8),
-                58 => chr(10).chr(10),
-                59 => chr(12).chr(12),
-              )[$item->textureFormat].chr(1));
-              fwrite($f, substr(pack('V', $item->width), 0, 3));
-              fwrite($f, substr(pack('V', $item->height), 0, 3));
-              fwrite($f, hex2bin('010000'));
-              fwrite($f, $item->imageData);
-              fclose($f);
-              exec('astcenc -d '.$item->name.'.astc '.$item->name.'.tga -silentmode');
-              unlink($item->name.'.astc');
-              exec('ffmpeg -hide_banner -loglevel quiet -y -i '.$item->name.'.tga -lossless 1 '.$item->name.'.webp');
-              unlink($item->name.'.tga');
-              $saveTo = RESOURCE_PATH_PREFIX. preg_replace($rule['nameMatch'], $rule['exportTo'], $item->name);
-              $dir = pathinfo($saveTo, PATHINFO_DIRNAME);
-              if (!file_exists($dir)) mkdir($dir, 0777, true);
-              rename($item->name.'.webp', $saveTo);
+            $itemname = $item->name;
+            if (isset($rule['namePrefix'])) {
+              $itemname = preg_replace($rule['bundleNameMatch'], $rule['namePrefix'], $name).$itemname;
+            }
+            if (isset($rule['namePrefixCb'])) {
+              $itemname = preg_replace_callback($rule['bundleNameMatch'], $rule['namePrefixCb'], $name).$itemname;
+            }
+            if (shouldExportFile($itemname, $rule)) {
+              $saveTo = RESOURCE_PATH_PREFIX. preg_replace($rule['nameMatch'], $rule['exportTo'], $itemname);
+              $param = '-lossless 1';
+              if (isset($rule['extraParam'])) $param .= ' '.$rule['extraParam'];
+              $item->exportTo($saveTo, 'webp', $param);
             }
             unset($item);
           }
@@ -1019,7 +1117,7 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
   chdir(__DIR__);
   $curl = curl_init();
   function _log($s) {echo "$s\n";}
-  checkAndUpdateResource(10000850);
+  checkAndUpdateResource(10001100);
 }
 //print_r($asset);
 

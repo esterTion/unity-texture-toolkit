@@ -807,10 +807,9 @@ class Texture2D {
       $astc->write(substr(pack('V', $this->height), 0, 3));
       $astc->write(hex2bin('010000'));
       $astc->write($this->imageData);
-      $astc->__desctruct();
       unset($astc);
-      exec('astcenc -d output.astc '.$this->name.'.tga -silentmode');
-      unlink($this->name.'.astc');
+      exec('astcenc -d output.astc output.tga -silentmode');
+      unlink('output.astc');
       $transcodeFile = 'output.tga';
     } else if ($this->outputMethod == 'bmp') {
       $width = $this->width;
