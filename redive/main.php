@@ -25,6 +25,49 @@ function execQuery($db, $query) {
   $returnVal = $result->fetchAll(PDO::FETCH_ASSOC);
   return $returnVal;
 }
+function autoProxy() {
+  $curl = curl_init();
+  curl_setopt_array($curl, [
+    CURLOPT_URL=>'https://www.us-proxy.org/',
+    CURLOPT_HTTPHEADER=>[
+      'Host: www.us-proxy.org',
+      'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:51.0) Gecko/20100101 Firefox/60.0.1',
+      'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+      'Accept-Language: zh-CN,zh-TW;q=0.7,en-US;q=0.3',
+      'Accept-Encoding: gzip, deflate, br',
+      'Connection: keep-alive',
+      'Upgrade-Insecure-Requests: 1'
+    ],
+    CURLOPT_CONNECTTIMEOUT=>3,
+    CURLOPT_HEADER=>0,
+    CURLOPT_RETURNTRANSFER=>1,
+    CURLOPT_SSL_VERIFYPEER=>false
+  ]);
+  $proxylist = brotli_uncompress(curl_exec($curl));
+  preg_match_all('/<tr><td>(\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3})<\/td><td>(\d+)<\/td>/', $proxylist, $matches);
+  //print_r($matches);
+
+  curl_setopt($curl, CURLOPT_URL, 'https://app.priconne-redive.jp/');
+  for ($i=0; $i<count($matches[1]); $i++) {
+    $proxy = $matches[1][$i].':'.$matches[2][$i];
+    curl_setopt($curl, CURLOPT_PROXY, $proxy);
+    //echo $proxy."\n";
+    curl_exec($curl);
+    if (curl_getinfo($curl, CURLINFO_HTTP_CODE) == 404) {
+      $oldproxy = file_get_contents('currentproxy.txt');
+      list($ip, $port) = explode(':', $oldproxy);
+      $search  = [' -d '.$ip.' --dport '.$port.' ', ' --to-destination '.$ip.':'.$port];
+      
+      list($ip, $port) = explode(':', $proxy);
+      $replace = [' -d '.$ip.' --dport '.$port.' ', ' --to-destination '.$ip.':'.$port];
+      file_put_contents('/etc/firewalld/direct.xml', str_replace($search, $replace, file_get_contents('/etc/firewalld/direct.xml')));
+      exec('/usr/bin/firewall-cmd --reload >/dev/null');
+      file_put_contents('currentproxy.txt', $proxy);
+      return true;
+    };
+  }
+  return false;
+}
 
 function encodeValue($value) {
   $arr = [];
@@ -44,8 +87,7 @@ $appver = file_exists('appver') ? file_get_contents('appver') : '1.1.4';
 $itunesid = 1134429300;
 $curl = curl_init();
 curl_setopt_array($curl, array(
-  CURLOPT_URL=>'https://itunes.apple.com/lookup?id='.$itunesid.'&lang=ja_jp&country=jp',
-  CURLOPT_USERAGENT=>'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:51.0) Gecko/20100101 Firefox/59.0',
+  CURLOPT_URL=>'https://itunes.apple.com/lookup?id='.$itunesid.'&lang=ja_jp&country=jp&rnd='.rand(10000000,99999999),
   CURLOPT_HEADER=>0,
   CURLOPT_RETURNTRANSFER=>1,
   CURLOPT_SSL_VERIFYPEER=>false
@@ -123,12 +165,25 @@ curl_setopt_array($curl, array(
   CURLOPT_HTTPHEADER=>$game_start_header,
   CURLOPT_HEADER=>0,
   CURLOPT_RETURNTRANSFER=>1,
+  CURLOPT_CONNECTTIMEOUT=>3,
   CURLOPT_SSL_VERIFYPEER=>false,
   CURLOPT_POST=>true,
   CURLOPT_POSTFIELDS=>base64_decode('Fh28009IuC3baOl9zp5LX7v/MuF7Ye2SI7fPSKlU84ru+bTFQPoEEoUnHBbZn4tf/gD6bCI+GD6opqtyeuAKq5Yile53RJYRU5ERCk6UpHWDmts6K8Z+vt5+3yb9sCU9EedYA2xnOoltbNjffQ1bTVBCErKRlDoo3agsFuCWF2AZEn3plfN7UpR7udogIePAWkRFeVpUWXlaakV5TldGbVltVXlOR1poWXpka05HUXg='),
+  CURLOPT_PROXY=>file_get_contents('currentproxy.txt')
+//  CURLOPT_PROXY=>'vultr.biliplus.com:87',
+//  CURLOPT_PROXYTYPE=>CURLPROXY_SOCKS5
 ));
 $response = curl_exec($curl);
+$code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 curl_close($curl);
+if ($code == 500 || $code == 0) {
+  _log('proxy failed: '. $code);
+  if (autoProxy()) {
+    return main();
+  } else {
+    exit;
+  }
+}
 if ($response === false) {
   _log('error fetching TruthVersion');
   return;
@@ -239,7 +294,12 @@ $name = [];
 foreach(execQuery($db, 'SELECT unit_id,unit_name FROM unit_data WHERE unit_id > 100000 AND unit_id < 200000') as $row) {
   $name[$row['unit_id']+30] = $row['unit_name'];
 }
-file_put_contents(RESOURCE_PATH_PREFIX.'card/full/index.json', json_encode($name, JSON_UNESCAPED_SLASHES+JSON_UNESCAPED_UNICODE));
+file_put_contents(RESOURCE_PATH_PREFIX.'card/full/index.json', json_encode($name, JSON_UNESCAPED_SLASHES));
+$storyStillName = [];
+foreach(execQuery($db, 'SELECT story_group_id,title FROM story_data') as $row) {
+  $storyStillName[$row['story_group_id']] = $row['title'];
+}
+file_put_contents(RESOURCE_PATH_PREFIX.'card/story/index.json', json_encode($storyStillName, JSON_UNESCAPED_SLASHES));
 unset($name);
 unset($db);
 file_put_contents('last_version', json_encode($last_version));

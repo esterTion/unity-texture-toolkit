@@ -983,9 +983,14 @@ $resourceToExport = [
   'unit'=>[
     [ 'bundleNameMatch'=>'/^a\/unit_icon_unit_\d+\.unity3d$/',      'nameMatch'=>'/^icon_unit_(\d+)$/',      'exportTo'=>'icon/unit/$1' ],
     [ 'bundleNameMatch'=>'/^a\/unit_icon_shadow_\d+\.unity3d$/',    'nameMatch'=>'/^icon_shadow_(\d+)$/',    'exportTo'=>'icon/unit_shadow/$1' ],
+    [ 'bundleNameMatch'=>'/^a\/unit_thumb_actual_unit_profile_\d+\.unity3d$/',    'nameMatch'=>'/^thumb_actual_unit_profile_(\d+)$/',    'exportTo'=>'card/actual_profile/$1', 'extraParam'=>'-s 1024x682' ],
+    [ 'bundleNameMatch'=>'/^a\/unit_thumb_unit_profile_\d+\.unity3d$/',           'nameMatch'=>'/^thumb_unit_profile_(\d+)$/',           'exportTo'=>'card/profile/$1',        'extraParam'=>'-s 1024x682' ],
   ],
   'comic'=>[
     [ 'bundleNameMatch'=>'/^a\/comic_comic_l_\d+_\d+.unity3d$/',      'nameMatch'=>'/^comic_l_(\d+_\d+)$/',      'exportTo'=>'comic/$1', 'extraParam'=>'-s 682x512' ],
+  ],
+  'storydata'=>[
+    [ 'bundleNameMatch'=>'/^a\/storydata_still_\d+.unity3d$/',      'nameMatch'=>'/^still_(\d+)$/',      'exportTo'=>'card/story/$1', 'extraParamCb'=>function(&$item){return ($item->width!=$item->height)?'-s '.$item->width.'x'.($item->width/16*9):'';} ],
   ]
 ];
 
@@ -1063,6 +1068,7 @@ function checkSubResource($manifest, $rules) {
               $saveTo = RESOURCE_PATH_PREFIX. preg_replace($rule['nameMatch'], $rule['exportTo'], $itemname);
               $param = '-lossless 1';
               if (isset($rule['extraParam'])) $param .= ' '.$rule['extraParam'];
+              if (isset($rule['extraParamCb'])) $param .= ' '.call_user_func($rule['extraParamCb'], $item);
               $item->exportTo($saveTo, 'webp', $param);
             }
             unset($item);
@@ -1085,6 +1091,7 @@ function checkSubResource($manifest, $rules) {
 function checkAndUpdateResource($TruthVersion) {
   global $resourceToExport;
   global $curl;
+  chdir(__DIR__);
   curl_setopt_array($curl, array(
     CURLOPT_URL=>'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/AssetBundles/iOS/manifest/manifest_assetmanifest',
     CURLOPT_CONNECTTIMEOUT=>5,
@@ -1117,7 +1124,7 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
   chdir(__DIR__);
   $curl = curl_init();
   function _log($s) {echo "$s\n";}
-  checkAndUpdateResource(10001100);
+  checkAndUpdateResource(10001210);
 }
 //print_r($asset);
 
