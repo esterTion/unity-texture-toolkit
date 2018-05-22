@@ -73,8 +73,7 @@ $appver = file_exists('appver') ? file_get_contents('appver') : '3.8.6';
 $itunesid = 1016318735;
 $curl = curl_init();
 curl_setopt_array($curl, array(
-  CURLOPT_URL=>'https://itunes.apple.com/lookup?id='.$itunesid.'&lang=ja_jp&country=jp',
-  CURLOPT_USERAGENT=>'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:51.0) Gecko/20100101 Firefox/59.0',
+  CURLOPT_URL=>'https://itunes.apple.com/lookup?id='.$itunesid.'&lang=ja_jp&country=jp&rnd='.rand(10000000,99999999),
   CURLOPT_HEADER=>0,
   CURLOPT_RETURNTRANSFER=>1,
   CURLOPT_SSL_VERIFYPEER=>false
@@ -284,14 +283,14 @@ echo "\n";
 global $poseData;
 $poseData=[];
 $names=[];
-foreach(execQuery($db, 'SELECT id,name,chara_id,pose FROM card_data') as $row) {
+foreach(execQuery($db, 'SELECT id,name,chara_id,pose,rarity FROM card_data') as $row) {
   $names[$row['id']] = ['','N','N+','R','R+','SR','SR+','SSR','SSR+'][$row['rarity']].$row['name'];
   $poseData[sprintf('%03d_%02d', $row['chara_id'], $row['pose'])] = $row['id'];
 }
 foreach(execQuery($db, 'SELECT chara_id,name FROM chara_data') as $row) {
   $names[sprintf('%03d', $row['chara_id'])] = $row['name'];
 }
-file_put_contents(RESOURCE_PATH_PREFIX.'card/index.json', json_encode($names, JSON_UNESCAPED_SLASHES+JSON_UNESCAPED_UNICODE));
+file_put_contents(RESOURCE_PATH_PREFIX.'card/index.json', json_encode($names, JSON_UNESCAPED_SLASHES));
 
 unset($db);
 file_put_contents('last_version', json_encode($last_version));
