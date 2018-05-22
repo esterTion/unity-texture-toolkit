@@ -9,6 +9,10 @@ $userID  = '775891250';
 $viewerID = '910841675';
 $udid = "600a5efd-cae5-41ff-a0c7-7deda751c5ed";
 
+$userID = '807297179';
+$viewerID = '995100198';
+$udid = unlolfuscate('002423;541<818p713l356;558<788<512B1167165B452A426p575p3447527>745B625l856B6417737l515;535;726A7217263;113@551n768l838:516m832;624A287p772p121o626:634466828748373881115683521611874');
+
 function _log($s) {
   //global $logFile;
   //fwrite($logFile, date('[m/d H:i] ').$s."\n");
@@ -72,7 +76,7 @@ function callapi($path, $data) {
   $sid = $viewerID . $udid;
   $header = [
     'PARAM: '.sha1($udid.$viewerID.$path.$data),
-    'KEYCHAIN: 910841675',
+    'KEYCHAIN: 127767137',
     'USER_ID: '.lolfuscate($userID),
     'CARRIER:  ',
     'UDID: '.lolfuscate($udid),
@@ -234,8 +238,10 @@ if ($fetchPt) {
   //print_r($missed);
   foreach ($missed as $border) {
     if ($border > $max) continue;
+    $retry = 0;
     while (1) {
       sleep(1);
+      if ($retry++ > 5) break;
       $data = callapi($path, [
         'page'=>$border/10+1,
         'ranking_type'=>1,
@@ -280,8 +286,10 @@ if ($fetchScore) {
   //print_r($missed);
   foreach ($missed as $border) {
     if ($border > $max) continue;
+    $retry = 0;
     while (1) {
       sleep(1);
+      if ($retry++ > 5) break;
       $data = callapi($path, [
         'page'=>$border/10+1,
         'ranking_type'=>2,
