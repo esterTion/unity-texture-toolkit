@@ -1,0 +1,2106 @@
+syntax = "proto2";
+message MasterMusicAchievement {
+  optional uint32 musicId = 1; // normal type
+  optional string achievementType = 2; // normal type
+  optional string rewardType = 3; // normal type
+  optional uint32 rewardId = 4; // normal type
+  optional uint32 quantity = 5; // normal type
+}
+message MasterMusicGetResponse {
+  optional uint32 musicId = 1; // normal type
+  optional string musicTitle = 2; // normal type
+  optional string bgmId = 3; // normal type
+  optional string bgmFile = 4; // normal type
+  optional string lyricist = 5; // normal type
+  optional string composer = 6; // normal type
+  optional string tag = 7; // normal type
+  optional string description = 8; // normal type
+  optional string arranger = 9; // normal type
+  optional string ruby = 10; // normal type
+  optional uint32 bandId = 11; // normal type
+  optional string howToGet = 12; // normal type
+  repeated MasterMusicAchievement achievements = 13; // array
+  optional string jacketImage = 14; // normal type
+  optional uint32 seq = 15; // normal type
+  optional uint32 publishedAt = 16; // normal type
+  optional uint32 closedAt = 17; // normal type
+  optional string transitionMethod = 18; // normal type
+  optional uint32 transitionId = 19; // normal type
+}
+message MasterMusicListGetResponse {
+  repeated MasterMusicGetResponse entries = 1; // array
+}
+message MasterMultiLiveScore {
+  optional uint32 musicId = 1; // normal type
+  optional string musicDifficulty = 2; // normal type
+  optional uint32 multiLiveDifficultyId = 3; // normal type
+  optional uint32 scoreS = 4; // normal type
+  optional uint32 scoreA = 5; // normal type
+  optional uint32 scoreB = 6; // normal type
+  optional uint32 scoreC = 7; // normal type
+  optional string multiLiveDifficultyType = 8; // normal type
+  optional uint32 scoreSS = 9; // normal type
+}
+message uint_MasterMultiLiveScore {
+  optional uint32 uint_MasterMultiLiveScore_key = 1; // normal type
+  optional MasterMultiLiveScore uint_MasterMultiLiveScore_value = 2; // sub class
+}
+message MasterMusicDifficultyGetResponse {
+  optional uint32 musicId = 1; // normal type
+  optional string difficulty = 2; // normal type
+  optional uint32 playLevel = 3; // normal type
+  repeated uint_MasterMultiLiveScore multiLiveScoreMap = 4; // dictionary
+  optional uint32 notesQuantity = 5; // normal type
+  optional uint32 scoreS = 6; // normal type
+  optional uint32 scoreA = 7; // normal type
+  optional uint32 scoreB = 8; // normal type
+  optional uint32 scoreC = 9; // normal type
+  optional uint32 scoreSS = 10; // normal type
+}
+message MasterMusicDifficultyListGetResponse {
+  repeated MasterMusicDifficultyGetResponse entries = 1; // array
+}
+message MasterMultiLiveDifficulty {
+  optional uint32 id = 1; // normal type
+  optional string difficulty = 2; // normal type
+  optional uint32 requiredTotalParam = 3; // normal type
+  optional float bonusRate = 4; // normal type
+  optional uint32 seq = 5; // normal type
+  optional string multiLiveDifficultyType = 6; // normal type
+}
+message uint_MasterMultiLiveDifficulty {
+  optional uint32 uint_MasterMultiLiveDifficulty_key = 1; // normal type
+  optional MasterMultiLiveDifficulty uint_MasterMultiLiveDifficulty_value = 2; // sub class
+}
+message MasterMultiLiveDifficultyMap {
+  repeated uint_MasterMultiLiveDifficulty entries = 1; // dictionary
+}
+message MasterCharacterProfile {
+  optional uint32 characterId = 1; // normal type
+  optional string part = 2; // normal type
+  optional string characterVoice = 3; // normal type
+  optional string school = 4; // normal type
+  optional uint32 schoolYear = 5; // normal type
+  optional uint32 birthday = 6; // normal type
+  optional string constellation = 7; // normal type
+  optional string favoriteFood = 8; // normal type
+  optional string hatedFood = 9; // normal type
+  optional string hobby = 10; // normal type
+  optional string selfIntroduction = 11; // normal type
+}
+message MasterCharacterSeasonCostume {
+  optional uint32 characterId = 1; // normal type
+  optional uint32 basicSeasonId = 2; // normal type
+  optional string costumeType = 3; // normal type
+  optional string seasonCostumeType = 4; // normal type
+  optional string sdAssetBundleName = 5; // normal type
+  optional string live2dAssetBundleName = 6; // normal type
+}
+message MasterCharacterSeasonCostumeList {
+  repeated MasterCharacterSeasonCostume entries = 1; // array
+}
+message MasterCharacterInfo {
+  optional MasterCharacterProfile profile = 12; // sub class
+  optional MasterCharacterSeasonCostumeList seasonCostumeList = 13; // sub class
+  optional uint32 characterId = 1; // normal type
+  optional string characterType = 2; // normal type
+  optional string characterName = 3; // normal type
+  optional string ruby = 4; // normal type
+  optional string firstName = 7; // normal type
+  optional string lastName = 8; // normal type
+  optional uint32 bandId = 9; // normal type
+  optional string sdAssetBundleName = 10; // normal type
+  optional uint32 defaultCostumeId = 11; // normal type
+}
+message uint_MasterCharacterInfo {
+  optional uint32 uint_MasterCharacterInfo_key = 1; // normal type
+  optional MasterCharacterInfo uint_MasterCharacterInfo_value = 2; // sub class
+}
+message MasterCharacterInfoMap {
+  repeated uint_MasterCharacterInfo entries = 1; // dictionary
+}
+message MasterSituationParameter {
+  optional uint32 situationId = 1; // normal type
+  optional uint32 level = 2; // normal type
+  optional uint32 performance = 3; // normal type
+  optional uint32 technique = 4; // normal type
+  optional uint32 visual = 5; // normal type
+}
+message uint_MasterSituationParameter {
+  optional uint32 uint_MasterSituationParameter_key = 1; // normal type
+  optional MasterSituationParameter uint_MasterSituationParameter_value = 2; // sub class
+}
+message PlayerResource {
+  optional uint32 resourceId = 1; // normal type
+  optional string resourceType = 2; // normal type
+  optional uint32 quantity = 3; // normal type
+  optional uint32 lbBonus = 4; // normal type
+  optional bool firstGet = 5; // normal type
+  optional uint32 duplicatedCount = 6; // normal type
+}
+message PlayerResourceList {
+  repeated PlayerResource entries = 1; // array
+}
+message MasterEpisode {
+  optional uint32 episodeId = 1; // normal type
+  optional string episodeType = 2; // normal type
+  optional uint32 situationId = 3; // normal type
+  optional string scenarioId = 4; // normal type
+  optional uint32 appendPerformance = 5; // normal type
+  optional uint32 appendTechnique = 6; // normal type
+  optional uint32 appendVisual = 7; // normal type
+  optional uint32 releaseLevel = 8; // normal type
+  optional PlayerResourceList costs = 9; // sub class
+  optional PlayerResourceList rewards = 10; // sub class
+  optional string title = 11; // normal type
+}
+message MasterEpisodeList {
+  repeated MasterEpisode entries = 1; // array
+}
+message MasterTraining {
+  optional uint32 situationId = 1; // normal type
+  optional uint32 trainingCostumeId = 2; // normal type
+  optional uint32 trainingLevelLimit = 3; // normal type
+  optional uint32 trainingPerformance = 4; // normal type
+  optional uint32 trainingTechnique = 5; // normal type
+  optional uint32 trainingVisual = 6; // normal type
+  optional PlayerResourceList costs = 7; // sub class
+}
+message MasterCharacterSituation {
+  optional uint32 situationId = 1; // normal type
+  optional uint32 characterId = 2; // normal type
+  optional uint32 rarity = 3; // normal type
+  optional string gachaText = 4; // normal type
+  optional string attribute = 5; // normal type
+  optional uint32 leaderSkillId = 6; // normal type
+  optional uint32 situationSkillId = 7; // normal type
+  repeated uint_MasterSituationParameter parameterMap = 8; // dictionary
+  optional string prefix = 10; // normal type
+  optional uint32 levelLimit = 11; // normal type
+  optional string resourceSetName = 12; // normal type
+  optional string sdResourceName = 13; // normal type
+  optional MasterEpisodeList episodes = 14; // sub class
+  optional MasterTraining training = 15; // sub class
+  optional uint32 costumeId = 16; // normal type
+}
+message uint_MasterCharacterSituation {
+  optional uint32 uint_MasterCharacterSituation_key = 1; // normal type
+  optional MasterCharacterSituation uint_MasterCharacterSituation_value = 2; // sub class
+}
+message MasterCharacterSituationMap {
+  repeated uint_MasterCharacterSituation entries = 1; // dictionary
+}
+message MasterBandExpTable {
+  optional uint32 level = 1; // normal type
+  optional uint32 exp = 2; // normal type
+}
+message uint_MasterBandExpTable {
+  optional uint32 uint_MasterBandExpTable_key = 1; // normal type
+  optional MasterBandExpTable uint_MasterBandExpTable_value = 2; // sub class
+}
+message MasterBandExpTableMap {
+  repeated uint_MasterBandExpTable entries = 1; // dictionary
+}
+message MasterLeaderSkill {
+  optional uint32 leaderSkillId = 1; // normal type
+  optional string leaderSkillType = 2; // normal type
+  optional string leaderSkillName = 3; // normal type
+  optional string description = 4; // normal type
+}
+message uint_MasterLeaderSkill {
+  optional uint32 uint_MasterLeaderSkill_key = 1; // normal type
+  optional MasterLeaderSkill uint_MasterLeaderSkill_value = 2; // sub class
+}
+message MasterLeaderSkillMap {
+  repeated uint_MasterLeaderSkill entries = 1; // dictionary
+}
+message MasterGachaDetail {
+  optional uint32 gachaId = 1; // normal type
+  optional uint32 rarityIndex = 2; // normal type
+  optional uint32 situationId = 3; // normal type
+  optional uint32 weight = 4; // normal type
+  optional bool pickup = 5; // normal type
+}
+message MasterGachaRarityRate {
+  optional uint32 gachaId = 1; // normal type
+  optional uint32 rarityIndex = 2; // normal type
+  optional float rate = 3; // normal type
+  optional uint32 weightTotal = 4; // normal type
+}
+message MasterGachaPaymentMethod {
+  optional uint32 gachaId = 1; // normal type
+  optional string paymentMethod = 2; // normal type
+  optional uint32 quantity = 3; // normal type
+  optional uint32 paymentMethodId = 4; // normal type
+  optional uint32 count = 5; // normal type
+  optional string behavior = 6; // normal type
+  optional bool pickup = 7; // normal type
+  optional uint32 maxSpinLimit = 8; // nullable
+  optional uint32 costItemQuantity = 9; // normal type
+}
+message MasterGachaExtra {
+  optional uint32 limit = 1; // normal type
+  optional string resourceType = 2; // normal type
+  optional uint32 resourceId = 3; // normal type
+  optional uint32 resourceQuantity = 4; // normal type
+  optional uint32 seq = 5; // normal type
+  optional uint32 expiredDays = 6; // nullable
+}
+message MasterGachaViewLive2d {
+  optional uint32 gachaId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional uint32 situationId = 3; // normal type
+}
+message MasterGacha {
+  optional uint32 gachaId = 1; // normal type
+  optional string gachaName = 2; // normal type
+  optional string gachaDisplayType = 3; // normal type
+  optional uint32 publishedAt = 4; // nullable
+  optional uint32 closedAt = 5; // nullable
+  repeated MasterGachaDetail details = 6; // array
+  repeated MasterGachaRarityRate rates = 7; // array
+  repeated MasterGachaPaymentMethod paymentMethods = 8; // array
+  optional string description = 9; // normal type
+  optional uint32 seq = 10; // normal type
+  optional string resourceName = 11; // normal type
+  optional string annotation = 12; // normal type
+  optional string gachaPeriod = 13; // normal type
+  optional uint32 rookieAt = 14; // nullable
+  optional string gachaSubName = 15; // normal type
+  optional uint32 priority = 16; // nullable
+  repeated MasterGachaExtra extras = 17; // array
+  repeated MasterGachaViewLive2d viewLive2ds = 18; // array
+}
+message ulong_MasterGacha {
+  optional uint32 ulong_MasterGacha_key = 1; // normal type
+  optional MasterGacha ulong_MasterGacha_value = 2; // sub class
+}
+message MasterGachaMap {
+  repeated ulong_MasterGacha entries = 1; // dictionary
+}
+message MasterSituationSkill {
+  optional uint32 situationSkillId = 1; // normal type
+  optional string skillName = 2; // normal type
+  optional uint32 skillId = 3; // normal type
+}
+message uint_MasterSituationSkill {
+  optional uint32 uint_MasterSituationSkill_key = 1; // normal type
+  optional MasterSituationSkill uint_MasterSituationSkill_value = 2; // sub class
+}
+message MasterSituationSkillMap {
+  repeated uint_MasterSituationSkill entries = 1; // dictionary
+}
+message MasterAreaItem {
+  optional string areaItemCategoryType = 19; // normal type
+  optional uint32 areaItemId = 1; // normal type
+  optional uint32 categoryId = 2; // normal type
+  optional uint32 level = 3; // normal type
+  optional string areaItemName = 4; // normal type
+  optional uint32 areaId = 5; // normal type
+  optional string spawnPoint = 6; // normal type
+  optional uint32 life = 7; // normal type
+  optional float performance = 8; // normal type
+  optional float technique = 9; // normal type
+  optional float visual = 10; // normal type
+  optional string valueType = 11; // normal type
+  repeated string targetAttributes = 12; // array
+  optional uint32 resourceId = 13; // normal type
+  optional string description = 14; // normal type
+  repeated uint32 characterIds = 15; // array
+  repeated uint32 targetBandIds = 16; // array
+  optional string flavorText = 17; // normal type
+  optional uint32 seq = 18; // normal type
+}
+message uint_MasterAreaItem {
+  optional uint32 uint_MasterAreaItem_key = 1; // normal type
+  optional MasterAreaItem uint_MasterAreaItem_value = 2; // sub class
+}
+message MasterAreaItemMap {
+  repeated uint_MasterAreaItem entries = 1; // dictionary
+}
+message MasterBondsLevel {
+  optional uint32 bondsId = 1; // normal type
+  optional uint32 level = 2; // normal type
+  optional string bondsName = 3; // normal type
+  optional uint32 bondsEffectId = 4; // normal type
+}
+message uint_MasterBondsLevel {
+  optional uint32 uint_MasterBondsLevel_key = 1; // normal type
+  optional MasterBondsLevel uint_MasterBondsLevel_value = 2; // sub class
+}
+message MasterBonds {
+  optional uint32 bondsId = 1; // normal type
+  optional string description = 2; // normal type
+  optional string tag = 3; // normal type
+  repeated uint32 characters = 4; // array
+  repeated uint_MasterBondsLevel bondsLevel = 5; // dictionary
+}
+message uint_MasterBonds {
+  optional uint32 uint_MasterBonds_key = 1; // normal type
+  optional MasterBonds uint_MasterBonds_value = 2; // sub class
+}
+message MasterBondsMap {
+  repeated uint_MasterBonds entries = 1; // dictionary
+}
+message MasterBondsEffect {
+  optional uint32 bondsEffectId = 1; // normal type
+  optional string bondsEffectName = 2; // normal type
+  optional string description = 3; // normal type
+  optional uint32 bondsId = 4; // normal type
+  optional uint32 level = 5; // normal type
+  optional string valueType = 6; // normal type
+  optional uint32 life = 7; // normal type
+  optional uint32 performance = 8; // normal type
+  optional uint32 technique = 9; // normal type
+  optional uint32 visual = 10; // normal type
+  optional uint32 skillEffect = 11; // normal type
+  optional string scope = 12; // normal type
+  repeated uint32 targetCharacters = 13; // array
+}
+message uint_MasterBondsEffect {
+  optional uint32 uint_MasterBondsEffect_key = 1; // normal type
+  optional MasterBondsEffect uint_MasterBondsEffect_value = 2; // sub class
+}
+message MasterBondsEffectMap {
+  repeated uint_MasterBondsEffect entries = 1; // dictionary
+}
+message MasterShop {
+  optional uint32 shopId = 1; // normal type
+  optional uint32 areaId = 2; // normal type
+  optional string shopName = 3; // normal type
+  optional string description = 4; // normal type
+  optional string shopType = 5; // normal type
+}
+message uint_MasterShop {
+  optional uint32 uint_MasterShop_key = 1; // normal type
+  optional MasterShop uint_MasterShop_value = 2; // sub class
+}
+message MasterShopMap {
+  repeated uint_MasterShop entries = 1; // dictionary
+}
+message MasterShopListCondition {
+  optional uint32 purchaseBandId = 1; // normal type
+  optional uint32 purchaseBandRank = 2; // normal type
+}
+message MasterShopListConditionList {
+  repeated MasterShopListCondition entries = 1; // list
+}
+message MasterShoplist {
+  optional uint32 shopListId = 1; // normal type
+  optional uint32 shopId = 2; // normal type
+  optional string shopCategory = 3; // normal type
+  optional uint32 seq = 4; // normal type
+  optional uint32 areaItemId = 5; // normal type
+  optional uint32 amount = 6; // normal type
+  optional PlayerResourceList costs = 7; // sub class
+  optional uint32 releaseMainStory = 8; // normal type
+  optional uint32 releaseBandStory = 9; // normal type
+  optional MasterShopListConditionList conditions = 10; // sub class
+}
+message uint_MasterShoplist {
+  optional uint32 uint_MasterShoplist_key = 1; // normal type
+  optional MasterShoplist uint_MasterShoplist_value = 2; // sub class
+}
+message MasterShoplistMap {
+  repeated uint_MasterShoplist entries = 1; // dictionary
+}
+message MasterActionSet {
+  optional uint32 actionSetId = 1; // normal type
+  optional uint32 areaId = 2; // normal type
+  repeated uint32 characterIds = 3; // array
+  optional string actionSetType = 4; // normal type
+  optional uint32 areaItemId = 5; // normal type
+  optional string areaName = 6; // normal type
+  optional uint32 seasonSpecialId = 7; // normal type
+}
+message uint_MasterActionSet {
+  optional uint32 uint_MasterActionSet_key = 1; // normal type
+  optional MasterActionSet uint_MasterActionSet_value = 2; // sub class
+}
+message MasterActionSetMap {
+  repeated uint_MasterActionSet entries = 1; // dictionary
+}
+message MasterArea {
+  optional uint32 areaId = 1; // normal type
+  optional string areaType = 2; // normal type
+  optional string areaName = 3; // normal type
+  optional string description = 4; // normal type
+  optional uint32 releaseMainStory = 5; // normal type
+}
+message uint_MasterArea {
+  optional uint32 uint_MasterArea_key = 1; // normal type
+  optional MasterArea uint_MasterArea_value = 2; // sub class
+}
+message MasterAreaMap {
+  repeated uint_MasterArea entries = 1; // dictionary
+}
+message MasterBand {
+  optional uint32 bandId = 1; // normal type
+  optional string bandName = 2; // normal type
+  optional uint32 resourceId = 3; // normal type
+  optional string color = 4; // normal type
+  optional uint32 leader = 5; // normal type
+  optional uint32 member1 = 6; // normal type
+  optional uint32 member2 = 7; // normal type
+  optional uint32 member3 = 8; // normal type
+  optional uint32 member4 = 9; // normal type
+  optional uint32 seq = 10; // normal type
+  optional string bandType = 11; // normal type
+  optional string introductions = 12; // normal type
+}
+message uint_MasterBand {
+  optional uint32 uint_MasterBand_key = 1; // normal type
+  optional MasterBand uint_MasterBand_value = 2; // sub class
+}
+message MasterBandMap {
+  repeated uint_MasterBand entries = 1; // dictionary
+}
+message MasterPlayerExpTable {
+  optional uint32 rank = 1; // normal type
+  optional uint32 exp = 2; // normal type
+  optional uint32 recoverValue = 3; // normal type
+  optional uint32 friendUpperLimit = 4; // normal type
+}
+message uint_MasterPlayerExpTable {
+  optional uint32 uint_MasterPlayerExpTable_key = 1; // normal type
+  optional MasterPlayerExpTable uint_MasterPlayerExpTable_value = 2; // sub class
+}
+message MasterPlayerExpTableMap {
+  repeated uint_MasterPlayerExpTable entries = 1; // dictionary
+}
+message MasterPracticeTicket {
+  optional uint32 practiceTicketId = 1; // normal type
+  optional string name = 2; // normal type
+  optional string description = 3; // normal type
+  optional uint32 resourceId = 4; // normal type
+  optional uint32 exp = 5; // normal type
+  optional string ticketType = 6; // normal type
+  optional string specializationType = 7; // normal type
+  optional uint32 specializationTargetId = 8; // normal type
+  optional float specializationFactor = 9; // normal type
+}
+message uint_MasterPracticeTicket {
+  optional uint32 uint_MasterPracticeTicket_key = 1; // normal type
+  optional MasterPracticeTicket uint_MasterPracticeTicket_value = 2; // sub class
+}
+message MasterPracticeTicketMap {
+  repeated uint_MasterPracticeTicket entries = 1; // dictionary
+}
+message MasterSituationExpTable {
+  optional uint32 level = 1; // normal type
+  optional uint32 exp = 2; // normal type
+}
+message uint_MasterSituationExpTable {
+  optional uint32 uint_MasterSituationExpTable_key = 1; // normal type
+  optional MasterSituationExpTable uint_MasterSituationExpTable_value = 2; // sub class
+}
+message MasterSituationExpTableMap {
+  repeated uint_MasterSituationExpTable entries = 1; // dictionary
+}
+message MasterMainStory {
+  optional uint32 mainStoryId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string caption = 3; // normal type
+  optional string title = 4; // normal type
+  optional string synopsis = 5; // normal type
+  optional string scenarioId = 6; // normal type
+  optional uint32 coverIllustId = 7; // normal type
+  optional uint32 releasePlayerRank = 8; // normal type
+  optional string releaseConditions = 9; // normal type
+  optional uint32 publishedAt = 10; // normal type
+  repeated PlayerResource rewards = 11; // array
+  optional string coverImage = 12; // normal type
+  optional string backgroundImage = 13; // normal type
+}
+message uint_MasterMainStory {
+  optional uint32 uint_MasterMainStory_key = 1; // normal type
+  optional MasterMainStory uint_MasterMainStory_value = 2; // sub class
+}
+message MasterMainStoryMap {
+  repeated uint_MasterMainStory entries = 1; // dictionary
+}
+message MasterBandStory {
+  optional uint32 bandStoryId = 1; // normal type
+  optional uint32 bandId = 2; // normal type
+  optional uint32 seq = 3; // normal type
+  optional string caption = 4; // normal type
+  optional string title = 5; // normal type
+  optional string synopsis = 6; // normal type
+  optional string scenarioId = 7; // normal type
+  optional uint32 coverIllustId = 8; // normal type
+  optional uint32 releasePlayerRank = 9; // normal type
+  optional string releaseConditions = 10; // normal type
+  optional uint32 publishedAt = 11; // normal type
+  repeated PlayerResource rewards = 12; // array
+  optional string coverImage = 13; // normal type
+  optional string backgroundImage = 14; // normal type
+  optional uint32 bandStoryChapterId = 16; // normal type
+  optional uint32 releaseBandStoryId = 17; // normal type
+}
+message uint_MasterBandStory {
+  optional uint32 uint_MasterBandStory_key = 1; // normal type
+  optional MasterBandStory uint_MasterBandStory_value = 2; // sub class
+}
+message MasterBandStoryMap {
+  repeated uint_MasterBandStory entries = 1; // dictionary
+}
+message MasterItem {
+  optional uint32 itemId = 1; // normal type
+  optional string itemName = 2; // normal type
+  optional uint32 resourceId = 3; // normal type
+  optional string description = 4; // normal type
+}
+message uint_MasterItem {
+  optional uint32 uint_MasterItem_key = 1; // normal type
+  optional MasterItem uint_MasterItem_value = 2; // sub class
+}
+message MasterItemMap {
+  repeated uint_MasterItem entries = 1; // dictionary
+}
+message MasterCommonsLive2d {
+  optional uint32 live2dId = 1; // normal type
+  optional string live2dCategory = 2; // normal type
+  optional string scenarioType = 3; // normal type
+  optional uint32 characterId = 4; // normal type
+  optional string serif = 5; // normal type
+  optional string voice = 6; // normal type
+  optional string motion = 7; // normal type
+  optional string expression = 8; // normal type
+}
+message uint_MasterCommonsLive2d {
+  optional uint32 uint_MasterCommonsLive2d_key = 1; // normal type
+  optional MasterCommonsLive2d uint_MasterCommonsLive2d_value = 2; // sub class
+}
+message MasterCommonsLive2dMap {
+  repeated uint_MasterCommonsLive2d entries = 1; // dictionary
+}
+message MasterMusicShop {
+  optional uint32 musicShopId = 1; // normal type
+  optional uint32 shopId = 2; // normal type
+  optional string shopCategory = 3; // normal type
+  optional uint32 seq = 4; // normal type
+  optional uint32 musicId = 5; // normal type
+  optional uint32 amount = 6; // normal type
+  optional PlayerResourceList costs = 7; // sub class
+}
+message uint_MasterMusicShop {
+  optional uint32 uint_MasterMusicShop_key = 1; // normal type
+  optional MasterMusicShop uint_MasterMusicShop_value = 2; // sub class
+}
+message MasterMusicShopMap {
+  repeated uint_MasterMusicShop entries = 1; // dictionary
+}
+message MasterCostume {
+  optional uint32 costumeId = 1; // normal type
+  optional uint32 characterId = 2; // normal type
+  optional string assetBundleName = 3; // normal type
+  optional string flavorText = 4; // normal type
+  optional string description = 5; // normal type
+  optional uint32 seq = 6; // normal type
+  optional string sdResourceName = 7; // normal type
+  optional string howToGet = 8; // normal type
+  optional uint32 publishedAt = 9; // normal type
+}
+message uint_MasterCostume {
+  optional uint32 uint_MasterCostume_key = 1; // normal type
+  optional MasterCostume uint_MasterCostume_value = 2; // sub class
+}
+message MasterCostumeMap {
+  repeated uint_MasterCostume entries = 1; // dictionary
+}
+message MasterAfterLiveTalk {
+  optional uint32 afterLiveTalkId = 1; // normal type
+  optional string scenarioId = 3; // normal type
+  optional string description = 4; // normal type
+}
+message uint_MasterAfterLiveTalk {
+  optional uint32 uint_MasterAfterLiveTalk_key = 1; // normal type
+  optional MasterAfterLiveTalk uint_MasterAfterLiveTalk_value = 2; // sub class
+}
+message MasterAfterLiveTalkMap {
+  repeated uint_MasterAfterLiveTalk entries = 1; // dictionary
+}
+message MasterAreaItemSpawn {
+  optional string spawnPoint = 1; // normal type
+  optional string spawnName = 2; // normal type
+  optional uint32 seq = 3; // normal type
+  optional uint32 areaId = 4; // normal type
+}
+message string_MasterAreaItemSpawn {
+  optional string string_MasterAreaItemSpawn_key = 1; // normal type
+  optional MasterAreaItemSpawn string_MasterAreaItemSpawn_value = 2; // sub class
+}
+message MasterAreaItemSpawnMap {
+  repeated string_MasterAreaItemSpawn entries = 1; // dictionary
+}
+message ServerSystem {
+  optional uint32 serverDate = 1; // normal type
+}
+message MasterCharacterRarity {
+  optional uint32 rarity = 1; // normal type
+  optional uint32 seal = 2; // normal type
+  optional uint32 defaultSkillExp = 3; // normal type
+  optional uint32 sameSituationSkillExp = 4; // normal type
+}
+message uint_MasterCharacterRarity {
+  optional uint32 uint_MasterCharacterRarity_key = 1; // normal type
+  optional MasterCharacterRarity uint_MasterCharacterRarity_value = 2; // sub class
+}
+message MasterCharacterRarityMap {
+  repeated uint_MasterCharacterRarity entries = 1; // dictionary
+}
+message MasterExchanges {
+  optional uint32 exchangesId = 1; // normal type
+  optional string exchangesCategory = 2; // normal type
+  optional uint32 seq = 3; // normal type
+  optional string resourceType = 4; // normal type
+  optional uint32 resourceId = 5; // normal type
+  optional uint32 quantity = 6; // normal type
+  optional uint32 amount = 7; // normal type
+  optional uint32 exchangeLimit = 8; // nullable
+  optional string reset = 9; // normal type
+  optional string badge = 10; // normal type
+  optional uint32 publishedAt = 11; // nullable
+  optional uint32 closedAt = 12; // nullable
+  optional string caption = 13; // normal type
+  optional bool recommendFlg = 14; // normal type
+  optional bool allowDuplicationFlg = 15; // normal type
+}
+message uint_MasterExchanges {
+  optional uint32 uint_MasterExchanges_key = 1; // normal type
+  optional MasterExchanges uint_MasterExchanges_value = 2; // sub class
+}
+message MasterExchangesMap {
+  repeated uint_MasterExchanges entries = 1; // dictionary
+}
+message MasterGachaTicket {
+  optional uint32 gachaTicketId = 1; // normal type
+  optional string gachaTicketType = 2; // normal type
+  optional string name = 3; // normal type
+  optional string description = 4; // normal type
+  optional uint32 resourceId = 5; // normal type
+}
+message uint_MasterGachaTicket {
+  optional uint32 uint_MasterGachaTicket_key = 1; // normal type
+  optional MasterGachaTicket uint_MasterGachaTicket_value = 2; // sub class
+}
+message MasterGachaTicketMap {
+  repeated uint_MasterGachaTicket entries = 1; // dictionary
+}
+message MasterPurchaseDetail {
+  optional uint32 purchaseId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string resourceType = 3; // normal type
+  optional uint32 resourceId = 4; // normal type
+  optional uint32 quantity = 5; // normal type
+}
+message MasterPurchase {
+  optional uint32 purchaseId = 1; // normal type
+  optional string purchaseCategory = 2; // normal type
+  optional string productName = 3; // normal type
+  optional string description = 4; // normal type
+  optional string label = 5; // normal type
+  optional uint32 purchaseLimit = 6; // normal type
+  optional uint32 publishedAt = 7; // nullable
+  optional uint32 closedAt = 8; // nullable
+  optional MasterPurchaseDetail detail = 9; // sub class
+  optional uint32 seq = 10; // normal type
+}
+message uint_MasterPurchase {
+  optional uint32 uint_MasterPurchase_key = 1; // normal type
+  optional MasterPurchase uint_MasterPurchase_value = 2; // sub class
+}
+message MasterPurchaseMap {
+  repeated uint_MasterPurchase entries = 1; // dictionary
+}
+message MasterProduct {
+  optional uint32 purchaseId = 1; // normal type
+  optional string productId = 2; // normal type
+  optional string platform = 3; // normal type
+  optional uint32 amount = 4; // normal type
+}
+message MasterProductList {
+  repeated MasterProduct entries = 1; // list
+}
+message MasterLoginBonusDetail {
+  optional uint32 loginBonusId = 1; // normal type
+  optional uint32 days = 2; // normal type
+  optional string resourceType = 3; // normal type
+  optional uint32 resourceId = 4; // normal type
+  optional uint32 quantity = 5; // normal type
+  optional string voiceId = 6; // normal type
+  optional uint32 seq = 7; // normal type
+}
+message MasterLoginBonusAsset {
+  optional uint32 loginBonusId = 1; // normal type
+  optional uint32 days = 2; // normal type
+  optional string resourceName = 3; // normal type
+  optional string voiceId = 4; // normal type
+}
+message uint_MasterLoginBonusAsset {
+  optional uint32 uint_MasterLoginBonusAsset_key = 1; // normal type
+  optional MasterLoginBonusAsset uint_MasterLoginBonusAsset_value = 2; // sub class
+}
+message MasterLoginBonusAssetMap {
+  repeated uint_MasterLoginBonusAsset entries = 1; // dictionary
+}
+message MasterLoginBonus {
+  optional uint32 loginBonusId = 1; // normal type
+  optional string loginBonusType = 2; // normal type
+  optional string caption = 3; // normal type
+  optional string assetBundleName = 4; // normal type
+  optional uint32 publishedAt = 5; // normal type
+  optional uint32 closedAt = 6; // normal type
+  repeated MasterLoginBonusDetail details = 7; // array
+  optional MasterLoginBonusAssetMap assetMap = 8; // sub class
+}
+message uint_MasterLoginBonus {
+  optional uint32 uint_MasterLoginBonus_key = 1; // normal type
+  optional MasterLoginBonus uint_MasterLoginBonus_value = 2; // sub class
+}
+message MasterLoginBonusMap {
+  repeated uint_MasterLoginBonus entries = 1; // dictionary
+}
+message MasterHomeBanner {
+  optional uint32 homeBannerId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string assetBundleName = 3; // normal type
+  optional uint32 publishedAt = 4; // normal type
+  optional uint32 closedAt = 5; // normal type
+  optional string transitionMethod = 6; // normal type
+  optional string url = 7; // normal type
+  optional uint32 releaseRankFrom = 8; // normal type
+  optional uint32 releaseRankTo = 9; // normal type
+  optional uint32 transitionId = 10; // normal type
+  optional uint32 rookieAt = 11; // nullable
+  optional string homeBannerType = 12; // normal type
+  optional uint32 gachaId = 13; // nullable
+}
+message MasterHomeBannerList {
+  repeated MasterHomeBanner entries = 1; // list
+}
+message MasterPremiumPass {
+  optional uint32 premiumPassId = 1; // normal type
+  optional uint32 days = 2; // normal type
+  optional string resourceType = 3; // normal type
+  optional uint32 resourceId = 4; // normal type
+  optional uint32 quantity = 5; // normal type
+}
+message MasterPremiumPassList {
+  repeated MasterPremiumPass entries = 1; // list
+}
+message Constants {
+  optional uint32 limitLiveBoost = 1; // normal type
+  optional uint32 recoverLiveBoostMinute = 2; // normal type
+  optional uint32 dateChangeHour = 3; // normal type
+  optional uint32 limitLiveBoostStack = 4; // normal type
+  optional uint32 presentExpiredDays = 7; // normal type
+  optional uint32 premiumPassExpiredDays = 8; // normal type
+  optional uint32 liveBoostBonus = 9; // normal type
+  optional uint32 doubleLiveBoostBonus = 10; // normal type
+  optional uint32 tripleLiveBoostBonus = 11; // normal type
+}
+message MasterStamp {
+  optional uint32 stampId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string imageName = 3; // normal type
+  optional string stampType = 4; // normal type
+}
+message uint_MasterStamp {
+  optional uint32 uint_MasterStamp_key = 1; // normal type
+  optional MasterStamp uint_MasterStamp_value = 2; // sub class
+}
+message MasterStampMap {
+  repeated uint_MasterStamp entries = 1; // dictionary
+}
+message MasterDegree {
+  optional uint32 degreeId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string baseImageName = 3; // normal type
+  optional string rank = 4; // normal type
+  optional string degreeName = 5; // normal type
+  optional string degreeType = 6; // normal type
+  optional string iconImageName = 7; // normal type
+  optional string description = 8; // normal type
+}
+message uint_MasterDegree {
+  optional uint32 uint_MasterDegree_key = 1; // normal type
+  optional MasterDegree uint_MasterDegree_value = 2; // sub class
+}
+message MasterDegreeMap {
+  repeated uint_MasterDegree entries = 1; // dictionary
+}
+message MasterCharacterProfileLive2d {
+  optional uint32 characterProfileLive2dId = 1; // normal type
+  optional string scenarioType = 2; // normal type
+  optional uint32 characterId = 3; // normal type
+  optional string serif = 4; // normal type
+  optional string voice = 5; // normal type
+  optional string motion = 6; // normal type
+  optional string expression = 7; // normal type
+}
+message uint_MasterCharacterProfileLive2d {
+  optional uint32 uint_MasterCharacterProfileLive2d_key = 1; // normal type
+  optional MasterCharacterProfileLive2d uint_MasterCharacterProfileLive2d_value = 2; // sub class
+}
+message MasterCharacterProfileLive2dMap {
+  repeated uint_MasterCharacterProfileLive2d entries = 1; // dictionary
+}
+message MasterWeeklyMultiLiveDifficulty {
+  optional uint32 id = 1; // normal type
+  optional string difficulty = 2; // normal type
+  optional uint32 requiredTotalParam = 3; // normal type
+  optional float bonusRate = 4; // normal type
+  optional uint32 seq = 5; // normal type
+  optional uint32 dayOfWeek = 6; // normal type
+  optional string description = 7; // normal type
+  optional string resourceName = 8; // normal type
+  optional string multiLiveDifficultyType = 9; // normal type
+}
+message uint_MasterWeeklyMultiLiveDifficulty {
+  optional uint32 uint_MasterWeeklyMultiLiveDifficulty_key = 1; // normal type
+  optional MasterWeeklyMultiLiveDifficulty uint_MasterWeeklyMultiLiveDifficulty_value = 2; // sub class
+}
+message MasterWeeklyMultiLiveDifficultyMap {
+  repeated uint_MasterWeeklyMultiLiveDifficulty entries = 1; // dictionary
+}
+message MasterCommonConfig {
+  optional uint32 commonConfigId = 1; // normal type
+  optional string commonConfigType = 2; // normal type
+  optional string value = 3; // normal type
+  optional uint32 startAt = 4; // normal type
+  optional uint32 endAt = 5; // normal type
+}
+message uint_MasterCommonConfig {
+  optional uint32 uint_MasterCommonConfig_key = 1; // normal type
+  optional MasterCommonConfig uint_MasterCommonConfig_value = 2; // sub class
+}
+message MasterCommonConfigMap {
+  repeated uint_MasterCommonConfig entries = 1; // dictionary
+}
+message MasterSkill {
+  optional uint32 skillId = 1; // normal type
+  optional uint32 skillLevel = 2; // normal type
+  optional float duration = 3; // normal type
+  optional string simpleDescription = 4; // normal type
+  optional string description = 5; // normal type
+  optional string skillSortType = 6; // normal type
+}
+message MasterSkillList {
+  repeated MasterSkill entries = 1; // array
+}
+message MasterSituationSkillExpTable {
+  optional uint32 skillLevel = 1; // normal type
+  optional uint32 skillExp = 2; // normal type
+  optional uint32 rarity = 3; // normal type
+}
+message MasterSituationSkillExpTableList {
+  repeated MasterSituationSkillExpTable entries = 1; // array
+}
+message MasterMission {
+  optional uint32 missionId = 1; // normal type
+  optional string missionType = 2; // normal type
+  optional string transitionMethod = 3; // normal type
+  optional uint32 transitionId = 4; // normal type
+  optional uint32 startAt = 5; // normal type
+  optional uint32 endAt = 6; // normal type
+  optional string missionTabType = 7; // normal type
+  optional uint32 seq = 8; // normal type
+  optional string url = 9; // normal type
+}
+message uint_MasterMission {
+  optional uint32 uint_MasterMission_key = 1; // normal type
+  optional MasterMission uint_MasterMission_value = 2; // sub class
+}
+message MasterMissionMap {
+  repeated uint_MasterMission entries = 1; // dictionary
+}
+message MasterMissionDetail {
+  optional uint32 missionId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string title = 3; // normal type
+  optional string description = 4; // normal type
+  optional uint32 maxProgress = 5; // normal type
+  optional string missionConditionTypes = 6; // normal type
+  optional uint32 values = 7; // normal type
+}
+message MasterMissionDetailList {
+  repeated MasterMissionDetail entries = 1; // array
+}
+message uint_MasterMissionDetailList {
+  optional uint32 uint_MasterMissionDetailList_key = 1; // normal type
+  optional MasterMissionDetailList uint_MasterMissionDetailList_value = 2; // sub class
+}
+message MasterMissionDetailMap {
+  repeated uint_MasterMissionDetailList entries = 1; // dictionary
+}
+message MasterMissionReward {
+  optional uint32 missionId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional uint32 missionRewardId = 3; // normal type
+  optional string resourceType = 4; // normal type
+  optional uint32 resourceId = 5; // normal type
+  optional uint32 quantity = 6; // normal type
+}
+message MasterMissionRewardList {
+  repeated MasterMissionReward entries = 1; // array
+}
+message uint_MasterMissionRewardList {
+  optional uint32 uint_MasterMissionRewardList_key = 1; // normal type
+  optional MasterMissionRewardList uint_MasterMissionRewardList_value = 2; // sub class
+}
+message MasterMissionRewardMap {
+  repeated uint_MasterMissionRewardList entries = 1; // dictionary
+}
+message MasterSkillActivateEffect {
+  optional uint32 skillId = 1; // normal type
+  optional uint32 skillLevel = 2; // normal type
+  optional uint32 seq = 3; // normal type
+  optional string colorDescription = 4; // normal type
+  optional string activateEffectType = 5; // normal type
+  optional string activateEffectValueType = 6; // normal type
+  optional string activateCondition = 7; // normal type
+  optional uint32 activateEffectValue = 8; // normal type
+  optional uint32 activateConditionLife = 9; // normal type
+}
+message MasterSkillActivateEffectList {
+  repeated MasterSkillActivateEffect entries = 1; // array
+}
+message MasterSkillOnceEffect {
+  optional uint32 skillId = 1; // normal type
+  optional uint32 skillLevel = 2; // normal type
+  optional string colorDescription = 3; // normal type
+  optional string onceEffectType = 4; // normal type
+  optional string onceEffectValueType = 5; // normal type
+  optional int32 onceEffectValue = 6; // normal type
+}
+message MasterSkillOnceEffectList {
+  repeated MasterSkillOnceEffect entries = 1; // array
+}
+message MasterLiveBoostRecoveryItem {
+  optional uint32 liveBoostRecoveryItemId = 1; // normal type
+  optional string liveBoostRecoveryItemName = 2; // normal type
+  optional uint32 resourceId = 3; // normal type
+  optional uint32 value = 4; // normal type
+  optional string description = 5; // normal type
+  optional uint32 seq = 6; // normal type
+  optional string liveBoostRecoveryItemType = 7; // normal type
+}
+message uint_MasterLiveBoostRecoveryItem {
+  optional uint32 uint_MasterLiveBoostRecoveryItem_key = 1; // normal type
+  optional MasterLiveBoostRecoveryItem uint_MasterLiveBoostRecoveryItem_value = 2; // sub class
+}
+message MasterLiveBoostRecoveryItemMap {
+  repeated uint_MasterLiveBoostRecoveryItem entries = 1; // dictionary
+}
+message MasterGenericStory {
+  optional uint32 genericStoryId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string caption = 3; // normal type
+  optional string title = 4; // normal type
+  optional string synopsis = 5; // normal type
+  optional string scenarioId = 6; // normal type
+  optional string coverImage = 7; // normal type
+  optional string backgroundImage = 8; // normal type
+  optional uint32 releasePlayerRank = 9; // normal type
+  optional string releaseConditions = 10; // normal type
+  optional int32 startAt = 11; // normal type
+  optional int32 endAt = 12; // normal type
+  repeated PlayerResource rewards = 13; // array
+  optional bool priorityFlg = 14; // normal type
+}
+message uint_MasterGenericStory {
+  optional uint32 uint_MasterGenericStory_key = 1; // normal type
+  optional MasterGenericStory uint_MasterGenericStory_value = 2; // sub class
+}
+message MasterGenericStoryMap {
+  repeated uint_MasterGenericStory entries = 1; // dictionary
+}
+message MasterSeasonBasic {
+  optional uint32 seasonBasicId = 1; // normal type
+  optional string seasonBasicType = 2; // normal type
+  optional uint32 startAt = 3; // normal type
+  optional uint32 endAt = 4; // normal type
+  optional uint32 seasonId = 5; // normal type
+}
+message uint_MasterSeasonBasic {
+  optional uint32 uint_MasterSeasonBasic_key = 1; // normal type
+  optional MasterSeasonBasic uint_MasterSeasonBasic_value = 2; // sub class
+}
+message MasterSeasonBasicMap {
+  repeated uint_MasterSeasonBasic entries = 1; // dictionary
+}
+message MasterSeasonSpecial {
+  optional uint32 seasonSpecialId = 1; // normal type
+  optional string seasonSpecialType = 2; // normal type
+  optional string description = 3; // normal type
+  optional uint32 startAt = 4; // normal type
+  optional uint32 endAt = 5; // normal type
+  optional bool repeatFlg = 6; // normal type
+  optional bool areaSpecialResourceFlg = 7; // normal type
+  optional string actionSetType = 8; // normal type
+}
+message uint_MasterSeasonSpecial {
+  optional uint32 uint_MasterSeasonSpecial_key = 1; // normal type
+  optional MasterSeasonSpecial uint_MasterSeasonSpecial_value = 2; // sub class
+}
+message MasterSeasonSpecialMap {
+  repeated uint_MasterSeasonSpecial entries = 1; // dictionary
+}
+message MasterAreaSeasonBasic {
+  optional uint32 areaId = 1; // normal type
+  optional uint32 seasonBasicId = 2; // normal type
+  optional string resourceName = 3; // normal type
+}
+message MasterAreaSeasonBasicList {
+  repeated MasterAreaSeasonBasic entries = 1; // array
+}
+message uint_MasterAreaSeasonBasicList {
+  optional uint32 uint_MasterAreaSeasonBasicList_key = 1; // normal type
+  optional MasterAreaSeasonBasicList uint_MasterAreaSeasonBasicList_value = 2; // sub class
+}
+message MasterAreaSeasonBasicMap {
+  repeated uint_MasterAreaSeasonBasicList entries = 1; // dictionary
+}
+message MasterAreaSeasonSpecial {
+  optional uint32 areaId = 1; // normal type
+  optional uint32 seasonSpecialId = 2; // normal type
+  optional string resourceName = 3; // normal type
+}
+message MasterAreaSeasonSpecialList {
+  repeated MasterAreaSeasonSpecial entries = 1; // array
+}
+message uint_MasterAreaSeasonSpecialList {
+  optional uint32 uint_MasterAreaSeasonSpecialList_key = 1; // normal type
+  optional MasterAreaSeasonSpecialList uint_MasterAreaSeasonSpecialList_value = 2; // sub class
+}
+message MasterAreaSeasonSpecialMap {
+  repeated uint_MasterAreaSeasonSpecialList entries = 1; // dictionary
+}
+message MasterSeasonSpecialBgm {
+  optional uint32 seasonSpecialId = 1; // normal type
+  optional string bgmAssetBundleName = 2; // normal type
+  optional string bgmFileName = 3; // normal type
+}
+message uint_MasterSeasonSpecialBgm {
+  optional uint32 uint_MasterSeasonSpecialBgm_key = 1; // normal type
+  optional MasterSeasonSpecialBgm uint_MasterSeasonSpecialBgm_value = 2; // sub class
+}
+message MasterSeasonSpecialBgmMap {
+  repeated uint_MasterSeasonSpecialBgm entries = 1; // dictionary
+}
+message MasterQualifyTournament {
+  optional uint32 qualifyTournamentId = 1; // normal type
+  optional string qualifyTournamentName = 2; // normal type
+  optional string musicDifficulty = 3; // normal type
+  optional string assetBundleName = 4; // normal type
+  optional string bgmAssetBundleName = 5; // normal type
+  optional string bgmFileName = 6; // normal type
+  optional uint32 playCount = 7; // normal type
+  optional uint32 startAt = 8; // normal type
+  optional uint32 endAt = 9; // normal type
+  optional uint32 entryStartAt = 10; // normal type
+  optional uint32 entryEndAt = 11; // normal type
+  optional uint32 publicStartAt = 12; // normal type
+  optional uint32 publicEndAt = 13; // normal type
+  optional string qualifyTournamentType = 14; // normal type
+  optional string place = 15; // normal type
+}
+message MasterQualifyTournamentList {
+  repeated MasterQualifyTournament entries = 1; // list
+}
+message uint_MasterQualifyTournamentList {
+  optional uint32 uint_MasterQualifyTournamentList_key = 1; // normal type
+  optional MasterQualifyTournamentList uint_MasterQualifyTournamentList_value = 2; // sub class
+}
+message MasterQualifyTournamentMap {
+  repeated uint_MasterQualifyTournamentList entries = 1; // dictionary
+}
+message QualifyTournamentSituationParameter {
+  optional uint32 situationId = 1; // normal type
+  optional uint32 level = 2; // normal type
+  optional uint32 skillLevel = 3; // normal type
+  optional string trainingStatus = 4; // normal type
+  optional uint32 performance = 5; // normal type
+  optional uint32 technique = 6; // normal type
+  optional uint32 visual = 7; // normal type
+}
+message MasterQualifyTournamentDeck {
+  optional uint32 qualifyTournamentId = 1; // normal type
+  optional string deckName = 2; // normal type
+  optional QualifyTournamentSituationParameter leader = 3; // sub class
+  optional QualifyTournamentSituationParameter member1 = 4; // sub class
+  optional QualifyTournamentSituationParameter member2 = 5; // sub class
+  optional QualifyTournamentSituationParameter member3 = 6; // sub class
+  optional QualifyTournamentSituationParameter member4 = 7; // sub class
+  optional string qualifyTournamentType = 8; // normal type
+}
+message MasterQualifyTournamentDeckList {
+  repeated MasterQualifyTournamentDeck entries = 1; // list
+}
+message uint_MasterQualifyTournamentDeckList {
+  optional uint32 uint_MasterQualifyTournamentDeckList_key = 1; // normal type
+  optional MasterQualifyTournamentDeckList uint_MasterQualifyTournamentDeckList_value = 2; // sub class
+}
+message MasterQualifyTournamentDeckMap {
+  repeated uint_MasterQualifyTournamentDeckList entries = 1; // dictionary
+}
+message MasterQualifyTournamentMusic {
+  optional uint32 qualifyTournamentId = 1; // normal type
+  optional uint32 musicId = 2; // normal type
+  optional uint32 seq = 3; // normal type
+  optional string qualifyTournamentType = 4; // normal type
+}
+message MasterQualifyTournamentMusicList {
+  repeated MasterQualifyTournamentMusic entries = 1; // list
+}
+message uint_MasterQualifyTournamentMusicList {
+  optional uint32 uint_MasterQualifyTournamentMusicList_key = 1; // normal type
+  optional MasterQualifyTournamentMusicList uint_MasterQualifyTournamentMusicList_value = 2; // sub class
+}
+message MasterQualifyTournamentMusicMap {
+  repeated uint_MasterQualifyTournamentMusicList entries = 1; // dictionary
+}
+message MasterEventStoryMemorialConfig {
+  optional uint32 eventId = 1; // normal type
+  optional uint32 bandId = 2; // normal type
+  optional string imageFileName = 3; // normal type
+  optional uint32 publishedAt = 4; // normal type
+  optional uint32 eventStoryMemorialReleaseConditionId = 5; // normal type
+  repeated uint32 characterIdList = 6; // array
+  optional uint32 eventPublicEndAt = 101; // normal type
+}
+message uint_MasterEventStoryMemorialConfig {
+  optional uint32 uint_MasterEventStoryMemorialConfig_key = 1; // normal type
+  optional MasterEventStoryMemorialConfig uint_MasterEventStoryMemorialConfig_value = 2; // sub class
+}
+message MasterEventStoryMemorialConfigMap {
+  repeated uint_MasterEventStoryMemorialConfig entries = 1; // dictionary
+}
+message MasterEventStoryMemorialReleaseCondition {
+  optional uint32 eventStoryMemorialReleaseConditionId = 1; // normal type
+  optional string memorialReleaseConditionType = 2; // normal type
+  optional uint32 bandId = 3; // normal type
+  optional uint32 rank = 4; // normal type
+}
+message uint_MasterEventStoryMemorialReleaseCondition {
+  optional uint32 uint_MasterEventStoryMemorialReleaseCondition_key = 1; // normal type
+  optional MasterEventStoryMemorialReleaseCondition uint_MasterEventStoryMemorialReleaseCondition_value = 2; // sub class
+}
+message MasterEventStoryMemorialReleaseConditionMap {
+  repeated uint_MasterEventStoryMemorialReleaseCondition entries = 1; // dictionary
+}
+message MasterBandStoryList {
+  repeated MasterBandStory entries = 1; // array
+}
+message MasterAreaItemList {
+  repeated MasterAreaItem entries = 1; // list
+}
+message MasterBandRank {
+  optional uint32 bandId = 1; // normal type
+  optional uint32 rank = 2; // normal type
+  optional MasterBandStoryList bandStories = 101; // sub class
+  optional MasterAreaItemList areaItems = 102; // sub class
+  optional PlayerResourceList rewards = 103; // sub class
+}
+message MasterBandRankList {
+  optional uint32 bandId = 1; // normal type
+  repeated MasterBandRank entries = 2; // list
+}
+message uint_MasterBandRankList {
+  optional uint32 uint_MasterBandRankList_key = 1; // normal type
+  optional MasterBandRankList uint_MasterBandRankList_value = 2; // sub class
+}
+message MasterBandRanksMap {
+  repeated uint_MasterBandRankList entries = 1; // dictionary
+}
+message MasterMainStoryList {
+  repeated MasterMainStory entries = 1; // array
+}
+message MasterPlayerRank {
+  optional uint32 rank = 1; // normal type
+  optional MasterMainStoryList mainStories = 101; // sub class
+  optional uint32 beforeFriendUpperLimit = 102; // nullable
+  optional uint32 afterFriendUpperLimit = 103; // nullable
+}
+message MasterPlayerRankList {
+  repeated MasterPlayerRank entries = 1; // list
+}
+message MasterWordingCollection {
+  optional string name = 1; // normal type
+  optional string wording = 2; // normal type
+}
+message string_MasterWordingCollection {
+  optional string string_MasterWordingCollection_key = 1; // normal type
+  optional MasterWordingCollection string_MasterWordingCollection_value = 2; // sub class
+}
+message MasterWordingCollectionMap {
+  repeated string_MasterWordingCollection entries = 1; // dictionary
+}
+message MasterMiracleTicket {
+  optional uint32 miracleTicketId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string miracleTicketEndAtType = 3; // normal type
+  optional string miracleTicketName = 4; // normal type
+  optional uint32 resourceId = 5; // normal type
+  optional uint32 exchangeStartAt = 6; // normal type
+  optional uint32 exchangeEndAt = 7; // normal type
+  optional uint32 exchangeEndMinutes = 8; // normal type
+  optional string bannerImageUrl = 9; // normal type
+  optional string miracleTicketExchangesName = 10; // normal type
+}
+message uint_MasterMiracleTicket {
+  optional uint32 uint_MasterMiracleTicket_key = 1; // normal type
+  optional MasterMiracleTicket uint_MasterMiracleTicket_value = 2; // sub class
+}
+message MasterMiracleTicketMap {
+  repeated uint_MasterMiracleTicket entries = 1; // dictionary
+}
+message MasterMiracleTicketExchanges {
+  optional uint32 miracleTicketId = 1; // normal type
+  optional uint32 miracleTicketExchangesId = 2; // normal type
+  optional uint32 seq = 3; // normal type
+  optional uint32 situationId = 4; // normal type
+  optional uint32 quantity = 5; // normal type
+  optional uint32 amount = 6; // normal type
+  optional uint32 exchangeLimit = 7; // normal type
+}
+message MasterMiracleTicketExchangesList {
+  repeated MasterMiracleTicketExchanges entries = 1; // array
+}
+message uint_MasterMiracleTicketExchangesList {
+  optional uint32 uint_MasterMiracleTicketExchangesList_key = 1; // normal type
+  optional MasterMiracleTicketExchangesList uint_MasterMiracleTicketExchangesList_value = 2; // sub class
+}
+message MasterMiracleTicketExchangesMap {
+  repeated uint_MasterMiracleTicketExchangesList entries = 1; // dictionary
+}
+message MasterSpecialLottery {
+  optional uint32 specialLotteryId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string caption = 3; // normal type
+  optional string assetBundleName = 4; // normal type
+  optional uint32 startAt = 5; // normal type
+  optional uint32 endAt = 6; // normal type
+}
+message MasterSpecialLotteryList {
+  repeated MasterSpecialLottery entries = 1; // array
+}
+message uint_MasterSpecialLotteryList {
+  optional uint32 uint_MasterSpecialLotteryList_key = 1; // normal type
+  optional MasterSpecialLotteryList uint_MasterSpecialLotteryList_value = 2; // sub class
+}
+message MasterSpecialLotteryMap {
+  repeated uint_MasterSpecialLotteryList entries = 1; // dictionary
+}
+message MasterBirthdayStory {
+  optional uint32 birthdayStoryId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string caption = 3; // normal type
+  optional string scenarioId = 6; // normal type
+  optional uint32 startAt = 7; // normal type
+  optional uint32 endAt = 8; // normal type
+  optional PlayerResourceList rewards = 9; // sub class
+}
+message uint_MasterBirthdayStory {
+  optional uint32 uint_MasterBirthdayStory_key = 1; // normal type
+  optional MasterBirthdayStory uint_MasterBirthdayStory_value = 2; // sub class
+}
+message MasterBirthdayStoryMap {
+  repeated uint_MasterBirthdayStory entries = 1; // dictionary
+}
+message MasterBirthdayPage {
+  optional uint32 birthdayPageId = 1; // normal type
+  optional uint32 characterId = 2; // normal type
+  optional string assetBundleName = 3; // normal type
+  optional uint32 birthdayStoryId = 4; // normal type
+  optional uint32 actionSetId = 5; // normal type
+  optional uint32 startAt = 6; // normal type
+  optional uint32 endAt = 7; // normal type
+}
+message uint_MasterBirthdayPage {
+  optional uint32 uint_MasterBirthdayPage_key = 1; // normal type
+  optional MasterBirthdayPage uint_MasterBirthdayPage_value = 2; // sub class
+}
+message MasterBirthdayPageMap {
+  repeated uint_MasterBirthdayPage entries = 1; // dictionary
+}
+message MasterSkinNotes {
+  optional uint32 skinNotesId = 1; // normal type
+  optional string skinName = 2; // normal type
+  optional bool defaultFlg = 3; // normal type
+  optional string assetBundleName = 4; // normal type
+  optional uint32 seq = 5; // normal type
+}
+message uint_MasterSkinNotes {
+  optional uint32 uint_MasterSkinNotes_key = 1; // normal type
+  optional MasterSkinNotes uint_MasterSkinNotes_value = 2; // sub class
+}
+message MasterSkinLane {
+  optional uint32 skinLaneId = 1; // normal type
+  optional string skinName = 2; // normal type
+  optional bool defaultFlg = 3; // normal type
+  optional string assetBundleName = 4; // normal type
+  optional uint32 seq = 5; // normal type
+}
+message uint_MasterSkinLane {
+  optional uint32 uint_MasterSkinLane_key = 1; // normal type
+  optional MasterSkinLane uint_MasterSkinLane_value = 2; // sub class
+}
+message MasterSkinEffect {
+  optional uint32 skinEffectId = 1; // normal type
+  optional string skinName = 2; // normal type
+  optional bool defaultFlg = 3; // normal type
+  optional string assetBundleName = 4; // normal type
+  optional uint32 seq = 5; // normal type
+}
+message uint_MasterSkinEffect {
+  optional uint32 uint_MasterSkinEffect_key = 1; // normal type
+  optional MasterSkinEffect uint_MasterSkinEffect_value = 2; // sub class
+}
+message MasterSkinBackground {
+  optional uint32 skinBackgroundId = 1; // normal type
+  optional string skinName = 2; // normal type
+  optional string eventType = 3; // normal type
+  optional string assetBundleName = 4; // normal type
+  optional uint32 seq = 5; // normal type
+  optional bool defaultFlg = 6; // normal type
+}
+message uint_MasterSkinBackground {
+  optional uint32 uint_MasterSkinBackground_key = 1; // normal type
+  optional MasterSkinBackground uint_MasterSkinBackground_value = 2; // sub class
+}
+message MasterSkinSoundEffect {
+  optional uint32 skinSoundEffectId = 1; // normal type
+  optional string skinName = 2; // normal type
+  optional bool defaultFlg = 3; // normal type
+  optional string assetBundleName = 4; // normal type
+  optional uint32 seq = 5; // normal type
+}
+message uint_MasterSkinSoundEffect {
+  optional uint32 uint_MasterSkinSoundEffect_key = 1; // normal type
+  optional MasterSkinSoundEffect uint_MasterSkinSoundEffect_value = 2; // sub class
+}
+message MasterSkin {
+  repeated uint_MasterSkinNotes skinNotesMap = 1; // dictionary
+  repeated uint_MasterSkinLane skinLaneMap = 2; // dictionary
+  repeated uint_MasterSkinEffect skinEffectMap = 3; // dictionary
+  repeated uint_MasterSkinBackground skinBackgroundMap = 4; // dictionary
+  repeated uint_MasterSkinSoundEffect skinSoundEffectMap = 5; // dictionary
+  optional uint32 defaultSkinNotesId = 6; // normal type
+  optional uint32 defaultSkinLaneId = 7; // normal type
+  optional uint32 defaultSkinEffectId = 8; // normal type
+  optional uint32 defaultSkinBackgroundId = 9; // normal type
+  optional uint32 defaultSkinSoundEffectId = 10; // normal type
+}
+message CharacterInGameVoice {
+  optional uint32 characterId = 1; // normal type
+  optional string soundKey = 2; // normal type
+}
+message CharacterInGameVoiceList {
+  repeated CharacterInGameVoice entries = 1; // array
+}
+message uint_CharacterInGameVoiceList {
+  optional uint32 uint_CharacterInGameVoiceList_key = 1; // normal type
+  optional CharacterInGameVoiceList uint_CharacterInGameVoiceList_value = 2; // sub class
+}
+message MasterCharacterInGameVoice {
+  repeated uint_CharacterInGameVoiceList beforeLiveVoiceMap = 1; // dictionary
+  repeated uint_CharacterInGameVoiceList fullComboVoiceMap = 2; // dictionary
+}
+message MasterPickupSituation {
+  optional string pickupType = 1; // normal type
+  optional uint32 pickupId = 2; // normal type
+  optional uint32 seq = 3; // normal type
+  optional uint32 situationId = 4; // normal type
+  optional uint32 performance = 5; // normal type
+  optional uint32 technique = 6; // normal type
+  optional uint32 visual = 7; // normal type
+}
+message MasterPickupSituationList {
+  repeated MasterPickupSituation entries = 1; // array
+}
+message uint_MasterPickupSituationList {
+  optional uint32 uint_MasterPickupSituationList_key = 1; // normal type
+  optional MasterPickupSituationList uint_MasterPickupSituationList_value = 2; // sub class
+}
+message MasterPickupSituationMap {
+  repeated uint_MasterPickupSituationList eventPickupSituationMap = 1; // dictionary
+  repeated uint_MasterPickupSituationList gachaPickupSituationMap = 2; // dictionary
+}
+message MasterSingleFrameCartoon {
+  optional uint32 singleFrameCartoonId = 1; // normal type
+  optional string title = 2; // normal type
+  optional string assetBundleName = 3; // normal type
+  optional uint32 seq = 4; // normal type
+  optional string subTitle = 5; // normal type
+}
+message uint_MasterSingleFrameCartoon {
+  optional uint32 uint_MasterSingleFrameCartoon_key = 1; // normal type
+  optional MasterSingleFrameCartoon uint_MasterSingleFrameCartoon_value = 2; // sub class
+}
+message MasterSingleFrameCartoonMap {
+  repeated uint_MasterSingleFrameCartoon entries = 1; // dictionary
+}
+message SingleFrameCartoonIdList {
+  repeated uint32 entries = 1; // array
+}
+message uint_SingleFrameCartoonIdList {
+  optional uint32 uint_SingleFrameCartoonIdList_key = 1; // normal type
+  optional SingleFrameCartoonIdList uint_SingleFrameCartoonIdList_value = 2; // sub class
+}
+message MasterSingleFrameCartoonCharacterMap {
+  repeated uint_SingleFrameCartoonIdList entries = 1; // dictionary
+}
+message MasterFourFrameCartoon {
+  optional uint32 fourFrameCartoonId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string title = 3; // normal type
+  optional string assetBundleName = 4; // normal type
+  optional uint32 publicStartAt = 5; // normal type
+  optional string subTitle = 6; // normal type
+}
+message uint_MasterFourFrameCartoon {
+  optional uint32 uint_MasterFourFrameCartoon_key = 1; // normal type
+  optional MasterFourFrameCartoon uint_MasterFourFrameCartoon_value = 2; // sub class
+}
+message MasterFourFrameCartoonMap {
+  repeated uint_MasterFourFrameCartoon entries = 1; // dictionary
+}
+message FourFrameCartoonIdList {
+  repeated uint32 entries = 1; // array
+}
+message uint_FourFrameCartoonIdList {
+  optional uint32 uint_FourFrameCartoonIdList_key = 1; // normal type
+  optional FourFrameCartoonIdList uint_FourFrameCartoonIdList_value = 2; // sub class
+}
+message MasterFourFrameCartoonCharacterMap {
+  repeated uint_FourFrameCartoonIdList entries = 1; // dictionary
+}
+message MasterMusicVideo {
+  optional uint32 musicId = 1; // normal type
+  optional string assetBundleName = 2; // normal type
+  optional uint32 startAt = 3; // normal type
+  optional uint32 endAt = 4; // normal type
+  optional int32 musicStartDelayMilliseconds = 5; // normal type
+}
+message uint_MasterMusicVideo {
+  optional uint32 uint_MasterMusicVideo_key = 1; // normal type
+  optional MasterMusicVideo uint_MasterMusicVideo_value = 2; // sub class
+}
+message MasterMusicVideoMap {
+  repeated uint_MasterMusicVideo entries = 1; // dictionary
+}
+message MasterBandStoryChapterDetail {
+  optional uint32 bandStoryChapterDetailId = 1; // normal type
+  optional uint32 bandStoryChapterId = 2; // normal type
+  optional uint32 eventId = 3; // nullable
+  optional uint32 releaseBandStoryId = 4; // nullable
+  optional uint32 startAt = 5; // normal type
+  optional uint32 endAt = 6; // normal type
+  optional string supplement = 7; // normal type
+  optional string appeal = 8; // normal type
+  optional string releaseConditions = 9; // normal type
+}
+message MasterBandStoryChapterDetailList {
+  repeated MasterBandStoryChapterDetail entries = 1; // array
+}
+message MasterBandStoryChapter {
+  optional uint32 bandStoryChapterId = 1; // normal type
+  optional uint32 bandId = 2; // normal type
+  optional string bandStoryChapterType = 3; // normal type
+  optional uint32 seq = 4; // normal type
+  optional string mainTitle = 5; // normal type
+  optional string subTitle = 6; // normal type
+  optional uint32 publishedAt = 7; // normal type
+  optional uint32 closedAt = 8; // normal type
+  optional uint32 chapterNumber = 9; // normal type
+  optional MasterBandStoryChapterDetailList masterBandStoryChapterDetailList = 101; // sub class
+}
+message uint_MasterBandStoryChapter {
+  optional uint32 uint_MasterBandStoryChapter_key = 1; // normal type
+  optional MasterBandStoryChapter uint_MasterBandStoryChapter_value = 2; // sub class
+}
+message MasterBandStoryChapterMap {
+  repeated uint_MasterBandStoryChapter entries = 1; // dictionary
+}
+message MasterNewMusicIntroduction {
+  optional uint32 newMusicIntroductionId = 1; // normal type
+  optional uint32 musicId = 2; // normal type
+  optional string assetBundleName = 3; // normal type
+  optional uint32 costumeId1 = 4; // nullable
+  optional uint32 costumeId2 = 5; // nullable
+  optional uint32 costumeId3 = 6; // nullable
+  optional uint32 costumeId4 = 7; // nullable
+  optional uint32 costumeId5 = 8; // nullable
+  optional uint32 startAt = 9; // normal type
+  optional uint32 endAt = 10; // normal type
+}
+message uint_MasterNewMusicIntroduction {
+  optional uint32 uint_MasterNewMusicIntroduction_key = 1; // normal type
+  optional MasterNewMusicIntroduction uint_MasterNewMusicIntroduction_value = 2; // sub class
+}
+message MasterNewMusicIntroductionMap {
+  repeated uint_MasterNewMusicIntroduction entries = 1; // dictionary
+}
+message MasterEventPointReward {
+  optional uint32 id = 1; // normal type
+  optional uint32 eventId = 2; // normal type
+  optional uint32 point = 3; // normal type
+  optional string rewardType = 4; // normal type
+  optional uint32 rewardId = 5; // normal type
+  optional uint32 rewardQuantity = 6; // normal type
+  optional bool recommendFlg = 7; // normal type
+}
+message MasterEventRankingReward {
+  optional uint32 id = 1; // normal type
+  optional uint32 eventId = 2; // normal type
+  optional uint32 fromRank = 3; // normal type
+  optional uint32 toRank = 4; // normal type
+  optional string rewardType = 5; // normal type
+  optional uint32 rewardId = 6; // normal type
+  optional uint32 rewardQuantity = 7; // normal type
+  optional bool recommendFlg = 8; // normal type
+}
+message MasterEvent {
+  optional uint32 eventId = 1; // normal type
+  optional string eventType = 2; // normal type
+  optional string eventName = 3; // normal type
+  optional string assetBundleName = 4; // normal type
+  optional uint32 startAt = 5; // normal type
+  optional uint32 endAt = 6; // normal type
+  optional bool enableFlg = 7; // normal type
+  optional uint32 publicStartAt = 8; // normal type
+  optional uint32 publicEndAt = 9; // normal type
+  optional uint32 distributionStartAt = 10; // normal type
+  optional uint32 distributionEndAt = 11; // normal type
+  optional string bgmAssetBundleName = 12; // normal type
+  optional string bgmFileName = 13; // normal type
+  optional uint32 aggregateEndAt = 14; // normal type
+  optional uint32 eventExchangesEndAt = 15; // nullable
+  repeated MasterEventPointReward pointRewards = 101; // array
+  repeated MasterEventRankingReward rankingRewards = 102; // array
+}
+message uint_MasterEvent {
+  optional uint32 uint_MasterEvent_key = 1; // normal type
+  optional MasterEvent uint_MasterEvent_value = 2; // sub class
+}
+message MasterEventMap {
+  repeated uint_MasterEvent entries = 1; // dictionary
+}
+message MasterEventConfig {
+  optional string configKeyType = 1; // normal type
+  optional string value = 2; // normal type
+}
+message string_MasterEventConfig {
+  optional string string_MasterEventConfig_key = 1; // normal type
+  optional MasterEventConfig string_MasterEventConfig_value = 2; // sub class
+}
+message MasterEventConfigMap {
+  repeated string_MasterEventConfig entries = 1; // dictionary
+}
+message MasterEventAttribute {
+  optional uint32 eventId = 1; // normal type
+  optional string attribute = 2; // normal type
+  optional float percent = 3; // normal type
+}
+message MasterEventCharacter {
+  optional uint32 eventId = 1; // normal type
+  optional uint32 characterId = 2; // normal type
+  optional float percent = 3; // normal type
+}
+message MasterEventStoryReward {
+  optional uint32 id = 1; // normal type
+  optional uint32 eventId = 2; // normal type
+  optional uint32 seq = 3; // normal type
+  optional string rewardType = 4; // normal type
+  optional uint32 rewardId = 5; // normal type
+  optional uint32 rewardQuantity = 6; // normal type
+}
+message MasterEventStory {
+  optional uint32 eventId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string caption = 3; // normal type
+  optional string title = 4; // normal type
+  optional string synopsis = 5; // normal type
+  optional string scenarioId = 6; // normal type
+  optional string coverImage = 7; // normal type
+  optional string backgroundImage = 8; // normal type
+  optional uint32 releasePt = 9; // normal type
+  optional string releaseConditions = 10; // normal type
+  repeated MasterEventStoryReward rewards = 101; // array
+}
+message MasterStoryEvent {
+  optional uint32 eventId = 1; // normal type
+  repeated MasterEventAttribute attributes = 101; // array
+  repeated MasterEventCharacter characters = 102; // array
+  repeated MasterEventStory stories = 103; // array
+}
+message uint_MasterStoryEvent {
+  optional uint32 uint_MasterStoryEvent_key = 1; // normal type
+  optional MasterStoryEvent uint_MasterStoryEvent_value = 2; // sub class
+}
+message MasterStoryEventMap {
+  repeated uint_MasterStoryEvent entries = 1; // dictionary
+}
+message MasterEventLiveBoost {
+  optional uint32 useCount = 1; // normal type
+  optional float percent = 2; // normal type
+}
+message uint_MasterEventLiveBoost {
+  optional uint32 uint_MasterEventLiveBoost_key = 1; // normal type
+  optional MasterEventLiveBoost uint_MasterEventLiveBoost_value = 2; // sub class
+}
+message MasterEventLiveBoostMap {
+  repeated uint_MasterEventLiveBoost entries = 1; // dictionary
+}
+message MasterEventExchanges {
+  optional uint32 eventId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string caption = 3; // normal type
+  optional string resourceType = 4; // normal type
+  optional uint32 resourceId = 5; // normal type
+  optional uint32 quantity = 6; // normal type
+  optional uint32 amount = 7; // normal type
+  optional uint32 exchangeLimit = 8; // nullable
+  optional string reset = 9; // normal type
+  optional string badge = 10; // normal type
+  optional uint32 publishedAt = 11; // nullable
+  optional uint32 closedAt = 12; // nullable
+  optional bool recommendFlg = 13; // normal type
+  optional bool allowDuplicationFlg = 14; // normal type
+}
+message MasterEventExchangesList {
+  repeated MasterEventExchanges entries = 1; // list
+}
+message MasterEventItem {
+  optional uint32 eventItemId = 1; // normal type
+  optional uint32 eventId = 2; // normal type
+  optional string itemName = 3; // normal type
+  optional string resourceName = 4; // normal type
+  optional string description = 5; // normal type
+}
+message uint_MasterEventItem {
+  optional uint32 uint_MasterEventItem_key = 1; // normal type
+  optional MasterEventItem uint_MasterEventItem_value = 2; // sub class
+}
+message MasterEventItemMap {
+  repeated uint_MasterEventItem entries = 1; // dictionary
+}
+message MasterEventLoginReward {
+  optional uint32 eventId = 1; // normal type
+  optional uint32 days = 2; // normal type
+  optional uint32 seq = 3; // normal type
+  optional string resourceType = 4; // normal type
+  optional uint32 resourceId = 5; // normal type
+  optional uint32 quantity = 6; // normal type
+}
+message MasterEventLoginRewardList {
+  repeated MasterEventLoginReward entries = 1; // list
+}
+message uint_MasterEventLoginRewardList {
+  optional uint32 uint_MasterEventLoginRewardList_key = 1; // normal type
+  optional MasterEventLoginRewardList uint_MasterEventLoginRewardList_value = 2; // sub class
+}
+message MasterEventLoginRewardMap {
+  repeated uint_MasterEventLoginRewardList entries = 1; // dictionary
+}
+message MasterEventMusicAchievement {
+  optional uint32 eventId = 1; // normal type
+  optional uint32 musicId = 2; // normal type
+  optional string achievementType = 3; // normal type
+  optional string resourceType = 4; // normal type
+  optional uint32 resourceId = 5; // normal type
+  optional uint32 quantity = 6; // normal type
+}
+message MasterEventMusicRankingReward {
+  optional uint32 id = 1; // normal type
+  optional uint32 eventId = 2; // normal type
+  optional uint32 musicId = 3; // normal type
+  optional uint32 fromRank = 4; // normal type
+  optional uint32 toRank = 5; // normal type
+  optional string resourceType = 6; // normal type
+  optional uint32 resourceId = 7; // normal type
+  optional uint32 quantity = 8; // normal type
+  optional bool recommendFlg = 9; // normal type
+}
+message MasterEventMusic {
+  optional uint32 eventId = 1; // normal type
+  optional uint32 musicId = 2; // normal type
+  optional uint32 seq = 3; // normal type
+  repeated MasterEventMusicAchievement musicAchievements = 101; // array
+  repeated MasterEventMusicRankingReward musicRankingRewards = 102; // array
+}
+message MasterEventChallengeCost {
+  optional uint32 eventId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional uint32 cost = 3; // normal type
+  optional uint32 ratio = 4; // normal type
+}
+message MasterChallengeEvent {
+  optional uint32 eventId = 1; // normal type
+  repeated MasterEventAttribute attributes = 101; // array
+  repeated MasterEventCharacter characters = 102; // array
+  repeated MasterEventStory stories = 103; // array
+  repeated MasterEventMusic musics = 104; // array
+  repeated MasterEventChallengeCost challengeCosts = 105; // array
+}
+message uint_MasterChallengeEvent {
+  optional uint32 uint_MasterChallengeEvent_key = 1; // normal type
+  optional MasterChallengeEvent uint_MasterChallengeEvent_value = 2; // sub class
+}
+message MasterChallengeEventMap {
+  repeated uint_MasterChallengeEvent entries = 1; // dictionary
+}
+message MasterEventLiveContribution {
+  optional uint32 participant = 1; // normal type
+  optional uint32 rank = 2; // normal type
+  optional uint32 rate = 3; // normal type
+}
+message MasterEventLiveContributionList {
+  repeated MasterEventLiveContribution entries = 1; // list
+}
+message uint_MasterEventLiveContributionList {
+  optional uint32 uint_MasterEventLiveContributionList_key = 1; // normal type
+  optional MasterEventLiveContributionList uint_MasterEventLiveContributionList_value = 2; // sub class
+}
+message MasterEventLiveContributionMap {
+  repeated uint_MasterEventLiveContributionList entries = 1; // dictionary
+}
+message MasterMultiVersusLiveScore {
+  optional uint32 musicId = 1; // normal type
+  optional uint32 scoreSS = 2; // normal type
+  optional uint32 scoreS = 3; // normal type
+  optional uint32 scoreA = 4; // normal type
+  optional uint32 scoreB = 5; // normal type
+  optional uint32 scoreC = 6; // normal type
+}
+message uint_MasterMultiVersusLiveScore {
+  optional uint32 uint_MasterMultiVersusLiveScore_key = 1; // normal type
+  optional MasterMultiVersusLiveScore uint_MasterMultiVersusLiveScore_value = 2; // sub class
+}
+message MasterMultiVersusLiveScoreMap {
+  repeated uint_MasterMultiVersusLiveScore entries = 1; // dictionary
+}
+message MasterMultiVersusLiveMatchingLogic {
+  optional uint32 id = 1; // normal type
+  optional uint32 logicOrder = 2; // normal type
+  optional uint32 totalPowerFrom = 3; // normal type
+  optional uint32 totalPowerTo = 4; // normal type
+  optional int32 searchFrom = 5; // normal type
+  optional int32 searchTo = 6; // normal type
+}
+message MasterMultiVersusLiveMatchingLogicList {
+  repeated MasterMultiVersusLiveMatchingLogic entries = 1; // list
+}
+message MasterVersusEvent {
+  optional uint32 eventId = 1; // normal type
+  repeated MasterEventAttribute attributes = 101; // array
+  repeated MasterEventCharacter characters = 102; // array
+  repeated MasterEventStory stories = 103; // array
+  repeated MasterEventMusic musics = 104; // array
+}
+message uint_MasterVersusEvent {
+  optional uint32 uint_MasterVersusEvent_key = 1; // normal type
+  optional MasterVersusEvent uint_MasterVersusEvent_value = 2; // sub class
+}
+message MasterVersusEventMap {
+  repeated uint_MasterVersusEvent entries = 1; // dictionary
+}
+message MasterEventBoxGachaDetail {
+  optional uint32 eventBoxGachaId = 1; // normal type
+  optional uint32 round = 2; // normal type
+  optional uint32 seq = 3; // normal type
+  optional uint32 count = 4; // normal type
+  optional string resourceType = 5; // normal type
+  optional uint32 resourceId = 6; // normal type
+  optional uint32 resourceQuantity = 7; // normal type
+  optional bool pickupFlag = 8; // normal type
+}
+message MasterEventBoxGachaDetailList {
+  repeated MasterEventBoxGachaDetail entries = 1; // list
+}
+message uint_MasterEventBoxGachaDetailList {
+  optional uint32 uint_MasterEventBoxGachaDetailList_key = 1; // normal type
+  optional MasterEventBoxGachaDetailList uint_MasterEventBoxGachaDetailList_value = 2; // sub class
+}
+message MasterEventBoxGacha {
+  optional uint32 eventBoxGachaId = 1; // normal type
+  optional uint32 eventId = 2; // normal type
+  optional string name = 3; // normal type
+  optional string resourceName = 4; // normal type
+  optional uint32 publishedAt = 5; // normal type
+  optional uint32 closedAt = 6; // normal type
+  repeated uint_MasterEventBoxGachaDetailList detailsMap = 101; // dictionary
+}
+message uint_MasterEventBoxGacha {
+  optional uint32 uint_MasterEventBoxGacha_key = 1; // normal type
+  optional MasterEventBoxGacha uint_MasterEventBoxGacha_value = 2; // sub class
+}
+message MasterEventBoxGachaMap {
+  repeated uint_MasterEventBoxGacha entries = 1; // dictionary
+}
+message MasterLiveTryMission {
+  optional uint32 eventId = 1; // normal type
+  optional uint32 liveTryMissionId = 2; // normal type
+  optional string liveTryMissionType = 3; // normal type
+  optional string liveTryMissionDifficultyType = 4; // normal type
+  optional uint32 level = 5; // normal type
+  optional uint32 liveTryMissionDetailId = 6; // normal type
+}
+message uint_MasterLiveTryMission {
+  optional uint32 uint_MasterLiveTryMission_key = 1; // normal type
+  optional MasterLiveTryMission uint_MasterLiveTryMission_value = 2; // sub class
+}
+message MasterLiveTryMissionMap {
+  repeated uint_MasterLiveTryMission entries = 1; // dictionary
+}
+message MasterLiveTryMissionDetail {
+  optional uint32 liveTryMissionDetailId = 1; // normal type
+  optional string musicDescription = 101; // normal type
+  optional string difficultyDescription = 102; // normal type
+  optional string description = 103; // normal type
+}
+message uint_MasterLiveTryMissionDetail {
+  optional uint32 uint_MasterLiveTryMissionDetail_key = 1; // normal type
+  optional MasterLiveTryMissionDetail uint_MasterLiveTryMissionDetail_value = 2; // sub class
+}
+message MasterLiveTryMissionDetailMap {
+  repeated uint_MasterLiveTryMissionDetail entries = 1; // dictionary
+}
+message string_uint {
+  optional string string_uint_key = 1; // normal type
+  optional uint32 string_uint_value = 2; // normal type
+}
+message MasterLiveTryMissionTypeSequenceMap {
+  repeated string_uint entries = 1; // dictionary
+}
+message MasterLiveTryMissionReward {
+  optional uint32 eventId = 1; // normal type
+  optional uint32 liveTryMissionId = 2; // normal type
+  optional uint32 seq = 3; // normal type
+  optional string resourceType = 4; // normal type
+  optional uint32 resourceId = 5; // normal type
+  optional uint32 quantity = 6; // normal type
+}
+message MasterLiveTryMissionRewardList {
+  repeated MasterLiveTryMissionReward entries = 1; // list
+}
+message uint_MasterLiveTryMissionRewardList {
+  optional uint32 uint_MasterLiveTryMissionRewardList_key = 1; // normal type
+  optional MasterLiveTryMissionRewardList uint_MasterLiveTryMissionRewardList_value = 2; // sub class
+}
+message MasterLiveTryMissionRewardMap {
+  repeated uint_MasterLiveTryMissionRewardList entries = 1; // dictionary
+}
+message MasterLiveTryLevelReward {
+  optional uint32 eventId = 1; // normal type
+  optional string liveTryMissionDifficultyType = 2; // normal type
+  optional uint32 level = 3; // normal type
+  optional string resourceType = 4; // normal type
+  optional uint32 resourceId = 5; // normal type
+  optional uint32 quantity = 6; // normal type
+}
+message uint_MasterLiveTryLevelReward {
+  optional uint32 uint_MasterLiveTryLevelReward_key = 1; // normal type
+  optional MasterLiveTryLevelReward uint_MasterLiveTryLevelReward_value = 2; // sub class
+}
+message MasterLiveTryLevelRewardMap {
+  repeated uint_MasterLiveTryLevelReward entries = 1; // dictionary
+}
+message string_MasterLiveTryLevelRewardMap {
+  optional string string_MasterLiveTryLevelRewardMap_key = 1; // normal type
+  optional MasterLiveTryLevelRewardMap string_MasterLiveTryLevelRewardMap_value = 2; // sub class
+}
+message MasterLiveTryLevelRewardDifficultyMap {
+  repeated string_MasterLiveTryLevelRewardMap entries = 1; // dictionary
+}
+message MasterLiveTryEvent {
+  optional uint32 eventId = 1; // normal type
+  repeated MasterEventAttribute attributes = 101; // array
+  repeated MasterEventCharacter characters = 102; // array
+  repeated MasterEventStory stories = 103; // array
+  optional MasterLiveTryMissionMap masterLiveTryMissionMap = 201; // sub class
+  optional MasterLiveTryMissionDetailMap masterLiveTryMissionDetailMap = 202; // sub class
+  optional MasterLiveTryMissionTypeSequenceMap masterLiveTryMissionTypeSequenceMap = 203; // sub class
+  optional MasterLiveTryMissionRewardMap masterLiveTryMissionRewardMap = 204; // sub class
+  optional MasterLiveTryLevelRewardDifficultyMap masterLiveTryLevelRewardDifficultyMap = 205; // sub class
+}
+message uint_MasterLiveTryEvent {
+  optional uint32 uint_MasterLiveTryEvent_key = 1; // normal type
+  optional MasterLiveTryEvent uint_MasterLiveTryEvent_value = 2; // sub class
+}
+message MasterLiveTryEventMap {
+  repeated uint_MasterLiveTryEvent entries = 1; // dictionary
+}
+message MasterEventSituation {
+  optional uint32 eventId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional uint32 situationId = 3; // normal type
+}
+message MasterEventSituationList {
+  repeated MasterEventSituation entries = 1; // list
+}
+message uint_MasterEventSituationList {
+  optional uint32 uint_MasterEventSituationList_key = 1; // normal type
+  optional MasterEventSituationList uint_MasterEventSituationList_value = 2; // sub class
+}
+message MasterEventSituationMap {
+  repeated uint_MasterEventSituationList entries = 1; // dictionary
+}
+message MasterNewSituationIntroductionDetail {
+  optional uint32 newSituationIntroductionId = 1; // normal type
+  optional uint32 situationId = 2; // normal type
+  optional uint32 seq = 3; // normal type
+  optional string motion = 4; // normal type
+  optional string voiceId = 5; // normal type
+  optional float situationPositionX = 6; // normal type
+}
+message MasterNewSituationIntroduction {
+  optional uint32 newSituationIntroductionId = 1; // normal type
+  optional uint32 gachaId = 2; // normal type
+  optional string logoPosition = 3; // normal type
+  optional uint32 startAt = 4; // normal type
+  optional uint32 endAt = 5; // normal type
+  repeated MasterNewSituationIntroductionDetail details = 6; // array
+}
+message MasterNewSituationIntroductionList {
+  repeated MasterNewSituationIntroduction entries = 1; // list
+}
+message MasterGachaInformation {
+  optional uint32 gachaId = 1; // normal type
+  optional string description = 2; // normal type
+  optional string term = 3; // normal type
+  optional string newMemberInfo = 4; // normal type
+  optional string stepInfo = 5; // normal type
+  optional string setInfo = 6; // normal type
+  optional string notice = 7; // normal type
+}
+message uint_MasterGachaInformation {
+  optional uint32 uint_MasterGachaInformation_key = 1; // normal type
+  optional MasterGachaInformation uint_MasterGachaInformation_value = 2; // sub class
+}
+message MasterGachaInformationMap {
+  repeated uint_MasterGachaInformation entries = 1; // dictionary
+}
+message MasterGenericAnimation {
+  optional uint32 genericAnimationId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string assetBundleName = 3; // normal type
+  optional bool priorityFlg = 4; // normal type
+  optional uint32 startAt = 5; // normal type
+  optional uint32 endAt = 6; // normal type
+  optional string genericAnimationType = 7; // normal type
+}
+message uint_MasterGenericAnimation {
+  optional uint32 uint_MasterGenericAnimation_key = 1; // normal type
+  optional MasterGenericAnimation uint_MasterGenericAnimation_value = 2; // sub class
+}
+message MasterGenericAnimationMap {
+  repeated uint_MasterGenericAnimation entries = 1; // dictionary
+}
+message SuiteMasterGetResponse {
+  optional MasterMusicListGetResponse masterMusicList = 1; // sub class
+  optional MasterMusicDifficultyListGetResponse masterMusicDifficultyList = 2; // sub class
+  optional MasterMultiLiveDifficultyMap masterMultiLiveDifficultyMap = 28; // sub class
+  optional MasterCharacterInfoMap masterCharacterInfoMap = 3; // sub class
+  optional MasterCharacterSituationMap masterCharacterSituationMap = 4; // sub class
+  optional MasterBandExpTableMap masterBandExpTableMap = 5; // sub class
+  optional MasterLeaderSkillMap masterLeaderSkillMap = 6; // sub class
+  optional MasterGachaMap masterGachaMap = 7; // sub class
+  optional MasterSituationSkillMap masterSituationSkillMap = 8; // sub class
+  optional MasterAreaItemMap masterAreaItemMap = 9; // sub class
+  optional MasterBondsMap masterBondsMap = 10; // sub class
+  optional MasterBondsEffectMap masterBondsEffectMap = 11; // sub class
+  optional MasterShopMap masterShopMap = 12; // sub class
+  optional MasterShoplistMap masterShopListMap = 13; // sub class
+  optional MasterActionSetMap masterActionSetMap = 14; // sub class
+  optional MasterAreaMap masterAreaMap = 15; // sub class
+  optional MasterBandMap masterBandMap = 16; // sub class
+  optional MasterPlayerExpTableMap masterPlayerExpTableMap = 17; // sub class
+  optional MasterPracticeTicketMap masterPracticeTicketMap = 19; // sub class
+  optional MasterSituationExpTableMap masterSituationExpTableMap = 20; // sub class
+  optional MasterMainStoryMap masterMainStoryMap = 21; // sub class
+  optional MasterBandStoryMap masterPoppinPartyStoryMap = 22; // sub class
+  optional MasterBandStoryMap masterAfterglowStoryMap = 23; // sub class
+  optional MasterBandStoryMap masterPastelPalettesStoryMap = 24; // sub class
+  optional MasterBandStoryMap masterHelloHappyWorldStoryMap = 25; // sub class
+  optional MasterBandStoryMap masterRoseliaStoryMap = 26; // sub class
+  optional MasterItemMap masterItemMap = 27; // sub class
+  optional MasterCommonsLive2dMap masterCommonsLive2dMap = 29; // sub class
+  optional MasterMusicShopMap masterMusicShopMap = 30; // sub class
+  optional MasterCostumeMap masterCostumeMap = 31; // sub class
+  optional MasterAfterLiveTalkMap masterAfterLiveTalkMap = 32; // sub class
+  optional MasterAreaItemSpawnMap masterAreaItemSpawnMap = 33; // sub class
+  optional ServerSystem system = 34; // sub class
+  optional MasterCharacterRarityMap masterCharacterRarityMap = 35; // sub class
+  optional MasterExchangesMap masterExchangesMap = 36; // sub class
+  optional MasterGachaTicketMap masterGachaTicketMap = 37; // sub class
+  optional MasterPurchaseMap masterPurchaseMap = 39; // sub class
+  optional MasterProductList masterProductList = 40; // sub class
+  optional MasterLoginBonusMap masterLoginBonusMap = 41; // sub class
+  optional MasterHomeBannerList masterHomeBannerList = 43; // sub class
+  optional MasterPremiumPassList masterPremiumPassList = 44; // sub class
+  optional Constants constants = 45; // sub class
+  optional MasterStampMap masterStampMap = 46; // sub class
+  optional MasterDegreeMap masterDegreeMap = 47; // sub class
+  optional MasterCharacterProfileLive2dMap masterCharacterProfileLive2dMap = 48; // sub class
+  optional MasterWeeklyMultiLiveDifficultyMap masterWeeklyMultiLiveDifficultyMap = 49; // sub class
+  optional MasterCommonConfigMap masterCommonConfigMap = 50; // sub class
+  optional MasterSkillList masterSkillList = 51; // sub class
+  optional MasterSituationSkillExpTableList masterSituationSkillExpTableList = 52; // sub class
+  optional MasterMissionMap masterMissionMap = 53; // sub class
+  optional MasterMissionDetailMap masterMissionDetailMap = 54; // sub class
+  optional MasterMissionRewardMap masterMissionRewardMap = 55; // sub class
+  optional MasterSkillActivateEffectList masterSkillActivateEffectList = 56; // sub class
+  optional MasterSkillOnceEffectList masterSkillOnceEffectList = 57; // sub class
+  optional MasterLiveBoostRecoveryItemMap masterLiveBoostRecoveryItemMap = 58; // sub class
+  optional MasterGenericStoryMap masterGenericStoryMap = 59; // sub class
+  optional MasterSeasonBasicMap masterSeasonBasicMap = 60; // sub class
+  optional MasterSeasonSpecialMap masterSeasonSpecialMap = 61; // sub class
+  optional MasterAreaSeasonBasicMap masterAreaSeasonBasicMap = 62; // sub class
+  optional MasterAreaSeasonSpecialMap masterAreaSeasonSpecialMap = 63; // sub class
+  optional MasterSeasonSpecialBgmMap masterSeasonSpecialBgmMap = 64; // sub class
+  optional MasterQualifyTournamentMap masterQualifyTournamentMap = 65; // sub class
+  optional MasterQualifyTournamentDeckMap masterQualifyTournamentDeckMap = 66; // sub class
+  optional MasterQualifyTournamentMusicMap masterQualifyTournamentMusicMap = 67; // sub class
+  optional MasterEventStoryMemorialConfigMap masterEventStoryMemorialConfigMap = 68; // sub class
+  optional MasterEventStoryMemorialReleaseConditionMap masterEventStoryMemorialReleaseConditionMap = 69; // sub class
+  optional MasterBandRanksMap masterBandRanksMap = 70; // sub class
+  optional MasterPlayerRankList masterPlayerRankList = 71; // sub class
+  optional MasterWordingCollectionMap masterWordingCollectionMap = 72; // sub class
+  optional MasterMiracleTicketMap masterMiracleTicketMap = 73; // sub class
+  optional MasterMiracleTicketExchangesMap masterMiracleTicketExchangesMap = 74; // sub class
+  optional MasterSpecialLotteryMap masterSpecialLotteryMap = 75; // sub class
+  optional MasterBirthdayStoryMap masterBirthdayStoryMap = 77; // sub class
+  optional MasterBirthdayPageMap masterBirthdayPageMap = 78; // sub class
+  optional MasterSkin masterSkin = 79; // sub class
+  optional MasterCharacterInGameVoice masterCharacterInGameVoice = 80; // sub class
+  optional MasterPickupSituationMap masterPickupSituationMap = 81; // sub class
+  optional MasterSingleFrameCartoonMap masterSingleFrameCartoonMap = 82; // sub class
+  optional MasterSingleFrameCartoonCharacterMap masterSingleFrameCartoonCharacterMap = 83; // sub class
+  optional MasterFourFrameCartoonMap masterFourFrameCartoonMap = 84; // sub class
+  optional MasterFourFrameCartoonCharacterMap masterFourFrameCartoonCharacterMap = 85; // sub class
+  optional MasterMusicVideoMap masterMusicVideoMap = 86; // sub class
+  optional MasterBandStoryChapterMap masterBandStoryChapterMap = 87; // sub class
+  optional MasterNewMusicIntroductionMap masterNewMusicIntroductionMap = 89; // sub class
+  optional MasterEventMap masterEventMap = 101; // sub class
+  optional MasterEventConfigMap masterEventConfigMap = 102; // sub class
+  optional MasterStoryEventMap masterStoryEventMap = 201; // sub class
+  optional MasterEventLiveBoostMap masterEventLiveBoostMap = 202; // sub class
+  optional MasterEventExchangesList masterEventExchangesList = 203; // sub class
+  optional MasterEventItemMap masterEventItemMap = 204; // sub class
+  optional MasterEventMap masterEventMapForExchanges = 205; // sub class
+  optional MasterEventLoginRewardMap masterEventLoginRewardMap = 206; // sub class
+  optional MasterChallengeEventMap masterChallengeEventMap = 207; // sub class
+  optional MasterEventLiveContributionMap masterEventLiveContributionMap = 208; // sub class
+  optional MasterMultiVersusLiveScoreMap masterMultiVersusLiveScoreMap = 209; // sub class
+  optional MasterMultiVersusLiveMatchingLogicList masterMultiVersusLiveMatchingLogicList = 210; // sub class
+  optional MasterVersusEventMap masterVersusEventMap = 211; // sub class
+  optional MasterEventBoxGachaMap masterEventBoxGachaMap = 212; // sub class
+  optional MasterLiveTryEventMap masterLiveTryEventMap = 213; // sub class
+  optional MasterEventSituationMap masterEventSituationMap = 214; // sub class
+  optional MasterNewSituationIntroductionList masterNewSituationIntroductionList = 300; // sub class
+  optional MasterGachaInformationMap masterGachaInformationMap = 301; // sub class
+  optional MasterGenericAnimationMap masterGenericAnimationMap = 302; // sub class
+}

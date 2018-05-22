@@ -1,0 +1,18 @@
+syntax = "proto2";
+message AssetBundleElement {
+  optional string bundleName = 1; // normal type
+  optional string hash = 2; // normal type
+  optional string version = 3; // normal type
+  optional string category = 4; // normal type
+  optional uint32 crc = 5; // normal type
+  repeated string dependencies = 6; // array
+  optional int32 fileSize = 7; // normal type
+}
+message string_AssetBundleElement {
+  optional string string_AssetBundleElement_key = 1; // normal type
+  optional AssetBundleElement string_AssetBundleElement_value = 2; // sub class
+}
+message AssetBundleInfo {
+  optional string version = 1; // normal type
+  repeated string_AssetBundleElement bundles = 2; // dictionary
+}

@@ -1,0 +1,12 @@
+syntax = "proto2";
+message AppGetResponse {
+  optional string clientVersion = 1; // normal type
+  optional string dataVersion = 2; // normal type
+  optional string appStatus = 3; // normal type
+  optional string clientStatus = 4; // normal type
+  optional string schema = 5; // normal type
+  optional string gacha = 7; // normal type
+  optional string multiLive = 8; // normal type
+  optional string starShop = 9; // normal type
+  optional string masterDataVersion = 10; // normal type
+}
