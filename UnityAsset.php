@@ -847,6 +847,21 @@ class Texture2D {
     rename('output.'.$format, $saveTo.'.'.$format);
   }
 }
+class TextAsset {
+  function __construct($preloadData, $readSwitch) {
+    $sourceFile = $preloadData->sourceFile;
+    $stream = $sourceFile->stream;
+    $stream->position = $preloadData->offset;
+    if ($sourceFile->platform == -2) {
+      $stream->ulong;
+      throw new Exception('platform -2');
+    }
+    $this->name = $stream->readAlignedString($stream->long);
+    if ($readSwitch) {
+      $this->data = $stream->readData($stream->long);
+    }
+  }
+}
 
 class TextureFormat {
   const Alpha8 = 1;
