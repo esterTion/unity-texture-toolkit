@@ -190,7 +190,7 @@ class AssetFile {
       $varCount = $stream->long;
       $stringSize = $stream->long;
       $stream->position += $varCount * 24;
-      $stringReader = new MemoryStream($stream->readData($stringSize));
+      $stringReader = new MemoryStream($stringSize?$stream->readData($stringSize):'');
       $className = '';
       $classVar = [];
       $stream->position -= $varCount * 24 + $stringSize;
@@ -849,6 +849,21 @@ class Texture2D {
     rename('output.'.$format, $saveTo.'.'.$format);
   }
 }
+class TextAsset {
+  function __construct($preloadData, $readSwitch) {
+    $sourceFile = $preloadData->sourceFile;
+    $stream = $sourceFile->stream;
+    $stream->position = $preloadData->offset;
+    if ($sourceFile->platform == -2) {
+      $stream->ulong;
+      throw new Exception('platform -2');
+    }
+    $this->name = $stream->readAlignedString($stream->long);
+    if ($readSwitch) {
+      $this->data = $stream->readData($stream->long);
+    }
+  }
+}
 
 class TextureFormat {
   const Alpha8 = 1;
@@ -991,8 +1006,76 @@ $resourceToExport = [
   ],
   'storydata'=>[
     [ 'bundleNameMatch'=>'/^a\/storydata_still_\d+.unity3d$/',      'nameMatch'=>'/^still_(\d+)$/',      'exportTo'=>'card/story/$1', 'extraParamCb'=>function(&$item){return ($item->width!=$item->height)?'-s '.$item->width.'x'.($item->width/16*9):'';} ],
+    [ 'bundleNameMatch'=>'/^a\/storydata_\d+.unity3d$/',      'customAssetProcessor'=> 'exportStory' ],
+  ],
+  'spine'=>[
+    [ 'bundleNameMatch'=>'/^a\/spine_000000_chara_base\.cysp\.unity3d$/', 'customAssetProcessor'=> 'exportSpine' ],
+    [ 'bundleNameMatch'=>'/^a\/spine_0\d_common_battle\.cysp\.unity3d$/', 'customAssetProcessor'=> 'exportSpine' ],
+    [ 'bundleNameMatch'=>'/^a\/spine_10\d\d01_battle\.cysp\.unity3d$/',   'customAssetProcessor'=> 'exportSpine' ],
+    [ 'bundleNameMatch'=>'/^a\/spine_sdnormal_10\d{4}\.unity3d$/',        'customAssetProcessor'=> 'exportAtlas' ],
   ]
 ];
+
+function exportSpine($asset) {
+  foreach ($asset->preloadTable as $item) {
+    if ($item->typeString == 'TextAsset') {
+      $item = new TextAsset($item, true);
+
+      // base chara skeleton
+      if ($item->name == '000000_CHARA_BASE.cysp') {
+        if (!file_exists(RESOURCE_PATH_PREFIX.'spine/common/')) mkdir(RESOURCE_PATH_PREFIX.'spine/common/', 0777, true);
+        file_put_contents(RESOURCE_PATH_PREFIX.'spine/common/000000_CHARA_BASE.cysp', $item->data);
+        require_once 'skel2json.php';
+        $baseSkel = readCyspSkeleton(RESOURCE_PATH_PREFIX.'spine/common/000000_CHARA_BASE.cysp');
+        file_put_contents(RESOURCE_PATH_PREFIX.'spine/common/000000_CHARA_BASE.json', json_encode(processToJson($baseSkel), JSON_UNESCAPED_SLASHES));
+      }
+      // class type animation
+      else if (preg_match('/0\d_COMMON_BATTLE\.cysp/', $item->name)) {
+        if (!file_exists(RESOURCE_PATH_PREFIX.'spine/common/')) mkdir(RESOURCE_PATH_PREFIX.'spine/common/', 0777, true);
+        file_put_contents(RESOURCE_PATH_PREFIX.'spine/common/'.$item->name, $item->data);
+        require_once 'skel2json.php';
+        $baseSkel = readCyspSkeleton(RESOURCE_PATH_PREFIX.'spine/common/000000_CHARA_BASE.cysp');
+        $baseSkel['animation'] = readCyspAnimation(RESOURCE_PATH_PREFIX.'spine/common/'.$item->name, $baseSkel);
+        file_put_contents(RESOURCE_PATH_PREFIX.'spine/common/'.str_replace('.cysp','.json',$item->name), json_encode(processToJson($baseSkel)['animations'], JSON_UNESCAPED_SLASHES));
+      }
+      // character skill animation
+      else if (preg_match('/10\d{4}_BATTLE\.cysp/', $item->name)) {
+        if (!file_exists(RESOURCE_PATH_PREFIX.'spine/unit/')) mkdir(RESOURCE_PATH_PREFIX.'spine/unit/', 0777, true);
+        file_put_contents(RESOURCE_PATH_PREFIX.'spine/unit/'.$item->name, $item->data);
+        require_once 'skel2json.php';
+        $baseSkel = readCyspSkeleton(RESOURCE_PATH_PREFIX.'spine/common/000000_CHARA_BASE.cysp');
+        $baseSkel['animation'] = readCyspAnimation(RESOURCE_PATH_PREFIX.'spine/unit/'.$item->name, $baseSkel);
+        file_put_contents(RESOURCE_PATH_PREFIX.'spine/unit/'.str_replace('.cysp','.json',$item->name), json_encode(processToJson($baseSkel)['animations'], JSON_UNESCAPED_SLASHES));
+      }
+    }
+  }
+}
+function exportAtlas($asset) {
+  foreach ($asset->preloadTable as $item) {
+    if ($item->typeString == 'TextAsset') {
+      $item = new TextAsset($item, true);
+      if (!file_exists(RESOURCE_PATH_PREFIX.'spine/unit/')) mkdir(RESOURCE_PATH_PREFIX.'spine/unit/', 0777, true);
+      file_put_contents(RESOURCE_PATH_PREFIX.'spine/unit/'.$item->name, $item->data);
+    } else if ($item->typeString == 'Texture2D') {
+      $item = new Texture2D($item, true);
+      $item->exportTo(RESOURCE_PATH_PREFIX.'spine/unit/'.$item->name, 'png');
+    }
+  }
+}
+
+function exportStory($asset) {
+  foreach ($asset->preloadTable as $item) {
+    if ($item->typeString == 'TextAsset') {
+      $item = new TextAsset($item, true);
+      if (!file_exists(RESOURCE_PATH_PREFIX.'story/data/')) mkdir(RESOURCE_PATH_PREFIX.'story/data/', 0777, true);
+      require_once 'RediveStoryDeserializer.php';
+      $parser = new RediveStoryDeserializer($item->data);
+      $name = substr($item->name, 10);
+      file_put_contents(RESOURCE_PATH_PREFIX.'story/data/'.$name.'.json', json_encode($parser->commandList));
+      file_put_contents(RESOURCE_PATH_PREFIX.'story/data/'.$name.'.htm', $parser->data);
+    }
+  }
+}
 
 function shouldExportFile($name, $rule) {
   return preg_match($rule['nameMatch'], $name) != 0;
@@ -1050,6 +1133,9 @@ function checkSubResource($manifest, $rules) {
         if (substr($asset, -4,4) == '.resS') continue;
         $asset = new AssetFile($asset);
     
+        if (isset($rule['customAssetProcessor'])) {
+          call_user_func($rule['customAssetProcessor'], $asset);
+        } else
         foreach ($asset->preloadTable as &$item) {
           if ($item->typeString == 'Texture2D') {
             $item = new Texture2D($item, true);
@@ -1124,7 +1210,15 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
   chdir(__DIR__);
   $curl = curl_init();
   function _log($s) {echo "$s\n";}
-  checkAndUpdateResource(10001210);
+  checkAndUpdateResource(10001500);
+  /*$assets = extractBundle(new FileStream('bundle/spine_000000_chara_base.cysp.unity3d'));
+  $asset = new AssetFile($assets[0]);
+  foreach ($asset->preloadTable as $item) {
+    if ($item->typeString == 'TextAsset') {
+      $item = new TextAsset($item, true);
+      print_r($item);
+    }
+  }*/
 }
 //print_r($asset);
 
