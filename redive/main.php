@@ -299,7 +299,19 @@ $storyStillName = [];
 foreach(execQuery($db, 'SELECT story_group_id,title FROM story_data') as $row) {
   $storyStillName[$row['story_group_id']] = $row['title'];
 }
+foreach(execQuery($db, 'SELECT story_group_id,title FROM event_story_data') as $row) {
+  $storyStillName[$row['story_group_id']] = $row['title'];
+}
 file_put_contents(RESOURCE_PATH_PREFIX.'card/story/index.json', json_encode($storyStillName, JSON_UNESCAPED_SLASHES));
+$info = [];
+foreach (execQuery($db, 'SELECT unit_id,motion_type,unit_name FROM unit_data WHERE unit_id > 100000 AND unit_id < 200000') as $row) {
+  $info[$row['unit_id']] = [
+    'name' => $row['unit_name'],
+    'type'=>$row['motion_type']
+  ];
+}
+file_put_contents(RESOURCE_PATH_PREFIX.'spine/classMap.json', json_encode($info));
+
 unset($name);
 unset($db);
 file_put_contents('last_version', json_encode($last_version));
@@ -311,6 +323,13 @@ exec('git push origin master');
 
 
 checkAndUpdateResource($TruthVersion);
+
+file_put_contents(RESOURCE_PATH_PREFIX.'spine/still/index.json', json_encode(
+  array_map(function ($i){
+    return substr($i, -10, -4);
+  },
+  glob(RESOURCE_PATH_PREFIX.'spine/still/unit/*.png'))
+));
 
 }
 

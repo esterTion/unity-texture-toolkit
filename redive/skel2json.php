@@ -607,7 +607,7 @@ function exportSkel($file) {
 
   $json = processToJson($skel);
 
-  file_put_contents($out, json_encode($json, JSON_PRETTY_PRINT+JSON_UNESCAPED_SLASHES));
+  file_put_contents($out, json_encode($json));
 }
 
 function processToJson($skel) {

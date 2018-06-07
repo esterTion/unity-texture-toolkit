@@ -1007,6 +1007,7 @@ $resourceToExport = [
   'storydata'=>[
     [ 'bundleNameMatch'=>'/^a\/storydata_still_\d+.unity3d$/',      'nameMatch'=>'/^still_(\d+)$/',      'exportTo'=>'card/story/$1', 'extraParamCb'=>function(&$item){return ($item->width!=$item->height)?'-s '.$item->width.'x'.($item->width/16*9):'';} ],
     [ 'bundleNameMatch'=>'/^a\/storydata_\d+.unity3d$/',      'customAssetProcessor'=> 'exportStory' ],
+    [ 'bundleNameMatch'=>'/^a\/storydata_spine_full_\d+.unity3d$/',      'customAssetProcessor'=> 'exportStoryStill' ],
   ],
   'spine'=>[
     [ 'bundleNameMatch'=>'/^a\/spine_000000_chara_base\.cysp\.unity3d$/', 'customAssetProcessor'=> 'exportSpine' ],
@@ -1073,6 +1074,38 @@ function exportStory($asset) {
       $name = substr($item->name, 10);
       file_put_contents(RESOURCE_PATH_PREFIX.'story/data/'.$name.'.json', json_encode($parser->commandList));
       file_put_contents(RESOURCE_PATH_PREFIX.'story/data/'.$name.'.htm', $parser->data);
+
+      $storyStillName = json_decode(file_get_contents(RESOURCE_PATH_PREFIX.'spine/still/still_name.json'), true);
+      $nextId = NULL;
+      foreach($parser->commandList as $cmd) {
+        if ($cmd['name'] == 'face') {
+          $nextId = str_pad(
+            substr($cmd['args'][0], 0, -1) . 1
+            , 6, '0', STR_PAD_LEFT);
+        } else if ($cmd['name'] == 'print' && $nextId) {
+          $storyStillName[$nextId] = $cmd['args'][0];
+          $nextId = NULL;
+        } else if ($cmd['name'] == 'touch') {
+          $nextId = NULL;
+        }
+      }
+      file_put_contents(RESOURCE_PATH_PREFIX.'spine/still/still_name.json', json_encode($storyStillName));
+    }
+  }
+}
+function exportStoryStill($asset) {
+  foreach ($asset->preloadTable as $item) {
+    if ($item->typeString == 'TextAsset') {
+      $item = new TextAsset($item, true);
+      if (!file_exists(RESOURCE_PATH_PREFIX.'spine/still/unit/')) mkdir(RESOURCE_PATH_PREFIX.'spine/still/unit/', 0777, true);
+      file_put_contents(RESOURCE_PATH_PREFIX.'spine/still/unit/'.$item->name, $item->data);
+      if (substr($item->name, -4, 4) == 'skel') {
+        require_once 'skel2json.php';
+        exportSkel(RESOURCE_PATH_PREFIX.'spine/still/unit/'.$item->name);
+      }
+    } else if ($item->typeString == 'Texture2D') {
+      $item = new Texture2D($item, true);
+      $item->exportTo(RESOURCE_PATH_PREFIX.'spine/still/unit/'.$item->name, 'png');
     }
   }
 }
@@ -1210,7 +1243,7 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
   chdir(__DIR__);
   $curl = curl_init();
   function _log($s) {echo "$s\n";}
-  checkAndUpdateResource(10001500);
+  checkAndUpdateResource(10001610);
   /*$assets = extractBundle(new FileStream('bundle/spine_000000_chara_base.cysp.unity3d'));
   $asset = new AssetFile($assets[0]);
   foreach ($asset->preloadTable as $item) {
