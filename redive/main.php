@@ -48,12 +48,14 @@ function autoProxy() {
   //print_r($matches);
 
   curl_setopt($curl, CURLOPT_URL, 'https://app.priconne-redive.jp/');
+  $oldproxy = file_get_contents('currentproxy.txt');
   for ($i=0; $i<count($matches[1]); $i++) {
     $proxy = $matches[1][$i].':'.$matches[2][$i];
+    if ($proxy == $oldproxy) continue;
     curl_setopt($curl, CURLOPT_PROXY, $proxy);
-    //echo $proxy."\n";
     curl_exec($curl);
     if (curl_getinfo($curl, CURLINFO_HTTP_CODE) == 404) {
+      /*
       $oldproxy = file_get_contents('currentproxy.txt');
       list($ip, $port) = explode(':', $oldproxy);
       $search  = [' -d '.$ip.' --dport '.$port.' ', ' --to-destination '.$ip.':'.$port];
@@ -62,6 +64,8 @@ function autoProxy() {
       $replace = [' -d '.$ip.' --dport '.$port.' ', ' --to-destination '.$ip.':'.$port];
       file_put_contents('/etc/firewalld/direct.xml', str_replace($search, $replace, file_get_contents('/etc/firewalld/direct.xml')));
       exec('/usr/bin/firewall-cmd --reload >/dev/null');
+      */
+      _log('Found new proxy: '. $proxy);
       file_put_contents('currentproxy.txt', $proxy);
       return true;
     };
@@ -163,20 +167,21 @@ $curl = curl_init();
 curl_setopt_array($curl, array(
   CURLOPT_URL => 'https://app.priconne-redive.jp/check/game_start',
   CURLOPT_HTTPHEADER=>$game_start_header,
-  CURLOPT_HEADER=>0,
-  CURLOPT_RETURNTRANSFER=>1,
+  CURLOPT_HEADER=>false,
+  CURLOPT_RETURNTRANSFER=>true,
   CURLOPT_CONNECTTIMEOUT=>3,
   CURLOPT_SSL_VERIFYPEER=>false,
   CURLOPT_POST=>true,
   CURLOPT_POSTFIELDS=>base64_decode('Fh28009IuC3baOl9zp5LX7v/MuF7Ye2SI7fPSKlU84ru+bTFQPoEEoUnHBbZn4tf/gD6bCI+GD6opqtyeuAKq5Yile53RJYRU5ERCk6UpHWDmts6K8Z+vt5+3yb9sCU9EedYA2xnOoltbNjffQ1bTVBCErKRlDoo3agsFuCWF2AZEn3plfN7UpR7udogIePAWkRFeVpUWXlaakV5TldGbVltVXlOR1poWXpka05HUXg='),
-  CURLOPT_PROXY=>file_get_contents('currentproxy.txt')
+  CURLOPT_PROXY=>file_get_contents('currentproxy.txt'),
+  CURLOPT_HTTPPROXYTUNNEL=>true
 //  CURLOPT_PROXY=>'vultr.biliplus.com:87',
 //  CURLOPT_PROXYTYPE=>CURLPROXY_SOCKS5
 ));
 $response = curl_exec($curl);
 $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 curl_close($curl);
-if ($code == 500 || $code == 0) {
+if ($code == 500 || $code == 0 || ($code == 200 && strlen($response) == 0)) {
   _log('proxy failed: '. $code);
   if (autoProxy()) {
     return main();
@@ -215,13 +220,33 @@ file_put_contents('data/!TruthVersion.txt', $TruthVersion."\n");
 //$TruthVersion = '10000000';
 $curl = curl_init();
 curl_setopt_array($curl, array(
-  CURLOPT_URL=>'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/AssetBundles/iOS/manifest/masterdata_assetmanifest',
+  CURLOPT_URL=>'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/AssetBundles/iOS/manifest/manifest_assetmanifest',
   CURLOPT_RETURNTRANSFER=>true,
   CURLOPT_HEADER=>0,
   CURLOPT_SSL_VERIFYPEER=>false
 ));
 //$manifest = file_get_contents('history/'.$TruthVersion);
+
+// fetch all manifest & save
 $manifest = curl_exec($curl);
+file_put_contents('data/+manifest_manifest.txt', $manifest);
+foreach (explode("\n", trim($manifest)) as $line) {
+  list($manifestName) = explode(',', $line);
+  if ($manifestName == 'manifest/soundmanifest') {
+    curl_setopt($curl, CURLOPT_URL, 'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Sound/manifest/soundmanifest');
+    $manifest = curl_exec($curl);
+    file_put_contents('data/+manifest_sound.txt', $manifest);
+  } else {
+    curl_setopt($curl, CURLOPT_URL, 'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/AssetBundles/iOS/'.$manifestName);
+    $manifest = curl_exec($curl);
+    file_put_contents('data/+manifest_'.substr($manifestName, 9, -14).'.txt', $manifest);
+  }
+}
+curl_setopt($curl, CURLOPT_URL, 'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Movie/SP/High/manifest/moviemanifest');
+$manifest = curl_exec($curl);
+file_put_contents('data/+manifest_movie.txt', $manifest);
+
+$manifest = file_get_contents('data/+manifest_masterdata.txt');
 $manifest = explode(',', $manifest);
 $bundleHash = $manifest[1];
 $bundleSize = $manifest[3]|0;
@@ -229,7 +254,7 @@ if ($last_version['hash'] == $bundleHash) {
   _log("Same hash as last version ${bundleHash}");
   file_put_contents('last_version', json_encode($last_version));
   chdir('data');
-  exec('git add !TruthVersion.txt');
+  exec('git add !TruthVersion.txt +manifest_*.txt');
   exec('git commit -m '.$TruthVersion);
   exec('git push origin master');
   return;
@@ -317,7 +342,7 @@ unset($db);
 file_put_contents('last_version', json_encode($last_version));
 
 chdir('data');
-exec('git add *.sql !TruthVersion.txt');
+exec('git add *.sql !TruthVersion.txt +manifest_*.txt');
 exec('git commit -m '.$TruthVersion);
 exec('git push origin master');
 
