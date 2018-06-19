@@ -1026,27 +1026,16 @@ function exportSpine($asset) {
       if ($item->name == '000000_CHARA_BASE.cysp') {
         if (!file_exists(RESOURCE_PATH_PREFIX.'spine/common/')) mkdir(RESOURCE_PATH_PREFIX.'spine/common/', 0777, true);
         file_put_contents(RESOURCE_PATH_PREFIX.'spine/common/000000_CHARA_BASE.cysp', $item->data);
-        require_once 'skel2json.php';
-        $baseSkel = readCyspSkeleton(RESOURCE_PATH_PREFIX.'spine/common/000000_CHARA_BASE.cysp');
-        file_put_contents(RESOURCE_PATH_PREFIX.'spine/common/000000_CHARA_BASE.json', json_encode(processToJson($baseSkel), JSON_UNESCAPED_SLASHES));
       }
       // class type animation
       else if (preg_match('/0\d_COMMON_BATTLE\.cysp/', $item->name)) {
         if (!file_exists(RESOURCE_PATH_PREFIX.'spine/common/')) mkdir(RESOURCE_PATH_PREFIX.'spine/common/', 0777, true);
         file_put_contents(RESOURCE_PATH_PREFIX.'spine/common/'.$item->name, $item->data);
-        require_once 'skel2json.php';
-        $baseSkel = readCyspSkeleton(RESOURCE_PATH_PREFIX.'spine/common/000000_CHARA_BASE.cysp');
-        $baseSkel['animation'] = readCyspAnimation(RESOURCE_PATH_PREFIX.'spine/common/'.$item->name, $baseSkel);
-        file_put_contents(RESOURCE_PATH_PREFIX.'spine/common/'.str_replace('.cysp','.json',$item->name), json_encode(processToJson($baseSkel)['animations'], JSON_UNESCAPED_SLASHES));
       }
       // character skill animation
       else if (preg_match('/10\d{4}_BATTLE\.cysp/', $item->name)) {
         if (!file_exists(RESOURCE_PATH_PREFIX.'spine/unit/')) mkdir(RESOURCE_PATH_PREFIX.'spine/unit/', 0777, true);
         file_put_contents(RESOURCE_PATH_PREFIX.'spine/unit/'.$item->name, $item->data);
-        require_once 'skel2json.php';
-        $baseSkel = readCyspSkeleton(RESOURCE_PATH_PREFIX.'spine/common/000000_CHARA_BASE.cysp');
-        $baseSkel['animation'] = readCyspAnimation(RESOURCE_PATH_PREFIX.'spine/unit/'.$item->name, $baseSkel);
-        file_put_contents(RESOURCE_PATH_PREFIX.'spine/unit/'.str_replace('.cysp','.json',$item->name), json_encode(processToJson($baseSkel)['animations'], JSON_UNESCAPED_SLASHES));
       }
     }
   }
@@ -1099,10 +1088,6 @@ function exportStoryStill($asset) {
       $item = new TextAsset($item, true);
       if (!file_exists(RESOURCE_PATH_PREFIX.'spine/still/unit/')) mkdir(RESOURCE_PATH_PREFIX.'spine/still/unit/', 0777, true);
       file_put_contents(RESOURCE_PATH_PREFIX.'spine/still/unit/'.$item->name, $item->data);
-      if (substr($item->name, -4, 4) == 'skel') {
-        require_once 'skel2json.php';
-        exportSkel(RESOURCE_PATH_PREFIX.'spine/still/unit/'.$item->name);
-      }
     } else if ($item->typeString == 'Texture2D') {
       $item = new Texture2D($item, true);
       $item->exportTo(RESOURCE_PATH_PREFIX.'spine/still/unit/'.$item->name, 'png');
