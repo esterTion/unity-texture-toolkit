@@ -87,6 +87,8 @@ message MasterCharacterProfile {
   optional string hatedFood = 9; // normal type
   optional string hobby = 10; // normal type
   optional string selfIntroduction = 11; // normal type
+  optional uint32 height = 12; // normal type
+  optional string schoolCls = 13; // normal type
 }
 message MasterCharacterSeasonCostume {
   optional uint32 characterId = 1; // normal type
@@ -182,6 +184,7 @@ message MasterCharacterSituation {
   optional MasterEpisodeList episodes = 14; // sub class
   optional MasterTraining training = 15; // sub class
   optional uint32 costumeId = 16; // normal type
+  optional uint32 releasedAt = 17; // normal type
 }
 message uint_MasterCharacterSituation {
   optional uint32 uint_MasterCharacterSituation_key = 1; // normal type
@@ -396,6 +399,8 @@ message MasterShoplist {
   optional uint32 releaseMainStory = 8; // normal type
   optional uint32 releaseBandStory = 9; // normal type
   optional MasterShopListConditionList conditions = 10; // sub class
+  optional uint32 startAt = 11; // nullable
+  optional uint32 endAt = 12; // nullable
 }
 message uint_MasterShoplist {
   optional uint32 uint_MasterShoplist_key = 1; // normal type
@@ -536,6 +541,8 @@ message MasterBandStory {
   optional string backgroundImage = 14; // normal type
   optional uint32 bandStoryChapterId = 16; // normal type
   optional uint32 releaseBandStoryId = 17; // normal type
+  optional string appealText = 18; // normal type
+  optional string voiceAssetBundleName = 19; // normal type
 }
 message uint_MasterBandStory {
   optional uint32 uint_MasterBandStory_key = 1; // normal type
@@ -1066,6 +1073,7 @@ message MasterAreaSeasonSpecial {
   optional uint32 areaId = 1; // normal type
   optional uint32 seasonSpecialId = 2; // normal type
   optional string resourceName = 3; // normal type
+  optional string albumBackgroundResourceName = 4; // normal type
 }
 message MasterAreaSeasonSpecialList {
   repeated MasterAreaSeasonSpecial entries = 1; // array
@@ -1168,6 +1176,7 @@ message MasterEventStoryMemorialConfig {
   optional uint32 publishedAt = 4; // normal type
   optional uint32 eventStoryMemorialReleaseConditionId = 5; // normal type
   repeated uint32 characterIdList = 6; // array
+  optional uint32 musicId = 7; // nullable
   optional uint32 eventPublicEndAt = 101; // normal type
 }
 message uint_MasterEventStoryMemorialConfig {
@@ -1543,6 +1552,44 @@ message uint_MasterNewMusicIntroduction {
 message MasterNewMusicIntroductionMap {
   repeated uint_MasterNewMusicIntroduction entries = 1; // dictionary
 }
+message MasterSituationFirstAppearance {
+  optional uint32 situationId = 1; // normal type
+  optional string campaignTitle = 2; // normal type
+  optional uint32 gachaId = 3; // nullable
+  repeated uint32 acquireableGachaIdList = 4; // array
+  optional uint32 eventId = 5; // nullable
+  optional uint32 bandStoryId = 6; // nullable
+  optional string eventName = 7; // normal type
+}
+message uint_MasterSituationFirstAppearance {
+  optional uint32 uint_MasterSituationFirstAppearance_key = 1; // normal type
+  optional MasterSituationFirstAppearance uint_MasterSituationFirstAppearance_value = 2; // sub class
+}
+message MasterSituationFirstAppearanceMap {
+  repeated uint_MasterSituationFirstAppearance entries = 1; // dictionary
+}
+message MasterCollaborationSkin {
+  optional uint32 collaborationSkinId = 1; // normal type
+  optional uint32 seasonSpecialId = 2; // normal type
+  optional string description = 3; // normal type
+  optional string backgroundSkinAssetBundleName = 5; // normal type
+  optional string effectSkinAssetBundleName = 6; // normal type
+  optional string laneSkinAssetBundleName = 7; // normal type
+  optional string notesSkinAssetBundleName = 8; // normal type
+  optional string soundEffectSkinAssetBundleName = 9; // normal type
+  optional bool changeBackgroundSkinFlg = 10; // normal type
+  optional bool changeEffectSkinFlg = 11; // normal type
+  optional bool changeLaneSkinFlg = 12; // normal type
+  optional bool changeNotesSkinFlg = 13; // normal type
+  optional bool changeSoundEffectSkinFlg = 14; // normal type
+}
+message uint_MasterCollaborationSkin {
+  optional uint32 uint_MasterCollaborationSkin_key = 1; // normal type
+  optional MasterCollaborationSkin uint_MasterCollaborationSkin_value = 2; // sub class
+}
+message MasterCollaborationSkinMap {
+  repeated uint_MasterCollaborationSkin entries = 1; // dictionary
+}
 message MasterEventPointReward {
   optional uint32 id = 1; // normal type
   optional uint32 eventId = 2; // normal type
@@ -1628,6 +1675,7 @@ message MasterEventStory {
   optional string backgroundImage = 8; // normal type
   optional uint32 releasePt = 9; // normal type
   optional string releaseConditions = 10; // normal type
+  optional uint32 bandStoryId = 11; // nullable
   repeated MasterEventStoryReward rewards = 101; // array
 }
 message MasterStoryEvent {
@@ -2084,6 +2132,8 @@ message SuiteMasterGetResponse {
   optional MasterMusicVideoMap masterMusicVideoMap = 86; // sub class
   optional MasterBandStoryChapterMap masterBandStoryChapterMap = 87; // sub class
   optional MasterNewMusicIntroductionMap masterNewMusicIntroductionMap = 89; // sub class
+  optional MasterSituationFirstAppearanceMap masterSituationFirstAppearanceMap = 90; // sub class
+  optional MasterCollaborationSkinMap masterCollaborationSkinMap = 91; // sub class
   optional MasterEventMap masterEventMap = 101; // sub class
   optional MasterEventConfigMap masterEventConfigMap = 102; // sub class
   optional MasterStoryEventMap masterStoryEventMap = 201; // sub class
