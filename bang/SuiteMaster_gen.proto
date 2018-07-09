@@ -415,8 +415,8 @@ message MasterActionSet {
   repeated uint32 characterIds = 3; // array
   optional string actionSetType = 4; // normal type
   optional uint32 areaItemId = 5; // normal type
-  optional string areaName = 6; // normal type
   optional uint32 seasonSpecialId = 7; // normal type
+  optional string areaName = 6; // manual add
 }
 message uint_MasterActionSet {
   optional uint32 uint_MasterActionSet_key = 1; // normal type
@@ -642,6 +642,7 @@ message MasterAreaItemSpawnMap {
 }
 message ServerSystem {
   optional uint32 serverDate = 1; // normal type
+  optional int32 timeZoneRawOffset = 2; // normal type
 }
 message MasterCharacterRarity {
   optional uint32 rarity = 1; // normal type
