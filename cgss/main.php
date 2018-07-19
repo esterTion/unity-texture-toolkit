@@ -2,6 +2,8 @@
 chdir(__DIR__);
 require_once 'UnityBundle.php';
 require_once 'UnityAsset.php';
+require_once 'diff_parse.php';
+require_once '../mysql.php';
 if (!file_exists('last_version')) {
   $last_version = array('TruthVersion'=>0,'hash'=>'');
 } else {
@@ -61,6 +63,83 @@ function getNextVersion($ver) {
   $mod = $ver % 100;
   $ver += 100 - $mod;
   return $ver;
+}
+
+function do_commit($TruthVersion, $db = NULL) {
+  exec('git diff --cached >a.diff');
+  $versionDiff = parse_db_diff('a.diff', $db, [
+    'event_data.sql' => 'diff_event_data', // event
+    'cappuccino_data.sql' => 'diff_chino', // gekijou_anime
+    'card_data.sql' => 'diff_card',        // card
+    'gacha_data.sql' => 'diff_gacha',      // gacha
+    'latte_art_data.sql' => 'diff_gekijou',// gekijou
+    'music_data.sql' => 'diff_music',      // music
+    'party_data_re.sql' => 'diff_party',   // party
+  ]);
+  //unlink('a.diff');
+  $versionDiff['ver'] = $TruthVersion;
+  $versionDiff['time'] = time();
+  $versionDiff['timeStr'] = date('Y-m-d H:i', $versionDiff['time'] + 3600);
+
+  $diff_send = [];
+  $commitMessage = [$TruthVersion];
+  if (isset($versionDiff['new_table'])) {
+    $diff_send['new_table'] = $versionDiff['new_table'];
+    $commitMessage[] = '- '.count($diff_send['new_table']).' new table';
+  }
+  if (isset($versionDiff['card'])) {
+    $diff_send['card'] = array_map(function ($a){ return ['','N','N+','R','R+','SR','SR+','SSR','SSR+'][$a['rarity']].$a['name'];}, $versionDiff['card']);
+    $commitMessage[] = '- '.count($diff_send['card']).' new card';
+  }
+  if (isset($versionDiff['event'])) {
+    $diff_send['event'] = array_map(function ($a){ return $a['name'];}, $versionDiff['event']);
+    $commitMessage[] = '- new event '. implode(', ',$diff_send['event']);
+  }
+  if (isset($versionDiff['gacha'])) {
+    $diff_send['gacha'] = array_map(function ($a){ return $a['name'];}, $versionDiff['gacha']);
+    $commitMessage[] = '- new gacha '. implode(', ',$diff_send['gacha']);
+  }
+  if (isset($versionDiff['music'])) {
+    $diff_send['music'] = array_map(function ($a){ return $a['name'];}, $versionDiff['music']);
+    $commitMessage[] = '- new music '. implode(', ',$diff_send['music']);
+  }
+  if (isset($versionDiff['gekijou'])) {
+    $diff_send['gekijou'] = array_map(function ($a){ return $a['title'];}, $versionDiff['gekijou']);
+    $commitMessage[] = '- new comic '. implode(', ',$diff_send['gekijou']);
+  }
+
+  exec('git commit -m "'.implode("\n", $commitMessage).'"');
+  exec('git rev-parse HEAD', $hash);
+  $versionDiff['hash'] = $hash[0];
+  global $mysqli;
+  $mysqli->select_db('db_diff');
+  $mysqli->query('REPLACE INTO cgss (ver,data) vALUES ('.$TruthVersion.',"'.$mysqli->real_escape_string(brotli_compress(
+    json_encode($versionDiff, JSON_UNESCAPED_SLASHES), 11, BROTLI_TEXT
+  )).'")');
+  exec('git push origin master');
+  
+  $data = json_encode(array(
+    'game'=>'cgss',
+    'hash'=>$hash[0],
+    'ver' =>$TruthVersion,
+    'data'=>$diff_send
+  ));
+  $header = [
+    'X-GITHUB-EVENT: push_direct_message',
+    'X-HUB-SIGNATURE: sha1='.hash_hmac('sha1', $data, 'sec', false)
+  ];
+  $curl = curl_init();
+  curl_setopt_array($curl, array(
+    CURLOPT_URL=>'https://redive.estertion.win/masterdb_subscription/webhook.php',
+    CURLOPT_HEADER=>0,
+    CURLOPT_RETURNTRANSFER=>1,
+    CURLOPT_SSL_VERIFYPEER=>false,
+    CURLOPT_HTTPHEADER=>$header,
+    CURLOPT_POST=>1,
+    CURLOPT_POSTFIELDS=>$data
+  ));
+  curl_exec($curl);
+  curl_close($curl);
 }
 
 function main() {
@@ -130,7 +209,7 @@ $game_start_header = [
   'UDID: 002423;541<818p713l356;558<788<512B1167165B452A426p575p3447527>745B625l856B6417737l515;535;726A7217263;113@551n768l838:516m832;624A287p772p121o626:634466828748373881115683521611874',
   'SID: 5348ecbff2589a204166891e1798483a',
   'Content-Length: 984',
-  'X-Unity-Version: 5.4.5p1',
+  'X-Unity-Version: 2017.4.2f2',
   'Connection: keep-alive',
   'CARRIER: ',
   'Accept-Language: en-us',
@@ -177,7 +256,6 @@ if ($TruthVersion == $last_version['TruthVersion']) {
   _log('no update found');
   return;
 }
-
 $last_version['TruthVersion'] = $TruthVersion;
 _log("TruthVersion: ${TruthVersion}, downloading manifest");
 file_put_contents('data/!TruthVersion.txt', $TruthVersion."\n");
@@ -186,7 +264,7 @@ curl_setopt_array($curl, array(
   CURLOPT_RETURNTRANSFER=>true,
   CURLOPT_HEADER=>0,
   CURLOPT_SSL_VERIFYPEER=>false,
-  CURLOPT_HTTPHEADER=>['X-Unity-Version: 5.4.5p1']
+  CURLOPT_HTTPHEADER=>['X-Unity-Version: 2017.4.2f2']
 ));
 $manifest_comp = curl_exec($curl);
 
@@ -211,8 +289,7 @@ if (!isset($masterHash[0])) {
   _log('old master format, skipping');
   chdir('data');
   exec('git add manifests.sql !TruthVersion.txt');
-  exec('git commit -m "'.$TruthVersion .$dateString.'"');
-  exec('git push origin master');
+  do_commit($TruthVersion);
   return;
 }
 $masterHash = $masterHash[0]['hash'];
@@ -222,8 +299,7 @@ if ($last_version['hash'] == $masterHash) {
   file_put_contents('last_version', json_encode($last_version));
   chdir('data');
   exec('git add manifests.sql !TruthVersion.txt');
-  exec('git commit -m "'.$TruthVersion .$dateString.'"');
-  exec('git push origin master');
+  do_commit($TruthVersion);
   return;
 }
 $last_version['hash'] = $masterHash;
@@ -231,7 +307,7 @@ $last_version['hash'] = $masterHash;
 _log("downloading bundle for TruthVersion ${TruthVersion}, hash: ${masterHash}");
 curl_setopt_array($curl, array(
   CURLOPT_URL=>'http://storages.game.starlight-stage.jp/dl/resources/Generic/'.$masterHash,
-  CURLOPT_HTTPHEADER=>['X-Unity-Version: 5.4.5p1'],
+  CURLOPT_HTTPHEADER=>['X-Unity-Version: 2017.4.2f2'],
   CURLOPT_RETURNTRANSFER=>true
 ));
 $master_compressed = curl_exec($curl);
@@ -241,8 +317,7 @@ if ($downloadedHash != $masterHash) {
   _log("download failed, received hash: ${downloadedHash}");
   chdir('data');
   exec('git add manifests.sql !TruthVersion.txt');
-  exec('git commit -m "'.$TruthVersion .$dateString.'"');
-  exec('git push origin master');
+  do_commit($TruthVersion);
   return;
 }
 
@@ -292,13 +367,12 @@ foreach(execQuery($db, 'SELECT chara_id,name FROM chara_data') as $row) {
 }
 file_put_contents(RESOURCE_PATH_PREFIX.'card/index.json', json_encode($names, JSON_UNESCAPED_SLASHES));
 
-unset($db);
 file_put_contents('last_version', json_encode($last_version));
 
 chdir('data');
 exec('git add *.sql !TruthVersion.txt');
-exec('git commit -m "'.$TruthVersion .$dateString.'"');
-exec('git push origin master');
+do_commit($TruthVersion, $db);
+unset($db);
 checkAndUpdateResource();
 _log('finished');
 

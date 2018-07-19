@@ -1010,7 +1010,7 @@ function checkAndUpdateResource() {
   $currenttime = time();
   curl_setopt_array($curl, array(
     CURLOPT_CONNECTTIMEOUT=>5,
-    CURLOPT_HTTPHEADER=>['X-Unity-Version: 5.4.5p1'],
+    CURLOPT_HTTPHEADER=>['X-Unity-Version: 2017.4.2f2'],
     CURLOPT_RETURNTRANSFER=>true,
     CURLOPT_HEADER=>0,
     CURLOPT_SSL_VERIFYPEER=>false,
