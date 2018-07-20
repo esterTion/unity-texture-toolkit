@@ -96,7 +96,7 @@ function do_commit($TruthVersion, $db = NULL) {
     $commitMessage[] = '- new event '. implode(', ',$diff_send['event']);
   }
   if (isset($versionDiff['gacha'])) {
-    $diff_send['gacha'] = array_map(function ($a){ return $a['name'];}, $versionDiff['gacha']);
+    $diff_send['gacha'] = array_map(function ($a){ return $a['name'].'（'.$a['detail'].'）';}, $versionDiff['gacha']);
     $commitMessage[] = '- new gacha '. implode(', ',$diff_send['gacha']);
   }
   if (isset($versionDiff['music'])) {
@@ -107,6 +107,7 @@ function do_commit($TruthVersion, $db = NULL) {
     $diff_send['gekijou'] = array_map(function ($a){ return $a['title'];}, $versionDiff['gekijou']);
     $commitMessage[] = '- new comic '. implode(', ',$diff_send['gekijou']);
   }
+  $diff_send['diff'] = $versionDiff['diff'];
 
   exec('git commit -m "'.implode("\n", $commitMessage).'"');
   exec('git rev-parse HEAD', $hash);

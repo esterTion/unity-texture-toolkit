@@ -37,9 +37,15 @@ function parse_db_diff($diff, $master, $cbMap) {
   $changeset = $parser->parseFile($diff, Parser::VCS_GIT);
   $files = $changeset->getFiles();
   $newtable = [];
+  $operates = [
+    File::CREATED => 0,
+    File::CHANGED => 0,
+    File::DELETED => 0,
+  ];
 
   foreach ($files as &$file) {
     $fname = $file->getNewFilename();
+    $operates[$file->getOperation()]++;
     if ($file->getOperation() == File::CREATED) {
       $newtable[] = substr($fname, 0, -4);
       continue;
@@ -50,6 +56,9 @@ function parse_db_diff($diff, $master, $cbMap) {
       $versionDiff[$data[0]] = $data[1];
     }
   }
+  // !TruthVersion.txt is always REMOVED
+  $operates[FILE::DELETED]--;
+  $versionDiff['diff'] = $operates;
   if (!empty($newtable)) {
     $versionDiff['new_table'] = $newtable;
   }
