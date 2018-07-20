@@ -2,6 +2,7 @@
 chdir(__DIR__);
 require_once 'UnityBundle.php';
 require_once 'UnityAsset.php';
+require_once 'diff_parse.php';
 if (!file_exists('last_version')) {
   $last_version = array('TruthVersion'=>0,'hash'=>'');
 } else {
@@ -79,6 +80,99 @@ function encodeValue($value) {
     $arr[] = '/*'.$key.'*/' . (is_numeric($val) ? $val : ('"'.str_replace('"','\\"',$val).'"'));
   }
   return implode(", ", $arr);
+}
+function do_commit($TruthVersion, $db = NULL) {
+  exec('git diff --cached >a.diff');
+  $versionDiff = parse_db_diff('a.diff', $master, [
+    'clan_battle_period.sql' => 'diff_clan_battle', // clan_battle
+    'dungeon_area_data.sql' => 'diff_dungeon_area', // dungeon_area
+    'gacha_data.sql' => 'diff_gacha',               // gacha
+    'quest_area_data.sql' => 'diff_quest_area',     // quest_area
+    'story_data.sql' => 'diff_story_data',          // story_data
+    'unit_data.sql' => 'diff_unit',                 // unit
+    'experience_team.sql' => 'diff_exp',            // experience
+    'unit_promotion.sql' => 'diff_rank',            // rank
+    'hatsune_schedule.sql' => 'diff_event',         // event,
+    'campaign_schedule.sql' => 'diff_campaign',     // campaign
+  ]);
+  unlink('a.diff');
+  $versionDiff['ver'] = $TruthVersion;
+  $versionDiff['time'] = time();
+  $versionDiff['timeStr'] = date('Y-m-d H:i', $versionDiff['time'] + 3600);
+
+  $diff_send = [];
+  $commitMessage = [$TruthVersion];
+  if (isset($versionDiff['new_table'])) {
+    $diff_send['new_table'] = $versionDiff['new_table'];
+    $commitMessage[] = '- '.count($diff_send['new_table']).' new table';
+  }
+  if (isset($versionDiff['unit'])) {
+    $diff_send['card'] = array_map(function ($a){ return str_repeat('★', $a['rarity']).$a['name'];}, $versionDiff['card']);
+    $commitMessage[] = '- new unit: '. implode(', ', $diff_send['card']);
+  }
+  if (isset($versionDiff['event'])) {
+    $diff_send['event'] = array_map(function ($a){ return $a['name'];}, $versionDiff['event']);
+    $commitMessage[] = '- new event '. implode(', ',$diff_send['event']);
+  }
+  if (isset($versionDiff['gacha'])) {
+    $diff_send['gacha'] = array_map(function ($a){ return $a['detail'];}, $versionDiff['gacha']);
+    $commitMessage[] = '- new gacha '. implode(', ',$diff_send['gacha']);
+  }
+  if (isset($versionDiff['quest_area'])) {
+    $diff_send['quest_area'] = array_map(function ($a){ return $a['name'];}, $versionDiff['quest_area']);
+    $commitMessage[] = '- new quest area '. implode(', ',$diff_send['quest_area']);
+  }
+  if (isset($versionDiff['clan_battle'])) {
+    $commitMessage[] = '- new clan battle';
+  }
+  if (isset($versionDiff['dungeon_area'])) {
+    $diff_send['dungeon_area'] = array_map(function ($a){ return $a['name'];}, $versionDiff['dungeon_area']);
+    $commitMessage[] = '- new dungeon area '. implode(', ',$diff_send['dungeon_area']);
+  }
+  if (isset($versionDiff['story_data'])) {
+    $diff_send['story_data'] = array_map(function ($a){ return $a['name'];}, $versionDiff['story_data']);
+    $commitMessage[] = '- new story '. implode(', ',$diff_send['story_data']);
+  }
+  if (isset($versionDiff['max_lv'])) {
+    $commitMessage[] = '- max level to '.$versionDiff['max_lv']['lv'];
+  }
+  if (isset($versionDiff['max_rank'])) {
+    $commitMessage[] = '- max rank to '.$versionDiff['max_rank'];
+  }
+  $diff_send['diff'] = $versionDiff['diff'];
+
+  exec('git commit -m "'.implode("\n", $commitMessage).'"');
+  exec('git rev-parse HEAD', $hash);
+  $versionDiff['hash'] = $hash[0];
+  require_once '../mysql.php';
+  $mysqli->select_db('db_diff');
+  $mysqli->query('REPLACE INTO cgss (ver,data) vALUES ('.$TruthVersion.',"'.$mysqli->real_escape_string(brotli_compress(
+    json_encode($versionDiff, JSON_UNESCAPED_SLASHES), 11, BROTLI_TEXT
+  )).'")');
+  exec('git push origin master');
+  
+  $data = json_encode(array(
+    'game'=>'cgss',
+    'hash'=>$hash[0],
+    'ver' =>$TruthVersion,
+    'data'=>$diff_send
+  ));
+  $header = [
+    'X-GITHUB-EVENT: push_direct_message',
+    'X-HUB-SIGNATURE: sha1='.hash_hmac('sha1', $data, 'sec', false)
+  ];
+  $curl = curl_init();
+  curl_setopt_array($curl, array(
+    CURLOPT_URL=>'https://redive.estertion.win/masterdb_subscription/webhook.php',
+    CURLOPT_HEADER=>0,
+    CURLOPT_RETURNTRANSFER=>1,
+    CURLOPT_SSL_VERIFYPEER=>false,
+    CURLOPT_HTTPHEADER=>$header,
+    CURLOPT_POST=>1,
+    CURLOPT_POSTFIELDS=>$data
+  ));
+  curl_exec($curl);
+  curl_close($curl);
 }
 
 function main() {
@@ -255,8 +349,7 @@ if ($last_version['hash'] == $bundleHash) {
   file_put_contents('last_version', json_encode($last_version));
   chdir('data');
   exec('git add !TruthVersion.txt +manifest_*.txt');
-  exec('git commit -m '.$TruthVersion);
-  exec('git push origin master');
+  do_commit($TruthVersion);
   return;
 }
 $last_version['hash'] = $bundleHash;
@@ -302,6 +395,7 @@ $tables = execQuery($db, 'SELECT * FROM sqlite_master');
 foreach (glob('data/*.sql') as $file) {unlink($file);}
 
 foreach ($tables as $entry) {
+  if ($entry['name'] == 'sqlite_stat1') continue;
   if ($entry['type'] == 'table') {
     $tblName = $entry['name'];
     $f = fopen("data/${tblName}.sql", 'w');
@@ -343,8 +437,7 @@ file_put_contents('last_version', json_encode($last_version));
 
 chdir('data');
 exec('git add *.sql !TruthVersion.txt +manifest_*.txt');
-exec('git commit -m '.$TruthVersion);
-exec('git push origin master');
+do_commit($TruthVersion, $db);
 
 
 checkAndUpdateResource($TruthVersion);
