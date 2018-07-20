@@ -3,7 +3,6 @@ chdir(__DIR__);
 require_once 'UnityBundle.php';
 require_once 'UnityAsset.php';
 require_once 'diff_parse.php';
-require_once '../mysql.php';
 if (!file_exists('last_version')) {
   $last_version = array('TruthVersion'=>0,'hash'=>'');
 } else {
@@ -76,7 +75,7 @@ function do_commit($TruthVersion, $db = NULL) {
     'music_data.sql' => 'diff_music',      // music
     'party_data_re.sql' => 'diff_party',   // party
   ]);
-  //unlink('a.diff');
+  unlink('a.diff');
   $versionDiff['ver'] = $TruthVersion;
   $versionDiff['time'] = time();
   $versionDiff['timeStr'] = date('Y-m-d H:i', $versionDiff['time'] + 3600);
@@ -112,7 +111,7 @@ function do_commit($TruthVersion, $db = NULL) {
   exec('git commit -m "'.implode("\n", $commitMessage).'"');
   exec('git rev-parse HEAD', $hash);
   $versionDiff['hash'] = $hash[0];
-  global $mysqli;
+  require_once '../mysql.php';
   $mysqli->select_db('db_diff');
   $mysqli->query('REPLACE INTO cgss (ver,data) vALUES ('.$TruthVersion.',"'.$mysqli->real_escape_string(brotli_compress(
     json_encode($versionDiff, JSON_UNESCAPED_SLASHES), 11, BROTLI_TEXT
@@ -340,6 +339,7 @@ foreach (glob('data/*.sql') as $file) {$file!='data/manifests.sql'&&unlink($file
 
 $i=0;
 foreach ($tables as $entry) {
+  if ($entry['name'] == 'sqlite_stat1') continue;
   if ($entry['type'] == 'table') {
     $tblName = $entry['name'];
     $f = fopen("data/${tblName}.sql", 'w');
