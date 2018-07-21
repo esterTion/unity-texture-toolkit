@@ -38,8 +38,6 @@ function parse_db_diff($diff, $master, $cbMap) {
       $versionDiff[$data[0]] = $data[1];
     }
   }
-  // !TruthVersion.txt is always REMOVED
-  $operates[FILE::DELETED]--;
   $versionDiff['diff'] = $operates;
   if (!empty($newtable)) {
     $versionDiff['new_table'] = $newtable;

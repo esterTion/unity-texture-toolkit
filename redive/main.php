@@ -82,7 +82,7 @@ function encodeValue($value) {
   return implode(", ", $arr);
 }
 function do_commit($TruthVersion, $db = NULL) {
-  exec('git diff --cached >a.diff');
+  exec('git diff --cached | sed -e "s/@@ -1 +1 @@/@@ -1,1 +1,1 @@/g" >a.diff');
   $versionDiff = parse_db_diff('a.diff', $master, [
     'clan_battle_period.sql' => 'diff_clan_battle', // clan_battle
     'dungeon_area_data.sql' => 'diff_dungeon_area', // dungeon_area
@@ -144,15 +144,15 @@ function do_commit($TruthVersion, $db = NULL) {
   exec('git commit -m "'.implode("\n", $commitMessage).'"');
   exec('git rev-parse HEAD', $hash);
   $versionDiff['hash'] = $hash[0];
-  require_once '../mysql.php';
+  require_once __DIR__.'/../mysql.php';
   $mysqli->select_db('db_diff');
-  $mysqli->query('REPLACE INTO cgss (ver,data) vALUES ('.$TruthVersion.',"'.$mysqli->real_escape_string(brotli_compress(
+  $mysqli->query('REPLACE INTO redive (ver,data) vALUES ('.$TruthVersion.',"'.$mysqli->real_escape_string(brotli_compress(
     json_encode($versionDiff, JSON_UNESCAPED_SLASHES), 11, BROTLI_TEXT
   )).'")');
   exec('git push origin master');
   
   $data = json_encode(array(
-    'game'=>'cgss',
+    'game'=>'redive',
     'hash'=>$hash[0],
     'ver' =>$TruthVersion,
     'data'=>$diff_send
@@ -432,13 +432,12 @@ foreach (execQuery($db, 'SELECT unit_id,motion_type,unit_name FROM unit_data WHE
 file_put_contents(RESOURCE_PATH_PREFIX.'spine/classMap.json', json_encode($info));
 
 unset($name);
-unset($db);
 file_put_contents('last_version', json_encode($last_version));
 
 chdir('data');
 exec('git add *.sql !TruthVersion.txt +manifest_*.txt');
 do_commit($TruthVersion, $db);
-
+unset($db);
 
 checkAndUpdateResource($TruthVersion);
 

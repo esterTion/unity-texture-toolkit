@@ -65,7 +65,7 @@ function getNextVersion($ver) {
 }
 
 function do_commit($TruthVersion, $db = NULL) {
-  exec('git diff --cached >a.diff');
+  exec('git diff --cached | sed -e "s/@@ -1 +1 @@/@@ -1,1 +1,1 @@/g" >a.diff');
   $versionDiff = parse_db_diff('a.diff', $db, [
     'event_data.sql' => 'diff_event_data', // event
     'cappuccino_data.sql' => 'diff_chino', // gekijou_anime
@@ -111,7 +111,7 @@ function do_commit($TruthVersion, $db = NULL) {
   exec('git commit -m "'.implode("\n", $commitMessage).'"');
   exec('git rev-parse HEAD', $hash);
   $versionDiff['hash'] = $hash[0];
-  require_once '../mysql.php';
+  require_once __DIR__.'/../mysql.php';
   $mysqli->select_db('db_diff');
   $mysqli->query('REPLACE INTO cgss (ver,data) vALUES ('.$TruthVersion.',"'.$mysqli->real_escape_string(brotli_compress(
     json_encode($versionDiff, JSON_UNESCAPED_SLASHES), 11, BROTLI_TEXT
