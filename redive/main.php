@@ -104,7 +104,7 @@ function do_commit($TruthVersion, $db = NULL) {
   $commitMessage = [$TruthVersion];
   if (isset($versionDiff['new_table'])) {
     $diff_send['new_table'] = $versionDiff['new_table'];
-    $commitMessage[] = '- '.count($diff_send['new_table']).' new table';
+    $commitMessage[] = '- '.count($diff_send['new_table']).' new table: '. implode(', ', $diff_send['new_table']);
   }
   if (isset($versionDiff['unit'])) {
     $diff_send['card'] = array_map(function ($a){ return str_repeat('★', $a['rarity']).$a['name'];}, $versionDiff['card']);
@@ -406,7 +406,7 @@ foreach ($tables as $entry) {
     }
     fclose($f);
   } else if ($entry['type'] == 'index') {
-    file_put_contents("data/${tblName}.sql", $entry['sql'], FILE_APPEND);
+    file_put_contents("data/${tblName}.sql", $entry['sql'].";\n", FILE_APPEND);
   }
 }
 $name = [];
