@@ -83,7 +83,7 @@ function encodeValue($value) {
 }
 function do_commit($TruthVersion, $db = NULL) {
   exec('git diff --cached | sed -e "s/@@ -1 +1 @@/@@ -1,1 +1,1 @@/g" >a.diff');
-  $versionDiff = parse_db_diff('a.diff', $master, [
+  $versionDiff = parse_db_diff('a.diff', $db, [
     'clan_battle_period.sql' => 'diff_clan_battle', // clan_battle
     'dungeon_area_data.sql' => 'diff_dungeon_area', // dungeon_area
     'gacha_data.sql' => 'diff_gacha',               // gacha
@@ -405,7 +405,7 @@ foreach ($tables as $entry) {
       fwrite($f, "INSERT INTO `${tblName}` VALUES (".encodeValue($value).");\n");
     }
     fclose($f);
-  } else if ($entry['type'] == 'index') {
+  } else if ($entry['type'] == 'index' && !empty($entry['sql'])) {
     file_put_contents("data/${tblName}.sql", $entry['sql'].";\n", FILE_APPEND);
   }
 }

@@ -349,7 +349,7 @@ foreach ($tables as $entry) {
       fwrite($f, "INSERT INTO `${tblName}` VALUES (".encodeValue($value).");\n");
     }
     fclose($f);
-  } else if ($entry['type'] == 'index') {
+  } else if ($entry['type'] == 'index' && $entry['sql']) {
     file_put_contents("data/${tblName}.sql", $entry['sql'].";\n", FILE_APPEND);
   }
   //echo "\r".++$i.'/'.count($tables);
