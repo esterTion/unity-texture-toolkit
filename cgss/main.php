@@ -350,6 +350,7 @@ foreach ($tables as $entry) {
     }
     fclose($f);
   } else if ($entry['type'] == 'index' && $entry['sql']) {
+    $tblName = $entry['tbl_name'];
     file_put_contents("data/${tblName}.sql", $entry['sql'].";\n", FILE_APPEND);
   }
   //echo "\r".++$i.'/'.count($tables);

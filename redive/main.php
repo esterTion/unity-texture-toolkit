@@ -107,7 +107,7 @@ function do_commit($TruthVersion, $db = NULL) {
     $commitMessage[] = '- '.count($diff_send['new_table']).' new table: '. implode(', ', $diff_send['new_table']);
   }
   if (isset($versionDiff['unit'])) {
-    $diff_send['card'] = array_map(function ($a){ return str_repeat('★', $a['rarity']).$a['name'];}, $versionDiff['card']);
+    $diff_send['card'] = array_map(function ($a){ return str_repeat('★', $a['rarity']).$a['name'];}, $versionDiff['unit']);
     $commitMessage[] = '- new unit: '. implode(', ', $diff_send['card']);
   }
   if (isset($versionDiff['event'])) {
@@ -341,7 +341,13 @@ $manifest = curl_exec($curl);
 file_put_contents('data/+manifest_movie.txt', $manifest);
 
 $manifest = file_get_contents('data/+manifest_masterdata.txt');
-$manifest = explode(',', $manifest);
+$manifest = array_map(function ($i){ return explode(',', $i); }, explode("\n", $manifest));
+foreach ($manifest as $entry) {
+  if ($entry[0] === 'a/masterdata_master.unity3d') { $manifest = $entry; break; }
+}
+if ($manifest[0] !== 'a/masterdata_master.unity3d') {
+  throw new Exception('masterdata_master.unity3d not found');
+}
 $bundleHash = $manifest[1];
 $bundleSize = $manifest[3]|0;
 if ($last_version['hash'] == $bundleHash) {
@@ -406,6 +412,7 @@ foreach ($tables as $entry) {
     }
     fclose($f);
   } else if ($entry['type'] == 'index' && !empty($entry['sql'])) {
+    $tblName = $entry['tbl_name'];
     file_put_contents("data/${tblName}.sql", $entry['sql'].";\n", FILE_APPEND);
   }
 }
