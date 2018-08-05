@@ -4,15 +4,15 @@ require_once 'UnityBundle.php';
 require_once 'UnityAsset.php';
 require_once 'diff_parse.php';
 if (!file_exists('last_version')) {
-  $last_version = array('TruthVersion'=>0,'hash'=>'');
+  $last_version = array('TruthVersion'=>-1,'hash'=>'');
 } else {
   $last_version = json_decode(file_get_contents('last_version'), true);
 }
 $logFile = fopen('redive.log', 'a');
 function _log($s) {
   global $logFile;
-  fwrite($logFile, date('[m/d H:i] ').$s."\n");
-  //echo $s."\n";
+  //fwrite($logFile, date('[m/d H:i] ').$s."\n");
+  echo $s."\n";
 }
 function execQuery($db, $query) {
   $returnVal = [];
@@ -152,7 +152,7 @@ function do_commit($TruthVersion, $db = NULL) {
   exec('git push origin master');
   
   $data = json_encode(array(
-    'game'=>'redive',
+    'game'=>'redive_tw',
     'hash'=>$hash[0],
     'ver' =>$TruthVersion,
     'data'=>$diff_send
@@ -182,10 +182,10 @@ chdir(__DIR__);
 
 //check app ver at 00:00
 $appver = file_exists('appver') ? file_get_contents('appver') : '1.1.4';
-$itunesid = 1134429300;
+$itunesid = 1390473317;
 $curl = curl_init();
 curl_setopt_array($curl, array(
-  CURLOPT_URL=>'https://itunes.apple.com/lookup?id='.$itunesid.'&lang=ja_jp&country=jp&rnd='.rand(10000000,99999999),
+  CURLOPT_URL=>'https://itunes.apple.com/lookup?id='.$itunesid.'&lang=zh_TW&country=tw&rnd='.rand(10000000,99999999),
   CURLOPT_HEADER=>0,
   CURLOPT_RETURNTRANSFER=>1,
   CURLOPT_SSL_VERIFYPEER=>false
@@ -202,9 +202,9 @@ if ($appinfo !== false) {
       file_put_contents('appver', $appver);
       _log('new game version: '. $appver);
       $data = json_encode(array(
-        'game'=>'redive',
+        'game'=>'redive_tw',
         'ver'=>$appver,
-        'link'=>'https://itunes.apple.com/jp/app/id'.$itunesid
+        'link'=>'https://itunes.apple.com/tw/app/id'.$itunesid
       ));
       $header = [
         'X-GITHUB-EVENT: app_update',
@@ -228,29 +228,29 @@ if ($appinfo !== false) {
 
 //check TruthVersion
 $game_start_header = [
-  'Host: app.priconne-redive.jp',
-  'User-Agent: princessconnectredive/12 CFNetwork/758.4.3 Darwin/15.5.0',
-  'PARAM: 7db6304d4d0be697a1e37b14883a9bc7848c5665',
+  'Host: api-pc.so-net.tw',
+  'User-Agent: princessconnect/17 CFNetwork/758.3.15 Darwin/15.4.0',
+  'PARAM: 42cb38693c53d80e450c47e5e2213352eb8cdb35',
   'REGION_CODE: ',
   'BATTLE_LOGIC_VERSION: 1',
-  'PLATFORM_OS_VERSION: iPhone OS 9.3.2',
+  'PLATFORM_OS_VERSION: iPhone OS 9.3.1',
   'Proxy-Connection: keep-alive',
-  'DEVICE_ID: 06D993AF-FE6D-4778-8553-085FAF6707CE',
-  'KEYCHAIN: 577247511',
-  'GRAPHICS_DEVICE_NAME: Apple A9 GPU',
-  'SHORT_UDID: 000961@277B487>163;656<178>844@861C276>212744265538282151286561554573842',
-  'DEVICE_NAME: iPhone8,4',
+  'DEVICE_ID: DAAF343A-ED51-4923-A24A-AD128AA69092',
+  'KEYCHAIN: 692807689',
+  'GRAPHICS_DEVICE_NAME: Apple A7 GPU',
+  'SHORT_UDID: 000974;156A655>551<835?218@261C861C817A776112486341741361616451827355827',
+  'DEVICE_NAME: iPhone6,2',
   'BUNDLE_VER: ',
   'LOCALE: Jpn',
-  'IP_ADDRESS: 192.168.1.112',
-  'SID: 956c729eb8eb60d80239ea6c662ebd9b',
-  'Content-Length: 176',
+  'IP_ADDRESS: 192.168.0.109',
+  'SID: fbfc84002187655acdce2a88638fd3f4',
+  'Content-Length: 208',
   'X-Unity-Version: 2017.1.2p2',
   'PLATFORM: 1',
   'Connection: keep-alive',
-  'Accept-Language: en-us',
+  'Accept-Language: zh-cn',
   'APP_VER: '.$appver,
-  'RES_VER: 10000000',
+  'RES_VER: -1',
   'Accept: */*',
   'Content-Type: application/x-www-form-urlencoded',
   'Accept-Encoding: gzip, deflate',
@@ -259,17 +259,17 @@ $game_start_header = [
 global $curl;
 $curl = curl_init();
 curl_setopt_array($curl, array(
-  CURLOPT_URL => 'https://app.priconne-redive.jp/check/game_start',
+  CURLOPT_URL => 'https://api-pc.so-net.tw/check/game_start',
   CURLOPT_HTTPHEADER=>$game_start_header,
   CURLOPT_HEADER=>false,
   CURLOPT_RETURNTRANSFER=>true,
   CURLOPT_CONNECTTIMEOUT=>3,
   CURLOPT_SSL_VERIFYPEER=>false,
   CURLOPT_POST=>true,
-  CURLOPT_POSTFIELDS=>base64_decode('Fh28009IuC3baOl9zp5LX7v/MuF7Ye2SI7fPSKlU84ru+bTFQPoEEoUnHBbZn4tf/gD6bCI+GD6opqtyeuAKq5Yile53RJYRU5ERCk6UpHWDmts6K8Z+vt5+3yb9sCU9EedYA2xnOoltbNjffQ1bTVBCErKRlDoo3agsFuCWF2AZEn3plfN7UpR7udogIePAWkRFeVpUWXlaakV5TldGbVltVXlOR1poWXpka05HUXg='),
-  CURLOPT_PROXY=>file_get_contents('currentproxy.txt'),
-  CURLOPT_HTTPPROXYTUNNEL=>true
-//  CURLOPT_PROXY=>'vultr.biliplus.com:87',
+  CURLOPT_POSTFIELDS=>base64_decode('E47TtA+1REw1ULHtpALWCxQlSegkFRRBh4+YZ2hAN36nnc93oUUNXXvzL1Szs86/52xmFM2fGuIFiKxjDXaQqP8BSBmQrHPk8BRr5XwhH666Y0PH4XuNJ9jmMwwtHDUQMYGlspljKt/l63KnCb6ObBBRzYdktsiGzvvSBUkvFI/bNxPssxGjfUNFyyFI94CdHgIuMYnjF/k14rynGZt9u3wRzOBn9tlVheq9RdUZmMhOR0l5WkRJMk1tRmhOell5WXpnNVlXTmhOMlEyWkRneA=='),
+//  CURLOPT_PROXY=>file_get_contents('currentproxy.txt'),
+//  CURLOPT_HTTPPROXYTUNNEL=>true,
+//  CURLOPT_PROXY=>'127.0.0.1:23457',
 //  CURLOPT_PROXYTYPE=>CURLPROXY_SOCKS5
 ));
 $response = curl_exec($curl);
@@ -277,11 +277,12 @@ $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
 curl_close($curl);
 if ($code == 500 || $code == 0 || ($code == 200 && strlen($response) == 0)) {
   _log('proxy failed: '. $code);
-  if (autoProxy()) {
+  /*if (autoProxy()) {
     return main();
   } else {
     exit;
-  }
+  }*/
+  exit;
 }
 if ($response === false) {
   _log('error fetching TruthVersion');
@@ -290,8 +291,7 @@ if ($response === false) {
 //$response = 'RerDjP3EYxdZtDcDm24Ni5WJLz/mnmKHltcuvXd8wUPHpVgkz7h8eNxSs25yL+xckTnO5EwR/YdCFu/jQ0tspFDhep7GI1hw1zPxX5AIzQnxS1uayolDzl9nfHZtJR28uj043NMdQ9Noqr0TNbbe0MUu66gYUFTzjTvboGf5l7nt/QwXR6hY3tzo67aMTpETbf0ZCi3urhOnEQlJlBMhjU2gtl6Ws2J7+wkTlNswpN2fn+d99xFuIdNln0J0jNRa/Ku/f2ix18wMiKA34ATWXUj5WBHcg6rZjbDrr7xp2QUbU4W3t62nRt7xR0klFxblxD5u4vmTZv5eYXHKlCgbMTM0YWVkYmQ3NzBkOTcyZDZiOTVhZTA0OGE5MjYyZGY2';
 $response = base64_decode($response);
 $key = substr($response, -32, 32);
-$udid = 'b94fb285-fdda-4136-b66c-e694f141cdab';
-$udid = '662dcf1f-cf2e-4560-a325-f550a1c01954';
+$udid = '2eae8edf-16a7-44f5-a593-a026ec46e895';
 $iv = substr(str_replace('-','',$udid),0,16);
 $response = msgpack_unpack(decrypt(substr($response, 0, -32), $key, $iv));
 
@@ -314,7 +314,7 @@ file_put_contents('data/!TruthVersion.txt', $TruthVersion."\n");
 //$TruthVersion = '10000000';
 $curl = curl_init();
 curl_setopt_array($curl, array(
-  CURLOPT_URL=>'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/AssetBundles/iOS/manifest/manifest_assetmanifest',
+  CURLOPT_URL=>'http://img-pc.so-net.tw/dl/Resources/'.$TruthVersion.'/Jpn/AssetBundles/iOS/manifest/manifest_assetmanifest',
   CURLOPT_RETURNTRANSFER=>true,
   CURLOPT_HEADER=>0,
   CURLOPT_SSL_VERIFYPEER=>false
@@ -327,16 +327,16 @@ file_put_contents('data/+manifest_manifest.txt', $manifest);
 foreach (explode("\n", trim($manifest)) as $line) {
   list($manifestName) = explode(',', $line);
   if ($manifestName == 'manifest/soundmanifest') {
-    curl_setopt($curl, CURLOPT_URL, 'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Sound/manifest/soundmanifest');
+    curl_setopt($curl, CURLOPT_URL, 'http://img-pc.so-net.tw/dl/Resources/'.$TruthVersion.'/Jpn/Sound/manifest/soundmanifest');
     $manifest = curl_exec($curl);
     file_put_contents('data/+manifest_sound.txt', $manifest);
   } else {
-    curl_setopt($curl, CURLOPT_URL, 'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/AssetBundles/iOS/'.$manifestName);
+    curl_setopt($curl, CURLOPT_URL, 'http://img-pc.so-net.tw/dl/Resources/'.$TruthVersion.'/Jpn/AssetBundles/iOS/'.$manifestName);
     $manifest = curl_exec($curl);
     file_put_contents('data/+manifest_'.substr($manifestName, 9, -14).'.txt', $manifest);
   }
 }
-curl_setopt($curl, CURLOPT_URL, 'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Movie/SP/High/manifest/moviemanifest');
+curl_setopt($curl, CURLOPT_URL, 'http://img-pc.so-net.tw/dl/Resources/'.$TruthVersion.'/Jpn/Movie/SP/High/manifest/moviemanifest');
 $manifest = curl_exec($curl);
 file_put_contents('data/+manifest_movie.txt', $manifest);
 
@@ -363,7 +363,7 @@ $last_version['hash'] = $bundleHash;
 _log("downloading bundle for TruthVersion ${TruthVersion}, hash: ${bundleHash}, size: ${bundleSize}");
 $bundleFileName = "master_${TruthVersion}.unity3d";
 curl_setopt_array($curl, array(
-  CURLOPT_URL=>'http://priconne-redive.akamaized.net/dl/pool/AssetBundles/'.substr($bundleHash,0,2).'/'.$bundleHash,
+  CURLOPT_URL=>'http://img-pc.so-net.tw/dl/pool/AssetBundles/'.substr($bundleHash,0,2).'/'.$bundleHash,
   CURLOPT_RETURNTRANSFER=>true
 ));
 $bundle = curl_exec($curl);
