@@ -56,6 +56,7 @@ message MasterMusicDifficultyGetResponse {
   optional uint32 scoreB = 8; // normal type
   optional uint32 scoreC = 9; // normal type
   optional uint32 scoreSS = 10; // normal type
+  optional uint32 publishedAt = 11; // normal type
 }
 message MasterMusicDifficultyListGetResponse {
   repeated MasterMusicDifficultyGetResponse entries = 1; // array
@@ -1656,6 +1657,7 @@ message MasterEventCharacter {
   optional uint32 eventId = 1; // normal type
   optional uint32 characterId = 2; // normal type
   optional float percent = 3; // normal type
+  optional uint32 seq = 4; // normal type
 }
 message MasterEventStoryReward {
   optional uint32 id = 1; // normal type
@@ -1786,6 +1788,12 @@ message MasterEventChallengeCost {
   optional uint32 cost = 3; // normal type
   optional uint32 ratio = 4; // normal type
 }
+message MasterEventCharacterParameterBonus {
+  optional uint32 eventId = 1; // normal type
+  optional float performance = 2; // normal type
+  optional float technique = 3; // normal type
+  optional float visual = 4; // normal type
+}
 message MasterChallengeEvent {
   optional uint32 eventId = 1; // normal type
   repeated MasterEventAttribute attributes = 101; // array
@@ -1793,6 +1801,7 @@ message MasterChallengeEvent {
   repeated MasterEventStory stories = 103; // array
   repeated MasterEventMusic musics = 104; // array
   repeated MasterEventChallengeCost challengeCosts = 105; // array
+  repeated MasterEventCharacterParameterBonus eventCharacterParameterBonus = 106; // array
 }
 message uint_MasterChallengeEvent {
   optional uint32 uint_MasterChallengeEvent_key = 1; // normal type
@@ -1848,6 +1857,7 @@ message MasterVersusEvent {
   repeated MasterEventCharacter characters = 102; // array
   repeated MasterEventStory stories = 103; // array
   repeated MasterEventMusic musics = 104; // array
+  repeated MasterEventCharacterParameterBonus eventCharacterParameterBonus = 105; // array
 }
 message uint_MasterVersusEvent {
   optional uint32 uint_MasterVersusEvent_key = 1; // normal type
