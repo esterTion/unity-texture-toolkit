@@ -22,16 +22,22 @@ function execQuery($db, $query) {
       $returnVal = $result->fetchArray(SQLITE3_ASSOC);
     }
   }*/
+  if (!$db) {
+    throw new Exception('Invalid db handle');
+  }
   $result = $db->query($query);
+  if ($result === false) {
+    throw new Exception('Failed executing query: '. $query);
+  }
   $returnVal = $result->fetchAll(PDO::FETCH_ASSOC);
   return $returnVal;
 }
 function autoProxy() {
   $curl = curl_init();
   curl_setopt_array($curl, [
-    CURLOPT_URL=>'https://www.us-proxy.org/',
+    CURLOPT_URL=>'https://free-proxy-list.net/',
     CURLOPT_HTTPHEADER=>[
-      'Host: www.us-proxy.org',
+      //'Host: www.us-proxy.org',
       'User-Agent: Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:51.0) Gecko/20100101 Firefox/60.0.1',
       'Accept: text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
       'Accept-Language: zh-CN,zh-TW;q=0.7,en-US;q=0.3',
@@ -55,6 +61,7 @@ function autoProxy() {
     if ($proxy == $oldproxy) continue;
     curl_setopt($curl, CURLOPT_PROXY, $proxy);
     curl_exec($curl);
+    //_log($proxy.' '.curl_getinfo($curl, CURLINFO_HTTP_CODE));
     if (curl_getinfo($curl, CURLINFO_HTTP_CODE) == 404) {
       /*
       $oldproxy = file_get_contents('currentproxy.txt');
@@ -229,28 +236,27 @@ if ($appinfo !== false) {
 //check TruthVersion
 $game_start_header = [
   'Host: app.priconne-redive.jp',
-  'User-Agent: princessconnectredive/12 CFNetwork/758.4.3 Darwin/15.5.0',
-  'PARAM: 7db6304d4d0be697a1e37b14883a9bc7848c5665',
+  'User-Agent: princessconnectredive/39 CFNetwork/758.4.3 Darwin/15.5.0',
+  'PARAM: 527336ff17818cd82e482d5c2cbdea2bc859b316',
   'REGION_CODE: ',
-  'BATTLE_LOGIC_VERSION: 1',
+  'BATTLE_LOGIC_VERSION: 2',
   'PLATFORM_OS_VERSION: iPhone OS 9.3.2',
   'Proxy-Connection: keep-alive',
-  'DEVICE_ID: 06D993AF-FE6D-4778-8553-085FAF6707CE',
+  'DEVICE_ID: BFCC3361-7BCE-4706-A44C-DDF8252669BB',
   'KEYCHAIN: 577247511',
   'GRAPHICS_DEVICE_NAME: Apple A9 GPU',
-  'SHORT_UDID: 000961@277B487>163;656<178>844@861C276>212744265538282151286561554573842',
+  'SHORT_UDID: 000973A123;453A538?687=244:861<473>161;683111718423523554437738453547512',
   'DEVICE_NAME: iPhone8,4',
   'BUNDLE_VER: ',
   'LOCALE: Jpn',
-  'IP_ADDRESS: 192.168.1.112',
-  'SID: 956c729eb8eb60d80239ea6c662ebd9b',
-  'Content-Length: 176',
+  'IP_ADDRESS: 192.168.0.110',
+  'SID: bc41c108715c98f0cae62f6f94a990c2',
   'X-Unity-Version: 2017.1.2p2',
   'PLATFORM: 1',
   'Connection: keep-alive',
   'Accept-Language: en-us',
   'APP_VER: '.$appver,
-  'RES_VER: 10000000',
+  'RES_VER: 10002700',
   'Accept: */*',
   'Content-Type: application/x-www-form-urlencoded',
   'Accept-Encoding: gzip, deflate',
@@ -266,9 +272,9 @@ curl_setopt_array($curl, array(
   CURLOPT_CONNECTTIMEOUT=>3,
   CURLOPT_SSL_VERIFYPEER=>false,
   CURLOPT_POST=>true,
-  CURLOPT_POSTFIELDS=>base64_decode('Fh28009IuC3baOl9zp5LX7v/MuF7Ye2SI7fPSKlU84ru+bTFQPoEEoUnHBbZn4tf/gD6bCI+GD6opqtyeuAKq5Yile53RJYRU5ERCk6UpHWDmts6K8Z+vt5+3yb9sCU9EedYA2xnOoltbNjffQ1bTVBCErKRlDoo3agsFuCWF2AZEn3plfN7UpR7udogIePAWkRFeVpUWXlaakV5TldGbVltVXlOR1poWXpka05HUXg='),
+  CURLOPT_POSTFIELDS=>'wN4AAjnMd5CaTfLGxSL+rUQzafWYMcXIhaUZxKbsOCuR64ldQuDc0mGuXMU72S2nYcOBLpJjWXNeoj59TV2mXcIKl/YXMxtsHHuKKdBCIOujxxJHW79q3jQ3F2LRg8iDTN2EGo+1NLCHqyDD8kt4iYT47D5gJa3HM0d4+n6X/U0/6hB+3utmirBPHRZJ5hVZZaSXbuzefQSbgrQ=',
   CURLOPT_PROXY=>file_get_contents('currentproxy.txt'),
-  CURLOPT_HTTPPROXYTUNNEL=>true
+  CURLOPT_HTTPPROXYTUNNEL=>true,
 //  CURLOPT_PROXY=>'vultr.biliplus.com:87',
 //  CURLOPT_PROXYTYPE=>CURLPROXY_SOCKS5
 ));
@@ -287,13 +293,16 @@ if ($response === false) {
   _log('error fetching TruthVersion');
   return;
 }
-//$response = 'RerDjP3EYxdZtDcDm24Ni5WJLz/mnmKHltcuvXd8wUPHpVgkz7h8eNxSs25yL+xckTnO5EwR/YdCFu/jQ0tspFDhep7GI1hw1zPxX5AIzQnxS1uayolDzl9nfHZtJR28uj043NMdQ9Noqr0TNbbe0MUu66gYUFTzjTvboGf5l7nt/QwXR6hY3tzo67aMTpETbf0ZCi3urhOnEQlJlBMhjU2gtl6Ws2J7+wkTlNswpN2fn+d99xFuIdNln0J0jNRa/Ku/f2ix18wMiKA34ATWXUj5WBHcg6rZjbDrr7xp2QUbU4W3t62nRt7xR0klFxblxD5u4vmTZv5eYXHKlCgbMTM0YWVkYmQ3NzBkOTcyZDZiOTVhZTA0OGE5MjYyZGY2';
 $response = base64_decode($response);
-$key = substr($response, -32, 32);
-$udid = 'b94fb285-fdda-4136-b66c-e694f141cdab';
-$udid = '662dcf1f-cf2e-4560-a325-f550a1c01954';
-$iv = substr(str_replace('-','',$udid),0,16);
-$response = msgpack_unpack(decrypt(substr($response, 0, -32), $key, $iv));
+file_put_contents('resp.data', $response);
+system('wine Coneshell_call.exe -unpack-edcadba12a674a089107d8065a031742 resp.data resp.json >/dev/null 2>&1');
+unlink('resp.data');
+if (!file_exists('resp.json')) {
+  _log('Unpack response failed');
+  return;
+}
+$response = json_decode(file_get_contents('resp.json'), true);
+unlink('resp.json');
 
 //print_r($response);
 //exit;
@@ -343,10 +352,10 @@ file_put_contents('data/+manifest_movie.txt', $manifest);
 $manifest = file_get_contents('data/+manifest_masterdata.txt');
 $manifest = array_map(function ($i){ return explode(',', $i); }, explode("\n", $manifest));
 foreach ($manifest as $entry) {
-  if ($entry[0] === 'a/masterdata_master.unity3d') { $manifest = $entry; break; }
+  if ($entry[0] === 'a/masterdata_master.cdb') { $manifest = $entry; break; }
 }
-if ($manifest[0] !== 'a/masterdata_master.unity3d') {
-  throw new Exception('masterdata_master.unity3d not found');
+if ($manifest[0] !== 'a/masterdata_master.cdb') {
+  throw new Exception('masterdata_master.cdb not found');
 }
 $bundleHash = $manifest[1];
 $bundleSize = $manifest[3]|0;
@@ -360,7 +369,7 @@ if ($last_version['hash'] == $bundleHash) {
 }
 $last_version['hash'] = $bundleHash;
 //download bundle
-_log("downloading bundle for TruthVersion ${TruthVersion}, hash: ${bundleHash}, size: ${bundleSize}");
+_log("downloading cdb for TruthVersion ${TruthVersion}, hash: ${bundleHash}, size: ${bundleSize}");
 $bundleFileName = "master_${TruthVersion}.unity3d";
 curl_setopt_array($curl, array(
   CURLOPT_URL=>'http://priconne-redive.akamaized.net/dl/pool/AssetBundles/'.substr($bundleHash,0,2).'/'.$bundleHash,
@@ -376,26 +385,18 @@ if ($downloadedSize != $bundleSize || $downloadedHash != $bundleHash) {
 }
 
 //extract db
-_log('extracting bundle');
-$bundle = new MemoryStream($bundle);
-$assetsList = extractBundle($bundle);
+_log('dumping cdb');
+file_put_contents('master.cdb', $bundle);
 unset($bundle);
-
-$asset = new AssetFile($assetsList[0]);
-foreach ($asset->preloadTable as &$item) {
-  if ($item->typeString == 'TextAsset') {
-    $item = new TextAsset($item, true);
-    if($item->name === 'master') {
-      file_put_contents('redive.db', $item->data);
-      file_put_contents('redive.db.br', brotli_compress($item->data, 9));
-      break;
-    }
-  }
+system('wine Coneshell_call.exe -cdb master.cdb master.mdb >/dev/null 2>&1');
+if (!file_exists('master.mdb')) {
+  _log('Dump master.mdb failed');
+  return;
 }
-
-$asset->__desctruct();
-unset($asset);
-unlink($assetsList[0]);
+unlink('master.cdb');
+rename('master.mdb', 'redive.db');
+$dbData = file_get_contents('redive.db');
+file_put_contents('redive.db.br', brotli_compress($dbData, 9));
 
 //dump sql
 _log('dumping sql');
