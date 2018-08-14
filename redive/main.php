@@ -352,7 +352,8 @@ file_put_contents('data/+manifest_movie.txt', $manifest);
 $manifest = file_get_contents('data/+manifest_masterdata.txt');
 $manifest = array_map(function ($i){ return explode(',', $i); }, explode("\n", $manifest));
 foreach ($manifest as $entry) {
-  if ($entry[0] === 'a/masterdata_master.cdb') { $manifest = $entry; break; }
+  if ($entry[0] === 'a/masterdata_master.cdb') { $manifest = $entry; }
+  if ($entry[0] === 'a/masterdata_master.unity3d') { file_put_contents('last_version_legacy.json', json_encode(['TruthVersion'=>$TruthVersion, 'hash' => $entry[1]])); }
 }
 if ($manifest[0] !== 'a/masterdata_master.cdb') {
   throw new Exception('masterdata_master.cdb not found');
