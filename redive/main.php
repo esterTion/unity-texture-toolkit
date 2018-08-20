@@ -295,7 +295,10 @@ if ($response === false) {
 }
 $response = base64_decode($response);
 file_put_contents('resp.data', $response);
-system('wine Coneshell_call.exe -unpack-edcadba12a674a089107d8065a031742 resp.data resp.json >/dev/null 2>&1');
+$isWin = DIRECTORY_SEPARATOR === '\\';
+$cmdPrepend = $isWin ? '' : 'wine ';
+$cmdAppend = $isWin ? '' : ' >/dev/null 2>&1';
+system($cmdPrepend.'Coneshell_call.exe -unpack-edcadba12a674a089107d8065a031742 resp.data resp.json'.$cmdAppend);
 unlink('resp.data');
 if (!file_exists('resp.json')) {
   _log('Unpack response failed');
@@ -307,6 +310,19 @@ unlink('resp.json');
 //print_r($response);
 //exit;
 if (!isset($response['data_headers']['required_res_ver'])) {
+  if (isset($response['data_headers']['result_code']) && $response['data_headers']['result_code'] == 101) {
+    // maintenance, wait for 00:30/30:30
+    $now = time();
+    $until = $now - $now % 1800 + 1830;
+    $wait = $until - $now;
+    if ($wait > 600) {
+      _log("maintaining, exit");
+      return;
+    }
+    _log("maintaining, wait for ${wait} secs now");
+    sleep($wait);
+    return main();
+  }
   _log('invalid response: '. json_encode($response));
   return;
 }
@@ -389,7 +405,7 @@ if ($downloadedSize != $bundleSize || $downloadedHash != $bundleHash) {
 _log('dumping cdb');
 file_put_contents('master.cdb', $bundle);
 unset($bundle);
-system('wine Coneshell_call.exe -cdb master.cdb master.mdb >/dev/null 2>&1');
+system($cmdPrepend.'Coneshell_call.exe -cdb master.cdb master.mdb'.$cmdAppend);
 if (!file_exists('master.mdb')) {
   _log('Dump master.mdb failed');
   return;
