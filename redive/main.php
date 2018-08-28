@@ -88,7 +88,7 @@ function encodeValue($value) {
   }
   return implode(", ", $arr);
 }
-function do_commit($TruthVersion, $db = NULL) {
+function do_commit($TruthVersion, $db = NULL, $extraMsg = '') {
   exec('git diff --cached | sed -e "s/@@ -1 +1 @@/@@ -1,1 +1,1 @@/g" >a.diff');
   $versionDiff = parse_db_diff('a.diff', $db, [
     'clan_battle_period.sql' => 'diff_clan_battle', // clan_battle
@@ -108,7 +108,7 @@ function do_commit($TruthVersion, $db = NULL) {
   $versionDiff['timeStr'] = date('Y-m-d H:i', $versionDiff['time'] + 3600);
 
   $diff_send = [];
-  $commitMessage = [$TruthVersion];
+  $commitMessage = [$TruthVersion.$extraMsg];
   if (isset($versionDiff['new_table'])) {
     $diff_send['new_table'] = $versionDiff['new_table'];
     $commitMessage[] = '- '.count($diff_send['new_table']).' new table: '. implode(', ', $diff_send['new_table']);
@@ -161,7 +161,7 @@ function do_commit($TruthVersion, $db = NULL) {
   $data = json_encode(array(
     'game'=>'redive',
     'hash'=>$hash[0],
-    'ver' =>$TruthVersion,
+    'ver' =>$TruthVersion.$extraMsg,
     'data'=>$diff_send
   ));
   $header = [
@@ -233,7 +233,11 @@ if ($appinfo !== false) {
   }
 }
 
+$isWin = DIRECTORY_SEPARATOR === '\\';
+$cmdPrepend = $isWin ? '' : 'wine ';
+$cmdAppend = $isWin ? '' : ' >/dev/null 2>&1';
 //check TruthVersion
+/*
 $game_start_header = [
   'Host: app.priconne-redive.jp',
   'User-Agent: princessconnectredive/39 CFNetwork/758.4.3 Darwin/15.5.0',
@@ -257,7 +261,7 @@ $game_start_header = [
   'Accept-Language: en-us',
   'APP_VER: '.$appver,
   'RES_VER: 10002700',
-  'Accept: */*',
+  'Accept: *\/*',
   'Content-Type: application/x-www-form-urlencoded',
   'Accept-Encoding: gzip, deflate',
   'DEVICE: 1'
@@ -295,9 +299,6 @@ if ($response === false) {
 }
 $response = base64_decode($response);
 file_put_contents('resp.data', $response);
-$isWin = DIRECTORY_SEPARATOR === '\\';
-$cmdPrepend = $isWin ? '' : 'wine ';
-$cmdAppend = $isWin ? '' : ' >/dev/null 2>&1';
 system($cmdPrepend.'Coneshell_call.exe -unpack-edcadba12a674a089107d8065a031742 resp.data resp.json'.$cmdAppend);
 unlink('resp.data');
 if (!file_exists('resp.json')) {
@@ -327,7 +328,32 @@ if (!isset($response['data_headers']['required_res_ver'])) {
   return;
 }
 $TruthVersion = $response['data_headers']['required_res_ver'];
+*/
 
+if (file_exists('stop_cron')) return;
+
+// guess latest res_ver
+global $curl;
+$curl = curl_init();
+curl_setopt_array($curl, array(
+  CURLOPT_RETURNTRANSFER=>true,
+  CURLOPT_HEADER=>0,
+  CURLOPT_SSL_VERIFYPEER=>false
+));
+$TruthVersion = $last_version['TruthVersion'];
+$current_ver = $TruthVersion|0;
+
+for ($i=1; $i<=10; $i++) {
+  $guess = $current_ver + $i * 10;
+  curl_setopt($curl, CURLOPT_URL, 'http://priconne-redive.akamaized.net/dl/Resources/'.$guess.'/Jpn/AssetBundles/iOS/manifest/manifest_assetmanifest');
+  curl_exec($curl);
+  $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+  if ($code == 200) {
+    $TruthVersion = $guess.'';
+    break;
+  }
+}
+curl_close($curl);
 if ($TruthVersion == $last_version['TruthVersion']) {
   _log('no update found');
   return;
@@ -368,11 +394,15 @@ file_put_contents('data/+manifest_movie.txt', $manifest);
 $manifest = file_get_contents('data/+manifest_masterdata.txt');
 $manifest = array_map(function ($i){ return explode(',', $i); }, explode("\n", $manifest));
 foreach ($manifest as $entry) {
-  if ($entry[0] === 'a/masterdata_master.cdb') { $manifest = $entry; }
-  if ($entry[0] === 'a/masterdata_master.unity3d') { file_put_contents('last_version_legacy.json', json_encode(['TruthVersion'=>$TruthVersion, 'hash' => $entry[1]])); }
+  if ($entry[0] === 'a/masterdata_master.cdb') { $manifest = $entry; break; }
 }
 if ($manifest[0] !== 'a/masterdata_master.cdb') {
-  throw new Exception('masterdata_master.cdb not found');
+  _log('masterdata_master.cdb not found');
+  file_put_contents('stop_cron', '');
+  chdir('data');
+  exec('git add !TruthVersion.txt +manifest_*.txt');
+  do_commit($TruthVersion, NULL, '(no master db)');
+  return;
 }
 $bundleHash = $manifest[1];
 $bundleSize = $manifest[3]|0;
