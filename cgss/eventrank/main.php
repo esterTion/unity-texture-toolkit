@@ -165,6 +165,7 @@ if ($fetchPt) {
   foreach(execQuery($db, "SELECT rank_min FROM $ptTable WHERE event_id=$id") as $row) {
     $ptBorders[] = $row['rank_min']+0;
   }
+  $ptBorders[]= 501;
 }
 $scoreBorders=[1];
 if ($fetchScore) {
@@ -308,4 +309,7 @@ if ($fetchScore) {
   }
 }
 
-file_put_contents("data/$id.json", json_encode($eventData));
+$filedata = json_encode($eventData);
+file_put_contents("data/$id.json", $filedata);
+file_put_contents("data/$id.json.br", brotli_compress($filedata, 11, BROTLI_TEXT));
+file_put_contents("data/$id.json.gz", gzencode($filedata, 9));
