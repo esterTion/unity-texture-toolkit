@@ -103,7 +103,7 @@ function do_commit($TruthVersion, $db = NULL, $extraMsg = '') {
     'campaign_schedule.sql' => 'diff_campaign',     // campaign
   ]);
   unlink('a.diff');
-  $versionDiff['ver'] = $TruthVersion.' (no data update)';
+  $versionDiff['ver'] = $TruthVersion.$extraMsg;
   $versionDiff['time'] = time();
   $versionDiff['timeStr'] = date('Y-m-d H:i', $versionDiff['time'] + 3600);
 
@@ -399,9 +399,10 @@ foreach ($manifest as $entry) {
 if ($manifest[0] !== 'a/masterdata_master.cdb') {
   _log('masterdata_master.cdb not found');
   //file_put_contents('stop_cron', '');
+  file_put_contents('last_version', json_encode($last_version));
   chdir('data');
   exec('git add !TruthVersion.txt +manifest_*.txt');
-  do_commit($TruthVersion, NULL, '(no master db)');
+  do_commit($TruthVersion, NULL, ' (no master db)');
   checkAndUpdateResource($TruthVersion);
   return;
 }
