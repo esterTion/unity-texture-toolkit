@@ -74,7 +74,9 @@ function diff_event_data($file) {
       preg_match('(/\*id\*/(\d+))', $line->getContent(), $id);
       if (empty($id)) continue;
       $id = $id[1];
-      list($item) = execQuery($db, 'SELECT * FROM event_data WHERE id='.$id);
+      $item = execQuery($db, 'SELECT * FROM event_data WHERE id='.$id);
+      if (!isset($item[0])) continue;
+      $item = $item[0];
       $items[] = [
         'id' => $id,
         'name' => $item['name'],
@@ -96,7 +98,9 @@ function diff_chino($file) {
       if (empty($id)) continue;
       $id = $id[1] |0;
       if (empty($id)) continue;
-      list($item) = execQuery($db, 'SELECT * FROM cappuccino_data WHERE id='.$id);
+      $item = execQuery($db, 'SELECT * FROM cappuccino_data WHERE id='.$id);
+      if (!isset($item[0])) continue;
+      $item = $item[0];
       $items[] = [
         'id' => $id,
         'title' => str_replace('\n',' ',$item['title']),
@@ -122,11 +126,17 @@ function diff_card($file) {
       if (empty($id)) continue;
       $id = $id[1];
       if ($id % 2 == 0) continue;
-      list($item) = execQuery($db, 'SELECT * FROM card_data WHERE id='.$id);
+      $item = execQuery($db, 'SELECT a.name as name, a.rarity as rarity, b.skill_type as skill_type, b.condition as condition, b.probability_type as probability_type, b.available_time_type as available_time_type FROM card_data as a, skill_data as b WHERE a.id='.$id.' AND a.skill_id=b.id');
+      if (!isset($item[0])) continue;
+      $item = $item[0];
       $items[] = [
         'id' => $id,
         'name' => $item['name'],
-        'rarity' => $item['rarity']
+        'rarity' => (int)$item['rarity'],
+        'skill_type' => (int)$item['skill_type'],
+        'condition' => (int)$item['condition'],
+        'probability_type' => (int)$item['probability_type'],
+        'available_time_type' => (int)$item['available_time_type']
       ];
     }
   }
@@ -144,9 +154,11 @@ function diff_gacha($file) {
       $id = $id[1];
       if (
         $id < 30000 || 
-        ($id >= 40000 && $id < 70000)
+        ($id >= 40000 && $id < 80000)
       ) continue;
-      list($item) = execQuery($db, 'SELECT * FROM gacha_data WHERE id='.$id);
+      $item = execQuery($db, 'SELECT * FROM gacha_data WHERE id='.$id);
+      if (!isset($item[0])) continue;
+      $item = $item[0];
       $items[] = [
         'id' => $id,
         'name' => $item['name'],
@@ -169,7 +181,9 @@ function diff_gekijou($file) {
       if (empty($id)) continue;
       $id = $id[1] |0;
       if (empty($id)) continue;
-      list($item) = execQuery($db, 'SELECT * FROM latte_art_data WHERE id='.$id);
+      $item = execQuery($db, 'SELECT * FROM latte_art_data WHERE id='.$id);
+      if (!isset($item[0])) continue;
+      $item = $item[0];
       $items[] = [
         'id' => $id,
         'title' => $item['title'],
@@ -195,7 +209,9 @@ function diff_music($file) {
       $balance--;
       if (empty($id)) continue;
       $id = $id[1];
-      list($item) = execQuery($db, 'SELECT * FROM music_data WHERE id='.$id);
+      $item = execQuery($db, 'SELECT * FROM music_data WHERE id='.$id);
+      if (!isset($item[0])) continue;
+      $item = $item[0];
       $items[] = [
         'id' => $id,
         'name' => str_replace('\n', '',$item['name'])
@@ -214,7 +230,9 @@ function diff_party($file) {
       preg_match('(/\*term_id\*/(\d+))', $line->getContent(), $id);
       if (empty($id)) continue;
       $id = $id[1];
-      list($item) = execQuery($db, 'SELECT * FROM party_data_re WHERE term_id='.$id);
+      $item = execQuery($db, 'SELECT * FROM party_data_re WHERE term_id='.$id);
+      if (!isset($item[0])) continue;
+      $item = $item[0];
       $items[] = [
         'id' => $id,
         'start' => $item['event_start'],
@@ -262,7 +280,7 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
   foreach($commits as $no=>$commit){
     if (!isset($commits[$no+1])) continue;
     if ($commit['skip']) continue;
-    echo "\r".$commit['ver'].' '.date('Y-m-d H:i', $commit['time'] + 3600).' '.$no.'/'.count($commits);
+    echo "\n".$commit['ver'].' '.date('Y-m-d H:i', $commit['time'] + 3600).' '.$no.'/'.count($commits);
     exec('D:/cygwin64/bin/git diff '.$commits[$no+1]['hash'].' '.$commit['hash'].' >../a.diff');
     chdir('..');
     $master = new PDO('sqlite:'.__DIR__.'/master.db');

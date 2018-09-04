@@ -87,8 +87,34 @@ function do_commit($TruthVersion, $db = NULL) {
     $commitMessage[] = '- '.count($diff_send['new_table']).' new table: '. implode(', ', $diff_send['new_table']);
   }
   if (isset($versionDiff['card'])) {
-    $diff_send['card'] = array_map(function ($a){ return ['','N','N+','R','R+','SR','SR+','SSR','SSR+'][$a['rarity']].$a['name'];}, $versionDiff['card']);
-    $commitMessage[] = '- '.count($diff_send['card']).' new card';
+    $diff_send['card'] = array_map(function ($a){ 
+      return ['','N','N+','R','R+','SR','SR+','SSR','SSR+'][$a['rarity']].
+      $a['name'].
+      ' ('.$a['condition'].'s/'.
+      ['','','Low','Medium','High'][$a['probability_type']].
+      '/'.(function ($a){
+        switch ($a) {
+          case 1: case 2: case 3:             { return 'Perfect Bonus'; }
+          case 4:                             { return 'Combo Bonus'; }
+          case 5: case 6: case 7: case 8:     { return 'Perfect Support'; }
+          case 9: case 10: case 11:           { return 'Combo Support'; }
+          case 12:                            { return 'Damage Guard'; }
+          case 13: case 17: case 18: case 19: { return 'Healer'; }
+          case 14:                            { return 'Overload'; }
+          case 15:                            { return 'Concentration'; }
+          case 16:                            { return 'Encore'; }
+          case 20:                            { return 'Skill Boost'; }
+          case 21: case 22: case 23:          { return 'Focus'; }
+          case 24:                            { return 'All Round'; }
+          case 25:                            { return 'Life Sparkle'; }
+          case 26:                            { return 'Synergy'; }
+          case 27:                            { return 'Coordination'; }
+          default:                            { return 'Skill '.$a; }
+        }
+      })($a['skill_type']).
+      ')';
+    }, $versionDiff['card']);
+    $commitMessage[] = "- new cards: \n  - ".implode("\n  - ", $diff_send['card']);
   }
   if (isset($versionDiff['event'])) {
     $diff_send['event'] = array_map(function ($a){ return $a['name'];}, $versionDiff['event']);
@@ -274,7 +300,7 @@ file_put_contents('manifest.db', cgss_data_uncompress($manifest_comp));
 unset($manifest_comp);
 $manifest = new PDO('sqlite:manifest.db');
 $f = fopen("data/manifests.sql", 'w');
-$values = execQuery($manifest, "SELECT * FROM manifests");
+$values = execQuery($manifest, "SELECT * FROM manifests order by name");
 foreach ($values as $value) {
   fwrite($f, "INSERT INTO `manifests` VALUES (".encodeValue($value).");\n");
 }
