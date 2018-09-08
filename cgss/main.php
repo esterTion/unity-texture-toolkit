@@ -1,7 +1,7 @@
 <?php
 chdir(__DIR__);
 require_once 'UnityBundle.php';
-require_once 'UnityAsset.php';
+require_once 'resource_fetch.php';
 require_once 'diff_parse.php';
 if (!file_exists('last_version')) {
   $last_version = array('TruthVersion'=>0,'hash'=>'');

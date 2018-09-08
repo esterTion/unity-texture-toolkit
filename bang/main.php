@@ -2,7 +2,7 @@
 
 chdir(__DIR__);
 require_once 'UnityBundle.php';
-require_once 'UnityAsset.php';
+require_once 'resource_fetch.php';
 if (!file_exists('last_version')) {
   $last_version = array('data'=>'0','master'=>'0');
 } else {
@@ -237,8 +237,7 @@ $appver = file_exists('appver') ? file_get_contents('appver') : '2.1.0';
 $itunesid = 1195834442;
 $curl = curl_init();
 curl_setopt_array($curl, array(
-  CURLOPT_URL=>'https://itunes.apple.com/lookup?id='.$itunesid.'&lang=ja_jp&country=jp',
-  CURLOPT_USERAGENT=>'Mozilla/5.0 (Windows NT 6.1; Win64; x64; rv:51.0) Gecko/20100101 Firefox/59.0',
+  CURLOPT_URL=>'https://itunes.apple.com/lookup?id='.$itunesid.'&lang=ja_jp&country=jp&rnd='.rand(10000000,99999999),
   CURLOPT_HEADER=>0,
   CURLOPT_RETURNTRANSFER=>1,
   CURLOPT_SSL_VERIFYPEER=>false
@@ -316,7 +315,8 @@ curl_setopt_array($curl, array(
   CURLOPT_URL => 'https://api.star.craftegg.jp/api/suite/master',
   CURLOPT_HTTPHEADER=>$header
 ));
-$masterData = new MemoryStream(decrypt(curl_exec($curl), 'mikumikulukaluka', 'lukalukamikumiku'));
+file_put_contents('master.dat', decrypt(curl_exec($curl), 'mikumikulukaluka', 'lukalukamikumiku'));
+$masterData = new FileStream('master.dat');
 //$masterData = new FileStream('master');
 
 $MasterProto = parseProto('SuiteMaster_gen.proto');
@@ -342,7 +342,7 @@ foreach ($situationMap['entries'] as &$entry) {
   $id = substr($entry['resourceSetName'], 3);
   $names[$id] = str_repeat('★',$entry['rarity']).'['.$entry['prefix'].']'.$charaInfo[$entry['characterId']]['characterName'];
 }
-file_put_contents(RESOURCE_PATH_PREFIX.'card/index.json', json_encode($names, JSON_UNESCAPED_SLASHES+JSON_UNESCAPED_UNICODE));
+file_put_contents(RESOURCE_PATH_PREFIX.'card/index.json', json_encode($names, JSON_UNESCAPED_SLASHES));
 unset($situationMap, $charaInfo, $names, $master);
 file_put_contents('data/!masterDataVersion.txt', $masterVer."\n");
 $commit[] = 'master: '.$masterVer;
@@ -362,7 +362,8 @@ curl_setopt_array($curl, array(
   CURLOPT_URL => 'https://d2ktlshvcuasnf.cloudfront.net/Release/'.$dataVer.'/iOS/AssetBundleInfo',
   CURLOPT_HTTPHEADER=>$header
 ));
-$bundleInfoData = new MemoryStream(curl_exec($curl));
+file_put_contents('manifest.dat', curl_exec($curl));
+$bundleInfoData = new FileStream('manifest.dat');
 $bundleInfoProto = parseProto('AssetBundleInfo_gen.proto');
 _log('dumping manifest');
 $bundleInfo = parseProtoBuf('AssetBundleInfo', $bundleInfoData->size, $bundleInfoData, $bundleInfoProto);

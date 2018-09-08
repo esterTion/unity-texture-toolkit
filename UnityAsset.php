@@ -188,7 +188,7 @@ class AssetFile {
       $varCount = $stream->long;
       $stringSize = $stream->long;
       $stream->position += $varCount * 24;
-      $stringReader = new MemoryStream($stream->readData($stringSize));
+      $stringReader = new MemoryStream($stringSize?$stream->readData($stringSize):'');
       $className = '';
       $classVar = [];
       $stream->position -= $varCount * 24 + $stringSize;
@@ -844,7 +844,12 @@ class Texture2D {
     }
     $dir = pathinfo($saveTo, PATHINFO_DIRNAME);
     if (!file_exists($dir)) mkdir($dir, 0777, true);
-    rename('output.'.$format, $saveTo.'.'.$format);
+    $saveToFull = $saveTo.'.'.$format;
+    if (file_exists($saveToFull)) {
+      $ftime = date('_Ymd_Hi', filemtime($saveToFull));
+      rename($saveToFull, $saveTo.$ftime.'.'.$format);
+    }
+    rename('output.'.$format, $saveToFull);
   }
 }
 class TextAsset {
@@ -982,4 +987,3 @@ class TextureFormat {
     65 => 'ETC2_RGBA8Crunched'
   );
 }
-

@@ -942,7 +942,8 @@ class TextureFormat {
 }
 
 $resourceToExport = [
-  [ 'bundleNameMatch'=>'/^characters\/resourceset\/res(\d+)$/', 'namePrefix'=>'$1_', 'nameMatch'=>'/^(.+)$/',     'exportTo'=>'card/$1' ]
+  [ 'bundleNameMatch'=>'/^characters\/resourceset\/res(\d+)$/', 'namePrefix'=>'$1_', 'nameMatch'=>'/^(.+)$/',     'exportTo'=>'card/$1' ],
+  [ 'bundleNameMatch'=>'/^title\/(.+)$/', 'namePrefix'=>'$1_', 'nameMatch'=>'/^(.+?)_title_bg$/',     'exportTo'=>'title_bg/$1' ]
 ];
 
 function shouldExportFile($name, $rule) {
@@ -1006,15 +1007,15 @@ function checkAndUpdateResource($dataVer) {
         foreach ($asset->preloadTable as &$item) {
           if ($item->typeString == 'Texture2D') {
             $item = new Texture2D($item, true);
+            $itemname = $item->name;
+            if (isset($rule['namePrefix'])) {
+              $itemname = preg_replace($rule['bundleNameMatch'], $rule['namePrefix'], $name).$itemname;
+            }
             if (isset($rule['print'])) {
-              var_dump($item->name);
+              var_dump($itemname);
               continue;
             }
-            if (shouldExportFile($item->name, $rule)) {
-              $itemname = $item->name;
-              if (isset($rule['namePrefix'])) {
-                $itemname = preg_replace($rule['bundleNameMatch'], $rule['namePrefix'], $name).$itemname;
-              }
+            if (shouldExportFile($itemname, $rule)) {
               $saveTo = RESOURCE_PATH_PREFIX. preg_replace($rule['nameMatch'], $rule['exportTo'], $itemname);
               $item->exportTo($saveTo, 'webp', '-lossless 1');
               touch($saveTo. '.webp', $currenttime);
@@ -1037,7 +1038,7 @@ function checkAndUpdateResource($dataVer) {
         unlink($asset);
       }
       unset($bundleData);
-      if (isset($rule['print'])) exit;
+      //if (isset($rule['print'])) exit;
       setHashCached($name, $info['crc']);
     }
   }
@@ -1047,7 +1048,8 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
   chdir(__DIR__);
   $curl = curl_init();
   function _log($s) {echo "$s\n";}
-  checkAndUpdateResource('2.1.0.400');
+  var_dump(trim(file_get_contents('data/!dataVersion.txt')));
+  checkAndUpdateResource(trim(file_get_contents('data/!dataVersion.txt')));
   /*$asset = new AssetFile('CAB-4856cccde53d6f3bfd0054253f1639a8');
   foreach ($asset->preloadTable as &$item) {
     if ($item->typeString == 'Texture2D') {
