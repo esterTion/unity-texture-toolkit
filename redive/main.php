@@ -394,10 +394,10 @@ file_put_contents('data/+manifest_movie.txt', $manifest);
 $manifest = file_get_contents('data/+manifest_masterdata.txt');
 $manifest = array_map(function ($i){ return explode(',', $i); }, explode("\n", $manifest));
 foreach ($manifest as $entry) {
-  if ($entry[0] === 'a/masterdata_master.cdb') { $manifest = $entry; break; }
+  if ($entry[0] === 'a/masterdata_master_0003.cdb') { $manifest = $entry; break; }
 }
-if ($manifest[0] !== 'a/masterdata_master.cdb') {
-  _log('masterdata_master.cdb not found');
+if ($manifest[0] !== 'a/masterdata_master_0003.cdb') {
+  _log('masterdata_master_0003.cdb not found');
   //file_put_contents('stop_cron', '');
   file_put_contents('last_version', json_encode($last_version));
   chdir('data');
