@@ -3,198 +3,188 @@
  * @author EAirPeter & esterTion
  * coneshell.dll is from (c)Cygames Inc.
  */
-
 #define _CRT_SECURE_NO_WARNINGS
 #define _WIN32_LEAN_AND_MEAN
 
-#include <chrono>
 #include <cstdint>
-#include <cstdio>
-#include <cstdlib>
 #include <memory>
 #include <string>
-#include <string_view>
-#include <thread>
 #include <utility>
+#include <iostream>
+#include <sstream>
+using namespace std;
 
 #include <Windows.h>
 
 #include "sqlite3.h"
 
-namespace {
-    using namespace ::std;
-    using namespace ::std::literals;
+template<class Obj, class Del>
+decltype(auto) Wrap(Obj *ptr, Del del) {
+	return std::unique_ptr<Obj, Del>(ptr, del);
+}
+std::string ReadAll(const char *file) {
+	std::string res;
+	auto f = Wrap(fopen(file, "rb"), &fclose);
+	char buf[4096];
+	while (!feof(f.get()))
+		res.append(buf, fread(buf, 1, sizeof(buf), f.get()));
+	return res;
+}
+void WriteAll(const char *file, const char* data, int length) {
+	auto f = Wrap(fopen(file, "wb"), &fclose);
+	int wrote = 0;
+	int nextChunk = 4096;
+	while (wrote < length) {
+		wrote += 4096;
+		if (wrote > length) {
+			nextChunk -= wrote - length;
+		}
+		fwrite(data + wrote - 4096, 1, nextChunk, f.get());
+	}
+}
+string hex2bin(string hex) {
+	if (hex.length() % 2 != 0) {
+		return NULL;
+	}
+	string val = "";
+	int len = hex.length();
+	for (int i = 0; i < len; i += 2) {
+		char byte = 0;
+		char c;
+		c = hex[i];
+		if (c >= '0' && c <= '9') byte = (c - '0') << 4;
+		else if (c >= 'A' && c <= 'F') byte = (c - 'A' + 10) << 4;
+		else if (c >= 'a' && c <= 'f') byte = (c - 'a' + 10) << 4;
+		else return NULL;
 
-    using Int = int32_t;
-    using Long = int64_t;
-    using IntPtr = void *;
-    using ByteArray = char *;
-
-    inline void Assert(bool pred, int code) {
-        if (!pred)
-            exit(code);
-    }
-
-    struct ReturnValueChecker {
-        inline void operator +(void *res) {
-            Assert(res, 2);
-        }
-        inline void operator <(int res) {
-            Assert(res >= 0, 2);
-        }
-        inline void operator =(int res) {
-            Assert(!res, res);
-        }
-    } X;
-
-    template<class Obj, class Del>
-    decltype(auto) Wrap(Obj *ptr, Del del) {
-        X + ptr;
-        return unique_ptr<Obj, Del>(ptr, del);
-    }
-
-    string ReadAll(const char *file) {
-        string res;
-        auto f = Wrap(fopen(file, "rb"), &fclose);
-        char buf[4096];
-        while (!feof(f.get()))
-            res.append(buf, fread(buf, 1, sizeof(buf), f.get()));
-        return res;
-    }
-
-    void WriteAll(const char *file, string_view data) {
-        auto f = Wrap(fopen(file, "wb"), &fclose);
-        fwrite(data.data(), data.size(), 1, f.get());
-    }
-
-    constexpr int HexDigit(char ch) {
-        if (ch < '0')
-            exit(1);
-        if (ch <= '9')
-            return ch - '0';
-        if (ch < 'A')
-            exit(1);
-        if (ch <= 'Z')
-            return ch - 'A' + 10;
-        if (ch < 'a')
-            exit(1);
-        if (ch <= 'z')
-            return ch - 'a' + 10;
-        exit(1);
-    }
-
-    constexpr char Hex2Byte(const char hi, const char lo) {
-        return (char) (HexDigit(hi) << 4 | HexDigit(lo));
-    }
-
-    inline string Hex2Bin(string_view hex) {
-        if (hex.size() % 2 != 0)
-            exit(-1);
-        string res;
-        for (size_t i = 0; i < hex.size(); i += 2)
-            res += Hex2Byte(hex[i], hex[i + 1]);
-        return res;
-    }
-
-    inline int IncorrectUsage() {
-        fputs(
-            "\n"
-            "Incorrect usage\n"
-            "    -cdb            <in> <out>  unpack cdb\n"
-            "    -pack-<udid>    <in> <out>  pack request body from json\n"
-            "    -unpack-<udid>  <in> <out>  unpack response body to json\n",
-            stderr
-        );
-        this_thread::sleep_for(3s);
-        return 1;
-    }
-
+		c = hex[i + 1];
+		if (c >= '0' && c <= '9') byte |= (c - '0');
+		else if (c >= 'A' && c <= 'F') byte |= (c - 'A' + 10);
+		else if (c >= 'a' && c <= 'f') byte |= (c - 'a' + 10);
+		else return NULL;
+		val += byte;
+	}
+	return val;
 }
 
-int main(int argc, const char *argv[]) {
-    if (argc != 4)
-        return IncorrectUsage();
+int main(int argc, const char* argv[]) {
+	auto h = Wrap(LoadLibraryA("coneshell.dll"), &FreeLibrary);
+	using Int = std::int32_t;
+	using Long = std::int64_t;
+	using IntPtr = void *;
+	using ByteArray = char *;
+	auto *_fx00 = (IntPtr(*)()) GetProcAddress(h.get(), "_fx00");
+	auto *_a = (IntPtr(*)()) _fx00(); // 获取函数指针
+	auto *_e = (Int(*)(IntPtr, ByteArray, Int, ByteArray, Int)) _a(); // Pack(IntPtr out, ByteArray body, int bodyLen, ByteArray iv, int unk)
+	auto *_g = (Int(*)(IntPtr, ByteArray, Int)) _a(); // Unpack(IntPtr out, ByteArray body, int bodyLen)
+	auto *_h = (Int(*)(IntPtr, Int, IntPtr, Int)) _a(); // DecompressUnpacked(IntPtr out, int decompressedSize, IntPtr body, int bodyLen)
+	auto *_c = (void(*)()) _a(); // ResetContext()
+	auto *_i = (IntPtr(*)(ByteArray, Long, ByteArray)) _a(); // OpenCustomVFS(ByteArray cdb, int cdbSize, ByteArray dbName)
+	auto *_j = (void(*)(IntPtr)) _a(); // CloseVFS(IntPtr vfsHandle)
+	auto *_b = (Int(*)(ByteArray, ByteArray)) _a(); // InitializeContext(udid, key)
+	auto *_d = (Int(*)(Int, Int)) _a(); // GetPackedSize(int bodySize)
+	auto *_f = (Int(*)(Int)) _a(); // GetUnpackedSize(int bodySize)
 
-    auto h = Wrap(LoadLibraryA("coneshell.dll"), &FreeLibrary);
-    auto *_fx00 = (IntPtr(*)()) GetProcAddress(h.get(), "_fx00");
-    auto *_a = (IntPtr(*)()) _fx00(); // NextFunctionPointer()
-    auto *_e = (Int(*)(IntPtr, ByteArray, Int, ByteArray, Int)) _a(); // Pack(IntPtr out, ByteArray body, int bodyLen, ByteArray iv, int unk)
-    auto *_g = (Int(*)(IntPtr, ByteArray, Int)) _a(); // Unpack(IntPtr out, ByteArray body, int bodyLen)
-    auto *_h = (Int(*)(IntPtr, Int, IntPtr, Int)) _a(); // DecompressUnpacked(IntPtr out, int decompressedSize, IntPtr body, int bodyLen)
-    auto *_c = (void(*)()) _a(); // ResetContext()
-    auto *_i = (IntPtr(*)(ByteArray, Long, ByteArray)) _a(); // OpenCustomVFS(ByteArray cdb, int cdbSize, ByteArray dbName)
-    auto *_j = (void(*)(IntPtr)) _a(); // CloseVFS(IntPtr vfsHandle)
-    auto *_b = (Int(*)(ByteArray, ByteArray)) _a(); // InitializeContext(udid, key)
-    auto *_d = (Int(*)(Int, Int)) _a(); // GetPackedSize(int bodySize)
-    auto *_f = (Int(*)(Int)) _a(); // GetUnpackedSize(int bodySize)
+	if (argc < 4) {
+		cerr << endl << "Not enough param" << endl
+			<< "\t-cdb\t\t<in> <out>\tunpack cdb" << endl
+			<< "\t-pack-<udid>\t<in> <out>\tpack request body from json" << endl
+			<< "\t-unpack-<udid>\t<in> <out>\tunpack response body to json" << endl;
+		Sleep(3e3);
+		return 1;
+	}
+	string mode = argv[1];
+	if (mode == "-cdb") {
+		auto  cdb = ReadAll(argv[2]);
+		char name[]{ "master.mdb" };
+		// prepare cdb to vfs
+		auto vfs = _i((ByteArray)cdb.data(), (Long)cdb.size(), name);
+		auto res = sqlite3_vfs_register((sqlite3_vfs *)vfs, 0);
+		if (res)
+			return res;
+		sqlite3 *psrc;
+		res = sqlite3_open_v2(name, &psrc, SQLITE_OPEN_READONLY, name);
+		if (res)
+			return res;
+		auto src = Wrap(psrc, &sqlite3_close);
+		sqlite3 *pdst;
+		res = sqlite3_open(argv[3], &pdst);
+		if (res)
+			return res;
+		auto dst = Wrap(pdst, &sqlite3_close);
+		auto pbk = sqlite3_backup_init(pdst, "main", psrc, "main");
+		if (!pbk)
+			return -1;
+		auto bk = Wrap(pbk, &sqlite3_backup_finish);
+		res = sqlite3_backup_step(pbk, -1);
+		if (res != SQLITE_DONE)
+			return res;
+		return 0;
+	}
+	else if (mode.substr(0, 7) == "-unpack") {
+		//string udid = "edcadba12a674a089107d8065a031742";
+		string udid = mode.substr(8);
+		string udidHex = hex2bin(udid);
+		int res0 = _b((ByteArray)udidHex.c_str(), "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
 
-    string_view mode = argv[1];
-    if (mode == "-cdb") {
-        auto cdb = ReadAll(argv[2]);
-        char name[] {"master.mdb"};
-        // prepare cdb to vfs
-        auto vfs = _i(cdb.data(), (Long) cdb.size(), name);
-        X = sqlite3_vfs_register((sqlite3_vfs *) vfs, 0);
-        sqlite3 *psrc;
-        X = sqlite3_open_v2(name, &psrc, SQLITE_OPEN_READONLY, name);
-        auto src = Wrap(psrc, &sqlite3_close);
-        sqlite3 *pdst;
-        X = sqlite3_open(argv[3], &pdst);
-        auto dst = Wrap(pdst, &sqlite3_close);
-        auto pbk = sqlite3_backup_init(pdst, "main", psrc, "main");
-        X + pbk;
-        auto bk = Wrap(pbk, &sqlite3_backup_finish);
-        auto res = sqlite3_backup_step(pbk, -1);
-        if (res != SQLITE_DONE)
-            return res;
-        return 0;
-    }
-    else if (mode.substr(0, 7) == "-unpack") {
-        //string udid = "edcadba12a674a089107d8065a031742";
-        auto udid = mode.substr(8);
-        auto udidHex = Hex2Bin(udid);
-        char zeros[32] {};
-        X = _b(udidHex.data(), zeros);
+		// pack once before unpack
+		char body[] = { "{}" };
+		int packedLen = _d(strlen(body), 0);
+		ByteArray packed = (ByteArray)malloc(packedLen);
+		int res = _e(packed, body, strlen(body), "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 0);
+		free(packed);
 
-        // pack once before unpack
-        string body = "{}";
-        auto packedLen = _d((int) body.size(), 0);
-        string packed((size_t) packedLen, '\0');
-        X < _e(packed.data(), body.data(), (int) body.size(), zeros, 0);
+		// unpack
+		auto encrypted = ReadAll(argv[2]);
+		auto unpackedLen = _f(encrypted.size());
+		IntPtr unpacked = (IntPtr)malloc(unpackedLen);
+		memset(unpacked, 0, unpackedLen);
+		res = _g(unpacked, (ByteArray)encrypted.data(), encrypted.size());
+		if (res < 0) {
+			return 2;
+		}
 
-        // unpack
-        auto encrypted = ReadAll(argv[2]);
-        auto unpackedLen = _f((int) encrypted.size());
-        string unpacked((size_t) unpackedLen, '\0');
-        X < _g(unpacked.data(), encrypted.data(), (int) encrypted.size());
-
-        // uncompress?
-        auto uncompressedSize = unpacked[0] | unpacked[1] << 8 | unpacked[2] << 16 | unpacked[3] << 24;
-        if (uncompressedSize > 0) {
-            string json((size_t) uncompressedSize, '\0');
-            X < _h(json.data(), uncompressedSize, unpacked.data() + 4, unpackedLen - 4);
-            WriteAll(argv[3], json);
-        }
-        else {
-            WriteAll(argv[3], string_view(unpacked).substr(4));
-        }
-        return 0;
-    }
-    else if (mode.substr(0, 5) == "-pack") {
-        //string udid = "edcadba12a674a089107d8065a031742";
-        auto udid = mode.substr(6);
-        auto udidHex = Hex2Bin(udid);
-        char zeros[32] {};
-        X = _b(udidHex.data(), zeros);
-
-        auto body = ReadAll(argv[2]);
-        auto packedLen = _d((int) body.size(), 0);
-        string packed((size_t) packedLen, '\0');
-        auto res = _e(packed.data(), body.data(), (int) body.size(), zeros, 0);
-        X < res;
-        packed.resize((size_t) res);
-        WriteAll(argv[3], packed);
-        return 0;
-    }
-    return IncorrectUsage();
+		// uncompress?
+		char* output;
+		int outputSize;
+		IntPtr json = NULL;
+		unsigned int uncompressedSize = *(char*)unpacked + (*((char*)unpacked + 1) << 8) + (*((char*)unpacked + 2) << 16) + (*((char*)unpacked + 3) << 24);
+		if (uncompressedSize > 0) {
+			json = (IntPtr)malloc(uncompressedSize);
+			int res2 = _h(json, uncompressedSize, (char*)unpacked + 4, unpackedLen - 4);
+			if (res2 < 0) {
+				return 2;
+			}
+			output = (char*)json;
+			outputSize = res2;
+		}
+		else {
+			output = (char*)unpacked + 4;
+			outputSize = unpackedLen - 4;
+		}
+		WriteAll(argv[3], output, outputSize);
+		free(unpacked);
+		if (json != NULL) free(json);
+		return 0;
+	}
+	else if (mode.substr(0, 5) == "-pack") {
+		auto body = ReadAll(argv[2]);
+		//string udid = "edcadba12a674a089107d8065a031742";
+		string udid = mode.substr(6);
+		string udidHex = hex2bin(udid);
+		_b((ByteArray)udidHex.c_str(), "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0");
+		int packedLen = _d(body.size(), 0);
+		ByteArray packed = (ByteArray)malloc(packedLen);
+		int res = _e(packed, (ByteArray)body.c_str(), body.size(), "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0", 0);
+		if (res > 0)
+		WriteAll(argv[3], packed, res);
+		free(packed);
+	}
+	else {
+		cerr << endl << "Not recognized param" << endl
+			<< "\t-cdb\t\t<in> <out>\tunpack cdb" << endl
+			<< "\t-pack-<udid>\t<in> <out>\tpack request body from json" << endl
+			<< "\t-unpack-<udid>\t<in> <out>\tunpack response body to json" << endl;
+		return 1;
+	}
 }
