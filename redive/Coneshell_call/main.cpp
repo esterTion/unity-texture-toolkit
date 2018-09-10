@@ -1,4 +1,4 @@
-/**
+﻿/**
 * coneshell.dll caller
 * @author EAirPeter & esterTion
 * coneshell.dll is from (c)Cygames Inc.
@@ -88,8 +88,8 @@ int main(int argc, const char* argv[]) {
 
 	if (argc < 4) {
 		cerr << endl << "Not enough param" << endl
-			<< "\t-cdb\t\t<in> <out>\tunpack cdb" << endl
-		Sleep(3e3);
+			<< "\t-cdb\t\t<in> <out>\tunpack cdb" << endl;
+		Sleep(3000LL);
 		return 1;
 	}
 	string mode = argv[1];
@@ -163,21 +163,22 @@ int main(int argc, const char* argv[]) {
 			} while (v12 != 16);
 			int i = 0;
 			do {
-				cdbChar[0x3c + i] = cdbChar[20 + i];
-				i++;
-			} while (i != 8);
+				cdbChar[4 + i] = cdbChar[20 + i];
+			} while (++i != 4);
 			i = 0;
 			do {
 				cdbChar[8 + i] = v109[i];
-				++i;
-			} while (i != 16);
-			//cdbChar[3] = 2;
+			} while (++i != 16);
+			cdbChar[3] = 2;
 		}
-		else {
+		else if (cdb[3] != 2) {
 			return -1;
 		}
 		// prepare cdb to vfs
 		auto vfs = _i((ByteArray)cdb.data(), (Long)cdb.size(), name);
+		if (vfs == NULL) {
+			return -1;
+		}
 		int* dbSize = (int*)((char*)vfs + 0x58);
 		char* dbData = (char*)vfs + 0x1000;
 		WriteAll(argv[3], dbData, *dbSize);
@@ -207,7 +208,7 @@ int main(int argc, const char* argv[]) {
 	}
 	else {
 		cerr << endl << "Not recognized param" << endl
-			<< "\t-cdb\t\t<in> <out>\tunpack cdb" << endl
+			<< "\t-cdb\t\t<in> <out>\tunpack cdb" << endl;
 		return 1;
 	}
 }
