@@ -133,9 +133,13 @@ function diff_story_data($file) {
   global $db;
   $items = [];
   foreach ($file->getHunks() as $hunk) {
+    $balance = 0;
     foreach ($hunk->getLines() as $line) {
       $op = $line->getOperation();
+      if ($op == Line::REMOVED) {$balance--; continue;}
       if ($op != Line::ADDED) continue;
+      if ($balance++ < 0) continue;
+      $balance--;
       preg_match('(/\*story_group_id\*/(\d+))', $line->getContent(), $id);
       if (empty($id)) continue;
       $id = $id[1];
@@ -205,7 +209,7 @@ function diff_rank($file) {
     $rank_limit['promotion_level']
   ];
 }
-function diff_event($file) {
+function diff_event_hatsune($file) {
   global $db;
   $items = [];
   foreach ($file->getHunks() as $hunk) {
@@ -223,12 +227,37 @@ function diff_event($file) {
       $items[] = [
         'id' => $id,
         'name' => $item['title'],
-        'start' => str_replace('2030', date('Y', time() + 15*24*3600), $item['start']),
-        'end' => str_replace('2030', date('Y', time() + 15*24*3600), $item['end'])
+        'start' => $item['start'],
+        'end' => $item['end']
       ];
     }
   }
   return ['event', $items];
+}
+function diff_event_tower($file) {
+  global $db;
+  $items = [];
+  foreach ($file->getHunks() as $hunk) {
+    $balance = 0;
+    foreach ($hunk->getLines() as $line) {
+      $op = $line->getOperation();
+      if ($op == Line::REMOVED) {$balance--; continue;}
+      if ($op != Line::ADDED) continue;
+      if ($balance++ < 0) continue;
+      $balance--;
+      preg_match('(/\*tower_schedule_id\*/(\d+))', $line->getContent(), $id);
+      if (empty($id)) continue;
+      $id = $id[1];
+      list($item) = execQuery($db, 'SELECT a.start_time as start, a.end_time as end, b.title as title FROM tower_schedule as a, tower_story_data as b WHERE a.tower_schedule_id='.$id.' AND b.value='.$id);
+      $items[] = [
+        'id' => $id,
+        'name' => $item['title'],
+        'start' => $item['start'],
+        'end' => $item['end']
+      ];
+    }
+  }
+  return ['event_tower', $items];
 }
 function diff_campaign($file) {
   global $db;
@@ -244,6 +273,7 @@ function diff_campaign($file) {
       $items[] = [
         'id' => $id,
         'category' => $item['campaign_category'],
+        'value' => floatval($item['value']),
         'start'=>$item['start_time'],
         'end'=>$item['end_time']
       ];
@@ -276,8 +306,9 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
     if (!is_numeric($comm['ver'])) {
       preg_match('/(\d+) (\d+)\/(\d+)\/(\d+) (\d+):(\d+)/', $comm['ver'], $ver);
       if (empty($ver)) {
-        $comm['skip'] = true;
-        //$comm['ver'] = intval($comm['ver']);
+        //$comm['skip'] = true;
+        $comm['ver'] = intval($comm['ver']).'';
+        if ($comm['ver'] == '0') $comm['skip'] = true;
       } else {
         $comm['ver'] = $ver[1];
         $comm['time'] = mktime($ver[5], $ver[6], 0, $ver[3], $ver[4], $ver[2]) - 3600;
@@ -289,7 +320,7 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
   foreach($commits as $no=>$commit){
     if (!isset($commits[$no+1])) continue;
     if ($commit['skip']) continue;
-    echo "\r".$commit['ver'].' '.date('Y-m-d H:i', $commit['time'] + 3600).' '.$no.'/'.count($commits);
+    echo "\n".$commit['ver'].' '.date('Y-m-d H:i', $commit['time'] + 3600).' '.$no.'/'.count($commits);
     exec('D:/cygwin64/bin/git diff '.$commits[$no+1]['hash'].' '.$commit['hash'].' >../a.diff');
     chdir('..');
     $master = new PDO('sqlite:'.__DIR__.'/redive.db');
@@ -302,7 +333,8 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
       'unit_data.sql' => 'diff_unit',                 // unit
       'experience_team.sql' => 'diff_exp',            // experience
       'unit_promotion.sql' => 'diff_rank',            // rank
-      'hatsune_schedule.sql' => 'diff_event',         // event,
+      'hatsune_schedule.sql' => 'diff_event_hatsune', // event_hatsune,
+      'tower_schedule.sql' => 'diff_event_tower',     // event_tower,
       'campaign_schedule.sql' => 'diff_campaign',     // campaign
     ]);
     unlink('a.diff');

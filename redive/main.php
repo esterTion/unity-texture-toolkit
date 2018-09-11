@@ -99,7 +99,8 @@ function do_commit($TruthVersion, $db = NULL, $extraMsg = '') {
     'unit_data.sql' => 'diff_unit',                 // unit
     'experience_team.sql' => 'diff_exp',            // experience
     'unit_promotion.sql' => 'diff_rank',            // rank
-    'hatsune_schedule.sql' => 'diff_event',         // event,
+    'hatsune_schedule.sql' => 'diff_event_hatsune', // event_hatsune,
+    'tower_schedule.sql' => 'diff_event_tower',     // event_tower,
     'campaign_schedule.sql' => 'diff_campaign',     // campaign
   ]);
   unlink('a.diff');
