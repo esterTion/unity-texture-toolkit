@@ -50,6 +50,9 @@ function cgss_data_uncompress($data) {
   return $uncompressed;
 }
 
+function in_range($num, $range) {
+  return ($num >= $range[0] && $num <= $range[1]);
+}
 function encodeValue($value) {
   $arr = [];
   foreach ($value as $key=>$val) {
@@ -82,6 +85,7 @@ function do_commit($TruthVersion, $db = NULL) {
 
   $diff_send = [];
   $commitMessage = [$TruthVersion];
+  $rechk_date = 0;
   if (isset($versionDiff['new_table'])) {
     $diff_send['new_table'] = $versionDiff['new_table'];
     $commitMessage[] = '- '.count($diff_send['new_table']).' new table: '. implode(', ', $diff_send['new_table']);
@@ -117,7 +121,7 @@ function do_commit($TruthVersion, $db = NULL) {
     $commitMessage[] = "- new cards: \n  - ".implode("\n  - ", $diff_send['card']);
   }
   if (isset($versionDiff['event'])) {
-    $diff_send['event'] = array_map(function ($a){ return $a['name'];}, $versionDiff['event']);
+    $diff_send['event'] = array_map(function ($a)use(&$rechk_date){ if (!in_range((int)substr($a['start'], 0, 4)+0, [2015, date('Y')+1])) $rechk_date=1; return $a['name'];}, $versionDiff['event']);
     $commitMessage[] = '- new event '. implode(', ',$diff_send['event']);
   }
   if (isset($versionDiff['gacha'])) {
@@ -139,7 +143,7 @@ function do_commit($TruthVersion, $db = NULL) {
   $versionDiff['hash'] = $hash[0];
   require_once __DIR__.'/../mysql.php';
   $mysqli->select_db('db_diff');
-  $mysqli->query('REPLACE INTO cgss (ver,data) vALUES ('.$TruthVersion.',"'.$mysqli->real_escape_string(brotli_compress(
+  $mysqli->query('REPLACE INTO cgss (ver,should_rechk_date,data) vALUES ('.$TruthVersion.','.$rechk_date.',"'.$mysqli->real_escape_string(brotli_compress(
     json_encode($versionDiff, JSON_UNESCAPED_SLASHES), 11, BROTLI_TEXT
   )).'")');
   exec('git push origin master');
@@ -166,6 +170,25 @@ function do_commit($TruthVersion, $db = NULL) {
   ));
   curl_exec($curl);
   curl_close($curl);
+
+  // rechk event date
+  if ($db != NULL) {
+    $select = $mysqli->query('SELECT data FROM cgss WHERE should_rechk_date=1');
+    $rechk_date = 0;
+    while (($row = $select->fetch_assoc()) != NULL) {
+      $data = json_decode(brotli_uncompress($row['data']), true);
+      $ver = $data['ver'];
+      foreach ($event as &$item) {
+        $id = $item['id'];
+        $event_row = execQuery($db, 'SELECT * FROM event_data WHERE id='.$id);
+        $item['start'] = $event_row['event_start'];
+        $item['end'] = $event_row['event_end'];
+        if (!in_range((int)substr($item['start'], 0, 4)+0, [2015, date('Y')+1])) break 2;
+      }
+      $data = $mysqli->real_escape_string(brotli_compress(json_encode($data, JSON_UNESCAPED_SLASHES), 11, BROTLI_TEXT));
+      $mysqli->query('UPDATE cgss SET should_rechk_date='.$rechk_date.' data="'.$data.'" WHERE ver='.$ver);
+    }
+  }
 }
 
 function main() {
@@ -274,7 +297,7 @@ if (!isset($response['data_headers']['required_res_ver'])) {
   _log('invalid response: '. json_encode($response));
   return;
 }
-$TruthVersion = intval($response['data_headers']['required_res_ver']);
+$TruthVersion = $response['data_headers']['required_res_ver'];
 
 global $curl;
 $curl = curl_init();
