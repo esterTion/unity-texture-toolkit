@@ -211,8 +211,8 @@ function diff_rank($file) {
       $op = $line->getOperation();
       if (!preg_match('(/\*promotion_level\*/(\d+))', $line->getContent(), $rank)) continue;
       $rank = $rank[1]|0;
-      if ($op == Line::REMOVED) $prevRank = max($prevRank, $rank);
-      else if ($op == Line::ADDED) $currRank = max($currRank, $rank);
+      if ($op == Line::ADDED) $currRank = max($currRank, $rank);
+      else $prevRank = max($prevRank, $rank);
     }
   }
   return [
