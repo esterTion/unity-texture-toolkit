@@ -28,14 +28,15 @@ function parse_db_diff($diff, $master, $cbMap) {
   foreach ($files as &$file) {
     $fname = $file->getNewFilename();
     $operates[$file->getOperation()]++;
-    if ($file->getOperation() == File::CREATED) {
+    if ($file->getOperation() == File::CREATED && substr($fname, 0, 10) != '+manifest_') {
       $newtable[] = substr($fname, 0, -4);
       continue;
     }
     if (isset($cbMap[$fname])) {
       $data = call_user_func($cbMap[$fname], $file);
-      if (!empty($data[1]))
-      $versionDiff[$data[0]] = $data[1];
+      if (!empty($data[1])) {
+        $versionDiff[$data[0]] = isset($versionDiff[$data[0]]) ? array_merge($versionDiff[$data[0]], $data[1]) : $data[1];
+      }
     }
   }
   $versionDiff['diff'] = $operates;
@@ -203,10 +204,20 @@ function diff_exp($file) {
 function diff_rank($file) {
   global $db;
   if (count($file->getHunks()) < 10) return ['max_rank', ''];
-  list($rank_limit) = execQuery($db, 'SELECT * FROM unit_promotion ORDER BY promotion_level DESC LIMIT 1');
+  $prevRank = 0;
+  $currRank = 0;
+  foreach ($file->getHunks() as $hunk) {
+    foreach ($hunk->getLines() as $line) {
+      $op = $line->getOperation();
+      if (!preg_match('(/\*promotion_level\*/(\d+))', $line->getContent(), $rank)) continue;
+      $rank = $rank[1]|0;
+      if ($op == Line::REMOVED) $prevRank = max($prevRank, $rank);
+      else if ($op == Line::ADDED) $currRank = max($currRank, $rank);
+    }
+  }
   return [
     'max_rank',
-    $rank_limit['promotion_level']
+    $currRank > $prevRank ? $currRank : ''
   ];
 }
 function diff_event_hatsune($file) {
@@ -228,7 +239,8 @@ function diff_event_hatsune($file) {
         'id' => $id,
         'name' => $item['title'],
         'start' => $item['start'],
-        'end' => $item['end']
+        'end' => $item['end'],
+        'type' => 'story'
       ];
     }
   }
@@ -248,16 +260,17 @@ function diff_event_tower($file) {
       preg_match('(/\*tower_schedule_id\*/(\d+))', $line->getContent(), $id);
       if (empty($id)) continue;
       $id = $id[1];
-      list($item) = execQuery($db, 'SELECT a.start_time as start, a.end_time as end, b.title as title FROM tower_schedule as a, tower_story_data as b WHERE a.tower_schedule_id='.$id.' AND b.value='.$id);
+      list($item) = execQuery($db, 'SELECT a.start_time as start, a.end_time as end, b.title as title FROM tower_schedule as a, tower_story_data as b WHERE a.tower_schedule_id='.$id.' AND b.value='.($id - 1000));
       $items[] = [
         'id' => $id,
         'name' => $item['title'],
         'start' => $item['start'],
-        'end' => $item['end']
+        'end' => $item['end'],
+        'type' => 'tower'
       ];
     }
   }
-  return ['event_tower', $items];
+  return ['event', $items];
 }
 function diff_campaign($file) {
   global $db;
@@ -293,7 +306,7 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
   $mysqli->select_db('db_diff');
   chdir(__DIR__);
   chdir('data');
-  exec('D:/cygwin64/bin/git log --pretty=format:"%H %s %ct"', $commits);
+  exec('D:/cygwin64/bin/git log --pretty=format:"%H %s %at"', $commits);
   $data = [];
   $commits = array_map(function ($commit) {
     preg_match('((.{40}) (.+) (\d+))',$commit,$detail);
