@@ -1013,10 +1013,12 @@ message MasterGenericStory {
   optional string backgroundImage = 8; // normal type
   optional uint32 releasePlayerRank = 9; // normal type
   optional string releaseConditions = 10; // normal type
-  optional int32 startAt = 11; // normal type
-  optional int32 endAt = 12; // normal type
+  optional uint32 startAt = 11; // normal type
+  optional uint32 endAt = 12; // normal type
   repeated PlayerResource rewards = 13; // array
   optional bool priorityFlg = 14; // normal type
+  optional string genericStoryType = 15; // normal type
+  optional uint32 genericStoryTypeId = 16; // normal type
 }
 message uint_MasterGenericStory {
   optional uint32 uint_MasterGenericStory_key = 1; // normal type
@@ -1592,6 +1594,30 @@ message uint_MasterCollaborationSkin {
 message MasterCollaborationSkinMap {
   repeated uint_MasterCollaborationSkin entries = 1; // dictionary
 }
+message MasterMissionPlatformOverview {
+  optional uint32 missionId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string platform = 3; // normal type
+  optional string missionTitle = 4; // normal type
+  optional string missionDescription = 5; // normal type
+}
+message MasterMissionPlatformOverviewList {
+  repeated MasterMissionPlatformOverview entries = 1; // array
+}
+message uint_MasterMissionPlatformOverviewList {
+  optional uint32 uint_MasterMissionPlatformOverviewList_key = 1; // normal type
+  optional MasterMissionPlatformOverviewList uint_MasterMissionPlatformOverviewList_value = 2; // sub class
+}
+message MasterMissionPlatformOverviewMap {
+  repeated uint_MasterMissionPlatformOverviewList entries = 1; // dictionary
+}
+message string_MasterMissionPlatformOverviewMap {
+  optional string string_MasterMissionPlatformOverviewMap_key = 1; // normal type
+  optional MasterMissionPlatformOverviewMap string_MasterMissionPlatformOverviewMap_value = 2; // sub class
+}
+message MasterMissionPlatformOverviewPlatformMap {
+  repeated string_MasterMissionPlatformOverviewMap entries = 1; // dictionary
+}
 message MasterEventPointReward {
   optional uint32 id = 1; // normal type
   optional uint32 eventId = 2; // normal type
@@ -2014,6 +2040,7 @@ message MasterNewSituationIntroductionDetail {
   optional string motion = 4; // normal type
   optional string voiceId = 5; // normal type
   optional float situationPositionX = 6; // normal type
+  optional string newSituationText = 7; // normal type
 }
 message MasterNewSituationIntroduction {
   optional uint32 newSituationIntroductionId = 1; // normal type
@@ -2145,6 +2172,8 @@ message SuiteMasterGetResponse {
   optional MasterNewMusicIntroductionMap masterNewMusicIntroductionMap = 89; // sub class
   optional MasterSituationFirstAppearanceMap masterSituationFirstAppearanceMap = 90; // sub class
   optional MasterCollaborationSkinMap masterCollaborationSkinMap = 91; // sub class
+  optional MasterGenericStoryMap masterOpeningAreaGenericStoryMap = 92; // sub class
+  optional MasterMissionPlatformOverviewPlatformMap masterMissionPlatformOverviewMap = 93; // sub class
   optional MasterEventMap masterEventMap = 101; // sub class
   optional MasterEventConfigMap masterEventConfigMap = 102; // sub class
   optional MasterStoryEventMap masterStoryEventMap = 201; // sub class

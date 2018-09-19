@@ -122,7 +122,11 @@ function parseProtoBuf($messageName, $end, &$pb, &$proto) {
           $data = $pb->readData($length);
           if ($typeName == 'string') {
           } else {
-            $data = '<byte> '.bin2hex($data);
+            if (mb_detect_encoding($data, 'UTF-8', true)) {
+              $data = '<guessed string> '.$data;
+            } else {
+              $data = '<byte> '.bin2hex($data);
+            }
           }
           setValue($message, $name, $data, $isRepeated);
         }
@@ -161,6 +165,11 @@ function processDict(&$arr) {
         }
       }
       processDict($val);
+    }
+    
+    $keys = is_array($val) ? array_keys($val) : [];
+    if (count($keys) == 1 && $keys[0] == 'entries') {
+      $arr[$key] = $val['entries'];
     }
   }
 }
@@ -268,7 +277,7 @@ if (!empty($commit)) {
   chdir('data');
   exec('git add *.json !dataVersion.txt !masterDataVersion.txt');
   exec('git commit -m "'.implode(' ', $commit).'"');
-  exec('git push origin master');
+  //exec('git push origin master');
 }
 
 chdir(__DIR__);
