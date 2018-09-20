@@ -1,8 +1,7 @@
 <?php
 
 chdir(__DIR__);
-require_once 'UnityBundle.php';
-require_once 'UnityAsset.php';
+require_once 'resource_fetch.php';
 if (!file_exists('last_version')) {
   $last_version = array('data'=>'0','master'=>'0');
 } else {
@@ -165,11 +164,11 @@ function processDict(&$arr) {
         }
       }
       processDict($val);
-    }
-    
-    $keys = is_array($val) ? array_keys($val) : [];
-    if (count($keys) == 1 && $keys[0] == 'entries') {
-      $arr[$key] = $val['entries'];
+
+      $keys = array_keys($val);
+      if (count($keys) == 1 && $keys[0] === 'entries') {
+        $arr[$key] = $val['entries'];
+      }
     }
   }
 }
@@ -262,8 +261,8 @@ foreach ($master as $part=>&$data) {
 }
 
 $situationMap = &$master['masterCharacterSituationMap'];
-$charaInfo = &$master['masterCharacterInfoMap']['entries'];
-foreach ($situationMap['entries'] as &$entry) {
+$charaInfo = &$master['masterCharacterInfoMap'];
+foreach ($situationMap as &$entry) {
   $id = substr($entry['resourceSetName'], 3);
   $names[$id] = str_repeat('★',$entry['rarity']).'['.$entry['prefix'].']'.$charaInfo[$entry['characterId']]['characterName'];
 }

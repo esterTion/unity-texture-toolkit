@@ -167,11 +167,11 @@ function processDict(&$arr) {
         }
       }
       processDict($val);
-    }
-    
-    $keys = is_array($val) ? array_keys($val) : [];
-    if (count($keys) == 1 && $keys[0] == 'entries') {
-      $arr[$key] = $val['entries'];
+
+      $keys = array_keys($val);
+      if (count($keys) == 1 && $keys[0] === 'entries') {
+        $arr[$key] = $val['entries'];
+      }
     }
   }
 }
@@ -346,8 +346,8 @@ foreach ($master as $part=>&$data) {
 }
 
 $situationMap = &$master['masterCharacterSituationMap'];
-$charaInfo = &$master['masterCharacterInfoMap']['entries'];
-foreach ($situationMap['entries'] as &$entry) {
+$charaInfo = &$master['masterCharacterInfoMap'];
+foreach ($situationMap as &$entry) {
   $id = substr($entry['resourceSetName'], 3);
   $names[$id] = str_repeat('★',$entry['rarity']).'['.$entry['prefix'].']'.$charaInfo[$entry['characterId']]['characterName'];
 }

@@ -178,11 +178,11 @@ function do_commit($TruthVersion, $db = NULL) {
     while (($row = $select->fetch_assoc()) != NULL) {
       $data = json_decode(brotli_uncompress($row['data']), true);
       $ver = $data['ver'];
-      foreach ($event as &$item) {
+      foreach ($data['event'] as &$item) {
         $id = $item['id'];
         $event_row = execQuery($db, 'SELECT * FROM event_data WHERE id='.$id);
-        $item['start'] = $event_row['event_start'];
-        $item['end'] = $event_row['event_end'];
+        $item['start'] = $event_row[0]['event_start'];
+        $item['end'] = $event_row[0]['event_end'];
         if (!in_range((int)substr($item['start'], 0, 4)+0, [2015, date('Y')+1])) break 2;
       }
       $data = $mysqli->real_escape_string(brotli_compress(json_encode($data, JSON_UNESCAPED_SLASHES), 11, BROTLI_TEXT));
