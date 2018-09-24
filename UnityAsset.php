@@ -846,6 +846,12 @@ class Texture2D {
     if (!file_exists($dir)) mkdir($dir, 0777, true);
     $saveToFull = $saveTo.'.'.$format;
     if (file_exists($saveToFull)) {
+      $hash_current = hash_file('sha1', 'output.'.$format);
+      $hash_previous = hash_file('sha1', $saveToFull);
+      if ($hash_current === $hash_previous) {
+        unlink('output.'.$format);
+        return;
+      }
       $ftime = date('_Ymd_Hi', filemtime($saveToFull));
       rename($saveToFull, $saveTo.$ftime.'.'.$format);
     }
