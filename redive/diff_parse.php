@@ -191,7 +191,13 @@ function diff_unit($file) {
 }
 function diff_exp($file) {
   global $db;
-  list($lv_limit) = execQuery($db, 'SELECT * FROM experience_team ORDER BY team_level DESC LIMIT 1 OFFSET 1');
+  $lines = array_reverse($file->gethunks())[0]->getLines();
+  array_pop($lines);
+  $line = array_reverse($lines)[0]->getContent();
+  $lv_limit = [];
+  preg_replace_callback('(/\*([\w_]+)\*/(\d+))', function ($m) use(&$lv_limit) {
+    if (in_array($m[1], ['team_level', 'total_exp', 'max_stamina'])) $lv_limit[$m[1]] = $m[2];
+  }, $line);
   return [
     'max_lv',
     [
@@ -330,6 +336,17 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
     return $comm;
   }, $commits);
   $i=0;
+  $chkTypes = [
+    'clan_battle',
+    'dungeon_area',
+    'gacha',
+    'quest_area',
+    'story',
+    'unit',
+    'max_lv',
+    'event',
+    'campaign'
+  ];
   foreach($commits as $no=>$commit){
     if (!isset($commits[$no+1])) continue;
     if ($commit['skip']) continue;
@@ -356,9 +373,17 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
     $versionDiff['ver'] = $commit['ver'];
     $versionDiff['time'] = $commit['time'];
     $versionDiff['timeStr'] = date('Y-m-d H:i', $commit['time'] + 3600);
-    $mysqli->query('REPLACE INTO redive (ver,data) vALUES ('.$commit['ver'].',"'.$mysqli->real_escape_string(brotli_compress(
+    $col = ['ver','data'];
+    $val = [$commit['ver'], '"'.$mysqli->real_escape_string(brotli_compress(
       json_encode($versionDiff, JSON_UNESCAPED_SLASHES), 11, BROTLI_TEXT
-    )).'")');
+    )).'"'];
+    foreach ($chkTypes as $type) {
+      if (isset($versionDiff[$type])) {
+        $col[] = 'has_'.$type;
+        $val[] = 1;
+      }
+    }
+    $mysqli->query('REPLACE INTO redive ('.implode(',', $col).') vALUES ('.implode(',', $val).')');
     //if (++$i > 10) break;
     //if ($commit['ver'] < 10040000) break;
   }

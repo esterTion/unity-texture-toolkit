@@ -154,9 +154,29 @@ function do_commit($TruthVersion, $db = NULL, $extraMsg = '') {
   $versionDiff['hash'] = $hash[0];
   require_once __DIR__.'/../mysql.php';
   $mysqli->select_db('db_diff');
-  $mysqli->query('REPLACE INTO redive (ver,data) vALUES ('.$TruthVersion.',"'.$mysqli->real_escape_string(brotli_compress(
+
+  $col = ['ver','data'];
+  $val = [$TruthVersion, '"'.$mysqli->real_escape_string(brotli_compress(
     json_encode($versionDiff, JSON_UNESCAPED_SLASHES), 11, BROTLI_TEXT
-  )).'")');
+  )).'"'];
+  $chkTypes = [
+    'clan_battle',
+    'dungeon_area',
+    'gacha',
+    'quest_area',
+    'story',
+    'unit',
+    'max_lv',
+    'event',
+    'campaign'
+  ];
+  foreach ($chkTypes as $type) {
+    if (isset($versionDiff[$type])) {
+      $col[] = 'has_'.$type;
+      $val[] = 1;
+    }
+  }
+  $mysqli->query('REPLACE INTO redive (ver,data) vALUES ('.implode(',', $col).') vALUES ('.implode(',', $val).')');
   exec('git push origin master');
   
   $data = json_encode(array(
