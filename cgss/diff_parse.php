@@ -268,12 +268,13 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
       preg_match('/(\d+) (\d+)\/(\d+)\/(\d+) (\d+):(\d+)/', $comm['ver'], $ver);
       if (empty($ver)) {
         //$comm['skip'] = true;
-        $comm['ver'] = intval($comm['ver']);
+        $comm['ver'] = intval($comm['ver']).'';
       } else {
         $comm['ver'] = $ver[1];
         $comm['time'] = mktime($ver[5], $ver[6], 0, $ver[3], $ver[4], $ver[2]) - 3600;
       }
     }
+    if ($comm['ver'] == '0') $comm['skip'] = true;
     return $comm;
   }, $commits);
   $i=0;

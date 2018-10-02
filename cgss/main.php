@@ -186,7 +186,7 @@ function do_commit($TruthVersion, $db = NULL) {
         if (!in_range((int)substr($item['start'], 0, 4)+0, [2015, date('Y')+1])) break 2;
       }
       $data = $mysqli->real_escape_string(brotli_compress(json_encode($data, JSON_UNESCAPED_SLASHES), 11, BROTLI_TEXT));
-      $mysqli->query('UPDATE cgss SET should_rechk_date='.$rechk_date.' data="'.$data.'" WHERE ver='.$ver);
+      $mysqli->query('UPDATE cgss SET should_rechk_date='.$rechk_date.', data="'.$data.'" WHERE ver='.$ver);
     }
   }
 }
@@ -409,6 +409,7 @@ echo "\n";
 global $poseData;
 $poseData=[];
 $names=[];
+$gekijou_charas=[];
 foreach(execQuery($db, 'SELECT id,name,chara_id,pose,rarity FROM card_data') as $row) {
   $names[$row['id']] = ['','N','N+','R','R+','SR','SR+','SSR','SSR+'][$row['rarity']].$row['name'];
   $poseData[sprintf('%03d_%02d', $row['chara_id'], $row['pose'])] = $row['id'];
@@ -416,7 +417,16 @@ foreach(execQuery($db, 'SELECT id,name,chara_id,pose,rarity FROM card_data') as 
 foreach(execQuery($db, 'SELECT chara_id,name FROM chara_data') as $row) {
   $names[sprintf('%03d', $row['chara_id'])] = $row['name'];
 }
+foreach(execQuery($db, 'SELECT id,chara_list FROM latte_art_data') as $row) {
+  $temp = [];
+  $list = $row['chara_list'];
+  foreach (execQuery($db, 'SELECT chara_id,name FROM chara_data WHERE chara_id in ('.$list.')') as $chara) {
+    $temp[$chara['chara_id']] = $chara['name'];
+  }
+  $gekijou_charas[$row['id']] = implode('，',array_map(function ($i)use($temp){return $temp[$i];}, explode(',', $list)));
+}
 file_put_contents(RESOURCE_PATH_PREFIX.'card/index.json', json_encode($names, JSON_UNESCAPED_SLASHES));
+file_put_contents(RESOURCE_PATH_PREFIX.'gekijou/index.json', json_encode($gekijou_charas, JSON_UNESCAPED_SLASHES));
 
 file_put_contents('last_version', json_encode($last_version));
 
