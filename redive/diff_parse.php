@@ -223,7 +223,7 @@ function diff_rank($file) {
   }
   return [
     'max_rank',
-    $currRank > $prevRank ? $currRank : ''
+    $currRank > $prevRank ? $currRank.'' : ''
   ];
 }
 function diff_event_hatsune($file) {
