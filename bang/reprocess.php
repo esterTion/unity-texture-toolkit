@@ -36,42 +36,16 @@ function parseProto($file) {
   return $output;
 }
 
-function readVarInt32($pb){
-	$b=0;
-	$result=0;
-	
-	do{
+function readVarInt32($pb) {
+	$b = ord($pb->readData(1));
+  $result = $b & 0x7f;
+  $shift = 0;
+  while ($b & 0x80) {
+    $shift += 7;
+    if ($shift > 64) throw new Exception('Too many bytes for varint');
 		$b=ord($pb->readData(1));
-		$result  = $b & 0x7f;
-		if(!( $b & 0x80 ))
-			break;
-		
-		$b=ord($pb->readData(1));
-		$result |= ($b & 0x7f)<<7;
-		if(!( $b & 0x80 ))
-			break;
-		
-		$b=ord($pb->readData(1));
-		$result |= ($b & 0x7f)<<14;
-		if(!( $b & 0x80 ))
-			break;
-		
-		$b=ord($pb->readData(1));
-		$result |= ($b & 0x7f)<<21;
-		if(!( $b & 0x80 ))
-			break;
-		
-		$b=ord($pb->readData(1));
-		$result |= ($b & 0x7f)<<28;
-		if(!( $b & 0x80 ))
-			break;
-		
-		for($i=0;$i<5;$i++){
-			$b=ord($pb->readData(1));
-			if(!( $b & 0x80 ))
-				break;
-		}
-	}while(false);
+		$result |= ($b & 0x7f) << $shift;
+  }
 	return $result;
 }
 
