@@ -176,7 +176,7 @@ function do_commit($TruthVersion, $db = NULL, $extraMsg = '') {
       $val[] = 1;
     }
   }
-  $mysqli->query('REPLACE INTO redive (ver,data) vALUES ('.implode(',', $col).') vALUES ('.implode(',', $val).')');
+  $mysqli->query('REPLACE INTO redive ('.implode(',', $col).') VALUES ('.implode(',', $val).')');
   exec('git push origin master');
   
   $data = json_encode(array(
