@@ -37,16 +37,16 @@ function parseProto($file) {
 }
 
 function readVarInt32($pb) {
-	$b = ord($pb->readData(1));
+  $b = ord($pb->readData(1));
   $result = $b & 0x7f;
   $shift = 0;
   while ($b & 0x80) {
     $shift += 7;
     if ($shift > 64) throw new Exception('Too many bytes for varint');
-		$b=ord($pb->readData(1));
-		$result |= ($b & 0x7f) << $shift;
+    $b=ord($pb->readData(1));
+    $result |= ($b & 0x7f) << $shift;
   }
-	return $result;
+  return $result;
 }
 
 function setValue(&$arr, $key, &$val, $isArr) {
