@@ -1618,6 +1618,21 @@ message string_MasterMissionPlatformOverviewMap {
 message MasterMissionPlatformOverviewPlatformMap {
   repeated string_MasterMissionPlatformOverviewMap entries = 1; // dictionary
 }
+message MasterSafeAreaDevice {
+  optional uint32 id = 1; // normal type
+  optional string deviceName = 2; // normal type
+  optional uint32 positionX = 3; // normal type
+  optional uint32 positionY = 4; // normal type
+  optional uint32 width = 5; // normal type
+  optional uint32 height = 6; // normal type
+}
+message string_MasterSafeAreaDevice {
+  optional string string_MasterSafeAreaDevice_key = 1; // normal type
+  optional MasterSafeAreaDevice string_MasterSafeAreaDevice_value = 2; // sub class
+}
+message MasterSafeAreaDeviceMap {
+  repeated string_MasterSafeAreaDevice entries = 1; // dictionary
+}
 message MasterEventPointReward {
   optional uint32 id = 1; // normal type
   optional uint32 eventId = 2; // normal type
@@ -2174,6 +2189,7 @@ message SuiteMasterGetResponse {
   optional MasterCollaborationSkinMap masterCollaborationSkinMap = 91; // sub class
   optional MasterGenericStoryMap masterOpeningAreaGenericStoryMap = 92; // sub class
   optional MasterMissionPlatformOverviewPlatformMap masterMissionPlatformOverviewMap = 93; // sub class
+  optional MasterSafeAreaDeviceMap masterSafeAreaDeviceMap = 100; // sub class
   optional MasterEventMap masterEventMap = 101; // sub class
   optional MasterEventConfigMap masterEventConfigMap = 102; // sub class
   optional MasterStoryEventMap masterStoryEventMap = 201; // sub class
