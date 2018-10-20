@@ -255,32 +255,34 @@ class RediveStoryDeserializer {
     }
     $this->commandList = $commandList;
     $text = new MemoryStream('');
-    $text->write('<!DOCTYPE HTML><html><head><title>'.$commandList[0]['args'][0].'</title><meta charset="UTF-8" name="viewport" content="width=device-width"></head><body style="background:#444;color:#FFF;white-space:pre-wrap;font-family:Meiryo"><b>');
-    $text->write($commandList[0]['args'][0]."\n");
-    $text->write($commandList[1]['args'][0]."</b>\n\n");
+    $text->write('<!DOCTYPE HTML><html><head><title>'.$commandList[0]['args'][0].'</title><meta charset="UTF-8" name="viewport" content="width=device-width"><style>.voice,.movie{color:#DDD;font-size:12px;cursor:pointer}.highlight{background:#ccc;color:#000}</style></head><body style="background:#444;color:#FFF;font-family:Meiryo;-webkit-text-size-adjust:none;cursor:default"><b>');
+    $text->write($commandList[0]['args'][0]."<br>\n");
+    $text->write($commandList[1]['args'][0]."</b><br>\n<br>\n");
     $buff = ['', ''];
     foreach ($commandList as $cmd) {
       if ($cmd['name'] == 'print') {
         $buff[0] = $cmd['args'][0];
         $buff[1] .= $cmd['args'][1];
       } else if ($cmd['name'] == 'touch') {
-        $text->write($buff[0]."：\n".$buff[1]."\n\n");
+        $text->write($buff[0]."：<br>\n".$buff[1]."<br>\n<br>\n");
         $buff = ['',''];
       } else if ($cmd['name'] == 'wait') {
         //$buff[1] .= '(pause:'.$cmd['args'][0].')';
       } else if ($cmd['name'] == 'vo') {
-        //$text->write('(voice:'.$cmd['args'][0].")\n");
+        $text->write('<div class="voice">voice: '.$cmd['args'][0]."</div>\n");
+      } else if ($cmd['name'] == 'movie') {
+        $text->write('<div class="movie">movie: '.$cmd['args'][0]."</div>\n");
       } else if ($cmd['name'] == 'white_out') {
-        $text->write("<b>--- Switch scene ---</b>\n\n");
+        $text->write("<b>--- Switch scene ---</b><br>\n<br>\n");
       } else if ($cmd['name'] == 'still') {
         if ($cmd['args'][0] == 'end') {
-          //$text->write("(still display end)\n");
+          //$text->write("(still display end)<br>\n");
           continue;
         }
-        $text->write('<a href="https://redive.estertion.win/card/story/'.$cmd['args'][0].'.webp"><img alt="story_still_'.$cmd['args'][0].'" src="https://redive.estertion.win/card/story/'.$cmd['args'][0].'.webp@w300"></a>'."\n");
+        $text->write('<a href="https://redive.estertion.win/card/story/'.$cmd['args'][0].'.webp" target="_blank"><img alt="story_still_'.$cmd['args'][0].'" src="https://redive.estertion.win/card/story/'.$cmd['args'][0].'.webp@w300"></a>'."<br>\n");
       }
     }
-    $text->write('</body></html>');
+    $text->write('<script src="/static/story_data.min.js"></script></body></html>');
     $text->position = 0;
     $this->data = str_replace("\n", "<br>", $text->readData($text->size));
   }

@@ -36,6 +36,10 @@ $resourceToExport = [
   'sound'=>[
     [ 'bundleNameMatch'=>'/^v\/vo_cmn_(\d+).acb$/', 'exportTo'=> 'sound/unit_common/$1' ],
     [ 'bundleNameMatch'=>'/^v\/t\/vo_adv_(\d+).acb$/', 'exportTo'=> 'sound/story_vo/$1' ],
+  ],
+  'movie'=>[
+    [ 'bundleNameMatch'=>'/^m\/(t\/)?(.+)_(\d+).usm$/', 'exportTo'=> 'movie/$2/$3' ],
+    [ 'bundleNameMatch'=>'/^m\/(t\/)?(.+).usm$/', 'exportTo'=> 'movie/$2' ],
   ]
 ];
 
@@ -278,6 +282,71 @@ function checkSoundResource($manifest, $rules) {
     }
   }
 }
+function checkMovieResource($manifest, $rules) {
+  global $curl;
+  $curl_movie = curl_copy_handle($curl);
+  mkdir('usm_temp', 0777, true);
+  foreach ($manifest as $name => $info) {
+    if (($rule = findRule($name, $rules)) !== false && shouldUpdate($name, $info['hash'])) {
+      _log('download '. $name.' '.$info['hash']);
+      $usmFileName = pathinfo($name, PATHINFO_BASENAME);
+      $usmFilePath = 'usm_temp/'.$usmFileName;
+      $fh = fopen($usmFilePath, 'w');
+      curl_setopt_array($curl, array(
+        CURLOPT_URL=>'http://priconne-redive.akamaized.net/dl/pool/Movie/'.substr($info['hash'],0,2).'/'.$info['hash'],
+        CURLOPT_RETURNTRANSFER=>false,
+        CURLOPT_FILE => $fh
+      ));
+      curl_exec($curl);
+      if (md5_file($usmFilePath) != $info['hash']) {
+        _log('download failed  '.$name);
+        unlink($usmFilePath);
+        continue;
+      }
+
+      // call UsmExtractor
+      $nullptr = NULL;
+      // https://github.com/esterTion/libcgss/blob/master/src/apps/acb2wavs/acb2wavs.cpp
+      exec('mono UsmDemuxer.exe '.$usmFilePath, $nullptr);
+      unlink($usmFilePath);
+      $streams = glob(substr($usmFilePath, 0, -4).'_*');
+      $videoFile = '';
+      $audioFiles = [];
+      foreach ($streams as $stream) {
+        $ext = pathinfo($stream, PATHINFO_EXTENSION);
+        if ($ext == 'hca' || $ext == 'bin') {
+          $waveFile = substr($stream, 0, -3). 'wav';
+          exec('hca2wav '.$stream.' '.$waveFile.' 0030D9E8 00000000', $nullptr);
+          $audioFiles[] = $waveFile;
+        } else if ($ext == 'm2v') {
+          $videoFile = $stream;
+        } else {
+          _log('---unknown stream '.$stream);
+        }
+      }
+      if (empty($videoFile)) {
+        _log('---no video stream found');
+        setHashCached($name, $info['hash']);
+        continue;
+      }
+      $saveTo = RESOURCE_PATH_PREFIX. preg_replace($rule['bundleNameMatch'], $rule['exportTo'], $name).'.mp4';
+      $saveToFolder = dirname($saveTo);
+      if (!file_exists($saveToFolder)) mkdir($saveToFolder, 0777, true);
+      $code=0;
+      exec('ffmpeg -hide_banner -loglevel quiet -y -i '.$videoFile.' '.implode(array_map(function($i){return '-i '.$i;}, $audioFiles)).' '.(empty($audioFiles)?'':'-filter_complex amix=inputs='.count($audioFiles).':duration=longest').' -c:v copy '.(empty($audioFiles)?'':'-c:a aac -vbr 5').' -movflags faststart out.mp4', $nullptr, $code);
+      if ($code !==0 || !file_exists('out.mp4')) {
+        _log('encode failed');
+        _log('ffmpeg -hide_banner -loglevel quiet -y -i '.$videoFile.' '.implode(array_map(function($i){return '-i '.$i;}, $audioFiles)).' '.(empty($audioFiles)?'':'-filter_complex amix=inputs='.count($audioFiles).':duration=longest').' -c:v copy '.(empty($audioFiles)?'':'-c:a aac -vbr 5').' -movflags faststart out.mp4');
+      }
+      rename('out.mp4', $saveTo);
+      unlink($videoFile);
+      array_map('unlink', $audioFiles);
+      if (isset($rule['print'])) exit;
+      setHashCached($name, $info['hash']);
+    }
+  }
+  delTree('usm_temp');
+}
 function delTree($dir) {
   $files = array_diff(scandir($dir), array('.','..'));
   foreach ($files as $file) {
@@ -334,6 +403,17 @@ function checkAndUpdateResource($TruthVersion) {
       checkSoundResource($submanifest, $resourceToExport['sound']);
       setHashCached($name, $manifest[$name]['hash']);
     }
+  } while(0);
+
+  // movie res check
+  do {
+    $name = "manifest/moviemanifest";
+    curl_setopt_array($curl, array(
+      CURLOPT_URL=>'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Movie/SP/High/'.$name,
+    ));
+    $submanifest = curl_exec($curl);
+    $submanifest = parseManifest($submanifest);
+    checkMovieResource($submanifest, $resourceToExport['movie']);
   } while(0);
 }
 if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
