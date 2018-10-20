@@ -32,6 +32,10 @@ $resourceToExport = [
     [ 'bundleNameMatch'=>'/^a\/spine_0\d_common_battle\.cysp\.unity3d$/', 'customAssetProcessor'=> 'exportSpine' ],
     [ 'bundleNameMatch'=>'/^a\/spine_10\d\d01_battle\.cysp\.unity3d$/',   'customAssetProcessor'=> 'exportSpine' ],
     [ 'bundleNameMatch'=>'/^a\/spine_sdnormal_10\d{4}\.unity3d$/',        'customAssetProcessor'=> 'exportAtlas' ],
+  ],
+  'sound'=>[
+    [ 'bundleNameMatch'=>'/^v\/vo_cmn_(\d+).acb$/', 'exportTo'=> 'sound/unit_common/$1' ],
+    [ 'bundleNameMatch'=>'/^v\/t\/vo_adv_(\d+).acb$/', 'exportTo'=> 'sound/story_vo/$1' ],
   ]
 ];
 
@@ -210,6 +214,78 @@ function checkSubResource($manifest, $rules) {
   }
 }
 
+function checkSoundResource($manifest, $rules) {
+  global $curl;
+  foreach ($manifest as $name => &$info) {
+    $info['hasAwb'] = false;
+    if (substr($name, -4, 4) === '.awb') {
+      $manifest[ substr($name, 0, -4) .'.acb' ]['hasAwb'] = true;
+      $manifest[ substr($name, 0, -4) .'.acb' ]['awbName'] = $name;
+      $manifest[ substr($name, 0, -4) .'.acb' ]['awbInfo'] = $info;
+    }
+  }
+  foreach ($manifest as $name => $info) {
+    if (($rule = findRule($name, $rules)) !== false && shouldUpdate($name, $info['hash'])) {
+      _log('download '. $name.' '.$info['hash']);
+      curl_setopt_array($curl, array(
+        CURLOPT_URL=>'http://priconne-redive.akamaized.net/dl/pool/Sound/'.substr($info['hash'],0,2).'/'.$info['hash'],
+      ));
+      $acbData = curl_exec($curl);
+      if (md5($acbData) != $info['hash']) {
+        _log('download failed  '.$name);
+        continue;
+      }
+      $acbFileName = pathinfo($name, PATHINFO_BASENAME);
+
+      // has streaming awb, download it
+      if ($info['hasAwb']) {
+        $awbName = $info['awbName'];
+        $awbInfo = $info['awbInfo'];
+        _log('download '. $awbName.' '.$awbInfo['hash']);
+        curl_setopt_array($curl, array(
+          CURLOPT_URL=>'http://priconne-redive.akamaized.net/dl/pool/Sound/'.substr($awbInfo['hash'],0,2).'/'.$awbInfo['hash'],
+        ));
+        $awbData = curl_exec($curl);
+        if (md5($awbData) != $awbInfo['hash']) {
+          _log('download failed  '.$awbName);
+          continue;
+        }
+        $awbFileName = pathinfo($awbName, PATHINFO_BASENAME);
+        file_put_contents($awbFileName, $awbData);
+      }
+      file_put_contents($acbFileName, $acbData);
+
+      // call acb2wavs
+      $nullptr = NULL;
+      // https://github.com/esterTion/libcgss/blob/master/src/apps/acb2wavs/acb2wavs.cpp
+      exec('acb2wavs '.$acbFileName.' -b 00000000 -a 0030D9E8 -n', $nullptr);
+      $acbUnpackDir = '_acb_'.$acbFileName;
+      $saveTo = RESOURCE_PATH_PREFIX. preg_replace($rule['bundleNameMatch'], $rule['exportTo'], $name);
+      if (!file_exists($saveTo)) mkdir($saveTo, 0777, true);
+      foreach (['internal', 'external'] as $awbFolder)
+        if (file_exists($acbUnpackDir .'/'. $awbFolder)) {
+          foreach (glob($acbUnpackDir .'/'. $awbFolder.'/*.wav') as $waveFile) {
+            $m4aFile = substr($waveFile, 0, -3).'m4a';
+            exec('ffmpeg -hide_banner -loglevel quiet -y -i '.$waveFile.' -vbr 5 -movflags faststart '.$m4aFile, $nullptr);
+            rename($m4aFile, $saveTo.'/'.pathinfo($m4aFile, PATHINFO_BASENAME));
+          }
+        }
+      delTree($acbUnpackDir);
+      unlink($acbFileName);
+      $info['hasAwb'] && unlink($awbFileName);
+      if (isset($rule['print'])) exit;
+      setHashCached($name, $info['hash']);
+    }
+  }
+}
+function delTree($dir) {
+  $files = array_diff(scandir($dir), array('.','..'));
+  foreach ($files as $file) {
+    (is_dir("$dir/$file")) ? delTree("$dir/$file") : unlink("$dir/$file");
+  }
+  return rmdir($dir);
+}
+
 function checkAndUpdateResource($TruthVersion) {
   global $resourceToExport;
   global $curl;
@@ -241,12 +317,30 @@ function checkAndUpdateResource($TruthVersion) {
       setHashCached($name, $manifest[$name]['hash']);
     }
   }
+
+  // sound res check
+  do {
+    $name = "manifest/soundmanifest";
+    if (isset($manifest[$name]) && shouldUpdate($name, $manifest[$name]['hash'])) {
+      curl_setopt_array($curl, array(
+        CURLOPT_URL=>'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Sound/'.$name,
+      ));
+      $submanifest = curl_exec($curl);
+      if (md5($submanifest) != $manifest[$name]['hash']) {
+        _log('download failed  '.$name);
+        continue;
+      }
+      $submanifest = parseManifest($submanifest);
+      checkSoundResource($submanifest, $resourceToExport['sound']);
+      setHashCached($name, $manifest[$name]['hash']);
+    }
+  } while(0);
 }
 if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
   chdir(__DIR__);
   $curl = curl_init();
   function _log($s) {echo "$s\n";}
-  checkAndUpdateResource(10001610);
+  checkAndUpdateResource(10004300);
   /*$assets = extractBundle(new FileStream('bundle/spine_000000_chara_base.cysp.unity3d'));
   $asset = new AssetFile($assets[0]);
   foreach ($asset->preloadTable as $item) {
