@@ -338,8 +338,11 @@ function checkMovieResource($manifest, $rules) {
       $code=0;
       exec('ffmpeg -hide_banner -loglevel quiet -y -i '.$videoFile.' '.implode(' ', array_map(function($i){return '-i '.$i;}, $audioFiles)).' '.(empty($audioFiles)?'':'-filter_complex amix=inputs='.count($audioFiles).':duration=longest').' -c:v copy '.(empty($audioFiles)?'':'-c:a aac -vbr 5').' -movflags faststart out.mp4', $nullptr, $code);
       if ($code !==0 || !file_exists('out.mp4')) {
-        _log('encode failed');
+        _log('encode failed, code '.$code);
         _log('ffmpeg -hide_banner -loglevel quiet -y -i '.$videoFile.' '.implode(' ', array_map(function($i){return '-i '.$i;}, $audioFiles)).' '.(empty($audioFiles)?'':'-filter_complex amix=inputs='.count($audioFiles).':duration=longest').' -c:v copy '.(empty($audioFiles)?'':'-c:a aac -vbr 5').' -movflags faststart out.mp4');
+        delTree('usm_temp');
+        mkdir('usm_temp');
+        continue;
       }
 
       $saveToFull = $saveTo .'.mp4';
@@ -353,6 +356,24 @@ function checkMovieResource($manifest, $rules) {
         $ftime = date('_Ymd_Hi', filemtime($saveToFull));
         rename($saveToFull, $saveTo.$ftime.'.mp4');
       }
+
+      // avc chk
+      $mp4 = new FileStream('out.mp4');
+      $mp4->littleEndian = false;
+      $ftypLen = $mp4->ulong;
+      $mp4->position = $ftypLen;
+      $moovLen = $mp4->ulong;
+      $moov = $mp4->readData($moovLen - 4);
+      $mp4->__destruct();
+      if (strpos($moov, 'avcC') === false) {
+        // not avc, reencode
+        _log('reencoding to avc');
+        rename('out.mp4', 'out_ori.mp4');
+        exec('ffmpeg -hide_banner -loglevel quiet -y -i out_ori.mp4 -c copy -c:v h264 -crf 20 -movflags faststart out.mp4', $nullptr);
+        touch('out_ori.mp4', $remoteTime);
+        rename('out_ori.mp4', $saveTo.'_ori.mp4');
+      }
+
       rename('out.mp4', $saveToFull);
       touch($saveToFull, $remoteTime);
 
