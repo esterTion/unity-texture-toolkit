@@ -298,15 +298,16 @@ function checkMovieResource($manifest, $rules) {
         CURLOPT_FILE => $fh
       ));
       curl_exec($curl);
+      $remoteTime = curl_getinfo($curl, CURLINFO_FILETIME);
       if (md5_file($usmFilePath) != $info['hash']) {
         _log('download failed  '.$name);
         unlink($usmFilePath);
         continue;
       }
 
-      // call UsmExtractor
+      // call UsmDemuxer
+      // https://github.com/esterTion/UsmDemuxer
       $nullptr = NULL;
-      // https://github.com/esterTion/libcgss/blob/master/src/apps/acb2wavs/acb2wavs.cpp
       exec('mono UsmDemuxer.exe '.$usmFilePath, $nullptr);
       unlink($usmFilePath);
       $streams = glob(substr($usmFilePath, 0, -4).'_*');
@@ -318,6 +319,8 @@ function checkMovieResource($manifest, $rules) {
           $waveFile = substr($stream, 0, -3). 'wav';
           exec('hca2wav '.$stream.' '.$waveFile.' 0030D9E8 00000000', $nullptr);
           $audioFiles[] = $waveFile;
+        } else if ($ext == 'adx') {
+          $audioFiles[] = $stream;
         } else if ($ext == 'm2v') {
           $videoFile = $stream;
         } else {
@@ -329,16 +332,30 @@ function checkMovieResource($manifest, $rules) {
         setHashCached($name, $info['hash']);
         continue;
       }
-      $saveTo = RESOURCE_PATH_PREFIX. preg_replace($rule['bundleNameMatch'], $rule['exportTo'], $name).'.mp4';
+      $saveTo = RESOURCE_PATH_PREFIX. preg_replace($rule['bundleNameMatch'], $rule['exportTo'], $name);
       $saveToFolder = dirname($saveTo);
       if (!file_exists($saveToFolder)) mkdir($saveToFolder, 0777, true);
       $code=0;
-      exec('ffmpeg -hide_banner -loglevel quiet -y -i '.$videoFile.' '.implode(array_map(function($i){return '-i '.$i;}, $audioFiles)).' '.(empty($audioFiles)?'':'-filter_complex amix=inputs='.count($audioFiles).':duration=longest').' -c:v copy '.(empty($audioFiles)?'':'-c:a aac -vbr 5').' -movflags faststart out.mp4', $nullptr, $code);
+      exec('ffmpeg -hide_banner -loglevel quiet -y -i '.$videoFile.' '.implode(' ', array_map(function($i){return '-i '.$i;}, $audioFiles)).' '.(empty($audioFiles)?'':'-filter_complex amix=inputs='.count($audioFiles).':duration=longest').' -c:v copy '.(empty($audioFiles)?'':'-c:a aac -vbr 5').' -movflags faststart out.mp4', $nullptr, $code);
       if ($code !==0 || !file_exists('out.mp4')) {
         _log('encode failed');
-        _log('ffmpeg -hide_banner -loglevel quiet -y -i '.$videoFile.' '.implode(array_map(function($i){return '-i '.$i;}, $audioFiles)).' '.(empty($audioFiles)?'':'-filter_complex amix=inputs='.count($audioFiles).':duration=longest').' -c:v copy '.(empty($audioFiles)?'':'-c:a aac -vbr 5').' -movflags faststart out.mp4');
+        _log('ffmpeg -hide_banner -loglevel quiet -y -i '.$videoFile.' '.implode(' ', array_map(function($i){return '-i '.$i;}, $audioFiles)).' '.(empty($audioFiles)?'':'-filter_complex amix=inputs='.count($audioFiles).':duration=longest').' -c:v copy '.(empty($audioFiles)?'':'-c:a aac -vbr 5').' -movflags faststart out.mp4');
       }
-      rename('out.mp4', $saveTo);
+
+      $saveToFull = $saveTo .'.mp4';
+      if (file_exists($saveToFull)) {
+        $hash_current = hash_file('sha1', 'out.mp4');
+        $hash_previous = hash_file('sha1', $saveToFull);
+        if ($hash_current === $hash_previous) {
+          unlink('out.mp4');
+          continue;
+        }
+        $ftime = date('_Ymd_Hi', filemtime($saveToFull));
+        rename($saveToFull, $saveTo.$ftime.'.mp4');
+      }
+      rename('out.mp4', $saveToFull);
+      touch($saveToFull, $remoteTime);
+
       unlink($videoFile);
       array_map('unlink', $audioFiles);
       if (isset($rule['print'])) exit;
@@ -365,6 +382,7 @@ function checkAndUpdateResource($TruthVersion) {
     CURLOPT_ENCODING=>'gzip',
     CURLOPT_RETURNTRANSFER=>true,
     CURLOPT_HEADER=>0,
+    CURLOPT_FILETIME=>true,
     CURLOPT_SSL_VERIFYPEER=>false
   ));
   $manifest = curl_exec($curl);
