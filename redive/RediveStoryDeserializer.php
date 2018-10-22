@@ -255,31 +255,53 @@ class RediveStoryDeserializer {
     }
     $this->commandList = $commandList;
     $text = new MemoryStream('');
-    $text->write('<!DOCTYPE HTML><html><head><title>'.$commandList[0]['args'][0].'</title><meta charset="UTF-8" name="viewport" content="width=device-width"><style>.voice,.movie{color:#DDD;font-size:12px;cursor:pointer}.highlight{background:#ccc;color:#000}</style></head><body style="background:#444;color:#FFF;font-family:Meiryo;-webkit-text-size-adjust:none;cursor:default"><b>');
+    $text->write('<!DOCTYPE HTML><html><head><title>'.$commandList[0]['args'][0].'</title><meta charset="UTF-8" name="viewport" content="width=device-width"><style>.cmd{color:#DDD;font-size:12px;cursor:pointer}.highlight{background:#ccc;color:#000}</style></head><body style="background:#444;color:#FFF;font-family:Meiryo;-webkit-text-size-adjust:none;cursor:default"><b>');
     $text->write($commandList[0]['args'][0]."<br>\n");
     $text->write($commandList[1]['args'][0]."</b><br>\n<br>\n");
     $buff = ['', ''];
+    $currentChara = '';
+    $currentFace = '';
     foreach ($commandList as $cmd) {
-      if ($cmd['name'] == 'print') {
-        $buff[0] = $cmd['args'][0];
-        $buff[1] .= $cmd['args'][1];
-      } else if ($cmd['name'] == 'touch') {
+      $cmdName = $cmd['name'];
+      $args = $cmd['args'];
+      if ($cmdName == 'print') {
+        $buff[0] = $args[0];
+        $buff[1] .= $args[1];
+      } else if ($cmdName == 'touch') {
         $text->write($buff[0]."：<br>\n".$buff[1]."<br>\n<br>\n");
         $buff = ['',''];
-      } else if ($cmd['name'] == 'wait') {
-        //$buff[1] .= '(pause:'.$cmd['args'][0].')';
-      } else if ($cmd['name'] == 'vo') {
-        $text->write('<div class="voice">voice: '.$cmd['args'][0]."</div>\n");
-      } else if ($cmd['name'] == 'movie') {
-        $text->write('<div class="movie">movie: '.$cmd['args'][0]."</div>\n");
-      } else if ($cmd['name'] == 'white_out') {
+        $currentChara = '';
+        $currentFace = '';
+      } else if ($cmdName == 'wait') {
+        //$buff[1] .= '(pause:'.$args[0].')';
+      } else if ($cmdName == 'choice') {
+        $text->write('<div>Choice: ('.$args[0].") ".$args[1]."</div>\n");
+      } else if ($cmdName == 'tag') {
+        $text->write('<div class="cmd">Tag '.$args[0].'</div>'."\n");
+      } else if ($cmdName == 'goto') {
+        $text->write('<div class="cmd">Jump to tag '.$args[0].'</div>'."\n");
+      } else if ($cmdName == 'vo') {
+        $text->write('<div class="voice cmd">voice: '.$args[0]."</div>\n");
+      } else if ($cmdName == 'movie') {
+        $text->write('<div class="movie cmd">movie: '.$args[0]."</div>\n");
+      } else if ($cmdName == 'white_out') {
         $text->write("<b>--- Switch scene ---</b><br>\n<br>\n");
-      } else if ($cmd['name'] == 'still') {
-        if ($cmd['args'][0] == 'end') {
-          //$text->write("(still display end)<br>\n");
+      } else if ($cmdName == 'situation') {
+        $text->write("-------------- situation: <br>\n<b>".$args[0]."</b><br>\n--------------<br>\n<br>\n");
+      } else if ($cmdName == 'place') {
+        $text->write("-------------- place: <br>\n<b>".$args[0]."</b><br>\n--------------<br>\n<br>\n");
+      } else if ($cmdName == 'face') {
+        $face = ['normal', 'normal','joy','anger','sad','shy','surprised','special_a','special_b','special_c','special_d','special_e','default'][$args[1]];
+        if ($currentChara == $args[0] && $currentFace == $face) continue;
+        $currentChara = $args[0];
+        $currentFace = $face;
+        $buff[1] .= '<span class="face cmd" data-chara="'.$args[0].'" data-face="'.$face.'">【chara '.$args[0]." face ".$args[1]." (".$face.")】</span>\n";
+      } else if ($cmdName == 'still') {
+        if ($args[0] == 'end') {
+          $text->write("<div class=\"cmd\">still display end</div>\n");
           continue;
         }
-        $text->write('<a href="https://redive.estertion.win/card/story/'.$cmd['args'][0].'.webp" target="_blank"><img alt="story_still_'.$cmd['args'][0].'" src="https://redive.estertion.win/card/story/'.$cmd['args'][0].'.webp@w300"></a>'."<br>\n");
+        $text->write('<a href="https://redive.estertion.win/card/story/'.$args[0].'.webp" target="_blank"><img alt="story_still_'.$args[0].'" src="https://redive.estertion.win/card/story/'.$args[0].'.webp@w300"></a>'."<br>\n");
       }
     }
     $text->write('<script src="/static/story_data.min.js"></script></body></html>');
