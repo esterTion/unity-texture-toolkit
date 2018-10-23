@@ -266,7 +266,7 @@ class RediveStoryDeserializer {
       $args = $cmd['args'];
       if ($cmdName == 'print') {
         $buff[0] = $args[0];
-        $buff[1] .= $args[1];
+        $buff[1] .= str_replace("\n", "<br>\n", $args[1]);
       } else if ($cmdName == 'touch') {
         $text->write($buff[0]."：<br>\n".$buff[1]."<br>\n<br>\n");
         $buff = ['',''];
