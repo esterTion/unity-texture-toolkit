@@ -275,11 +275,11 @@ class RediveStoryDeserializer {
       } else if ($cmdName == 'wait') {
         //$buff[1] .= '(pause:'.$args[0].')';
       } else if ($cmdName == 'choice') {
-        $text->write('<div>Choice: ('.$args[0].") ".$args[1]."</div>\n");
+        $text->write('<div>Choice: ('.$args[1].") ".$args[0]."</div>\n");
       } else if ($cmdName == 'tag') {
-        $text->write('<div class="cmd">Tag '.$args[0].'</div>'."\n");
+        $text->write('<div class="cmd">----- Tag '.$args[0]." -----</div>\n");
       } else if ($cmdName == 'goto') {
-        $text->write('<div class="cmd">Jump to tag '.$args[0].'</div>'."\n");
+        $text->write('<div class="cmd">Jump to tag '.$args[0]."</div>\n");
       } else if ($cmdName == 'vo') {
         $text->write('<div class="voice cmd">voice: '.$args[0]."</div>\n");
       } else if ($cmdName == 'movie') {

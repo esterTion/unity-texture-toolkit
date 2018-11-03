@@ -504,6 +504,9 @@ foreach(execQuery($db, 'SELECT story_group_id,title FROM story_data') as $row) {
 foreach(execQuery($db, 'SELECT story_group_id,title FROM event_story_data') as $row) {
   $storyStillName[$row['story_group_id']] = $row['title'];
 }
+foreach(execQuery($db, 'SELECT story_group_id,title FROM tower_story_data') as $row) {
+  $storyStillName[$row['story_group_id']] = $row['title'];
+}
 file_put_contents(RESOURCE_PATH_PREFIX.'card/story/index.json', json_encode($storyStillName, JSON_UNESCAPED_SLASHES));
 $info = [];
 foreach (execQuery($db, 'SELECT unit_id,motion_type,unit_name FROM unit_data WHERE unit_id > 100000 AND unit_id < 200000') as $row) {

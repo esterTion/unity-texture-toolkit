@@ -29,7 +29,7 @@ $resourceToExport = [
   ],
   'spine'=>[
     [ 'bundleNameMatch'=>'/^a\/spine_000000_chara_base\.cysp\.unity3d$/', 'customAssetProcessor'=> 'exportSpine' ],
-    [ 'bundleNameMatch'=>'/^a\/spine_0\d_common_battle\.cysp\.unity3d$/', 'customAssetProcessor'=> 'exportSpine' ],
+    [ 'bundleNameMatch'=>'/^a\/spine_\d\d_common_battle\.cysp\.unity3d$/', 'customAssetProcessor'=> 'exportSpine' ],
     [ 'bundleNameMatch'=>'/^a\/spine_10\d\d01_battle\.cysp\.unity3d$/',   'customAssetProcessor'=> 'exportSpine' ],
     [ 'bundleNameMatch'=>'/^a\/spine_sdnormal_10\d{4}\.unity3d$/',        'customAssetProcessor'=> 'exportAtlas' ],
   ],
@@ -54,7 +54,7 @@ function exportSpine($asset) {
         file_put_contents(RESOURCE_PATH_PREFIX.'spine/common/000000_CHARA_BASE.cysp', $item->data);
       }
       // class type animation
-      else if (preg_match('/0\d_COMMON_BATTLE\.cysp/', $item->name)) {
+      else if (preg_match('/\d\d_COMMON_BATTLE\.cysp/', $item->name)) {
         if (!file_exists(RESOURCE_PATH_PREFIX.'spine/common/')) mkdir(RESOURCE_PATH_PREFIX.'spine/common/', 0777, true);
         file_put_contents(RESOURCE_PATH_PREFIX.'spine/common/'.$item->name, $item->data);
       }
@@ -351,6 +351,7 @@ function checkMovieResource($manifest, $rules) {
         $hash_previous = hash_file('sha1', $saveToFull);
         if ($hash_current === $hash_previous) {
           unlink('out.mp4');
+          setHashCached($name, $info['hash']);
           continue;
         }
         $ftime = date('_Ymd_Hi', filemtime($saveToFull));
@@ -459,7 +460,7 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
   chdir(__DIR__);
   $curl = curl_init();
   function _log($s) {echo "$s\n";}
-  checkAndUpdateResource(10004300);
+  checkAndUpdateResource(10004500);
   /*$assets = extractBundle(new FileStream('bundle/spine_000000_chara_base.cysp.unity3d'));
   $asset = new AssetFile($assets[0]);
   foreach ($asset->preloadTable as $item) {
