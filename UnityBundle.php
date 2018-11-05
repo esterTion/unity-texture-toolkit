@@ -38,6 +38,13 @@ abstract class Stream {
     }
     return $s;
   }
+  public function readStringAt($pos) {
+    $current = $this->position;
+    $this->position = $pos;
+    $data = $this->string;
+    $this->position = $current;
+    return $data;
+  }
   public function readStringToReturn() {
     $s = '';
     while ($this->position < $this->size && ($char = $this->read(1)) != "\n") {
@@ -81,15 +88,24 @@ abstract class Stream {
   public function readFloat() {
     $int = $this->read(4);
     if (strlen($int) != 4) return 0;
+    if (!$this->littleEndian) $int = $int[3].$int[2].$int[1].$int[0];
     return unpack(/*$this->littleEndian?'g':'G'*/ 'f', $int)[1];
   }
   public function readDouble() {
     $int = $this->read(8);
     if (strlen($int) != 8) return 0;
+    if (!$this->littleEndian) $int = $int[7].$int[6].$int[5].$int[4].$int[3].$int[2].$int[1].$int[0];
     return unpack(/*$this->littleEndian?'e':'E'*/ 'd', $int)[1];
   }
   public function readData($size) {
     return $this->read($size);
+  }
+  public function readDataAt($pos, $size) {
+    $current = $this->position;
+    $this->position = $pos;
+    $data = $this->readData($size);
+    $this->position = $current;
+    return $data;
   }
   public function alignStream($alignment) {
     $mod = $this->position % $alignment;
@@ -168,6 +184,42 @@ class MemoryStream extends Stream {
   }
 }
 
+function checkAndMoveFile(string $current, string $saveTo) {
+  if (!file_exists($current)) return;
+  $dir = pathinfo($saveTo, PATHINFO_DIRNAME);
+  $format = pathinfo($saveTo, PATHINFO_EXTENSION);
+  $saveTo = $dir.'/'.pathinfo($saveTo, PATHINFO_FILENAME);
+  if (!file_exists($dir)) mkdir($dir, 0777, true);
+  $saveToFull = $saveTo.'.'.$format;
+  if (file_exists($saveToFull)) {
+    $hash_current = hash_file('sha1', $current);
+    $hash_previous = hash_file('sha1', $saveToFull);
+    if ($hash_current === $hash_previous) {
+      unlink($current);
+      return;
+    }
+    $ftime = date('_Ymd_Hi', filemtime($saveToFull));
+    rename($saveToFull, $saveTo.$ftime.'.'.$format);
+  }
+  rename($current, $saveToFull);
+}
+function checkAndCreateFile(string $saveTo, string $data) {
+  $dir = pathinfo($saveTo, PATHINFO_DIRNAME);
+  $format = pathinfo($saveTo, PATHINFO_EXTENSION);
+  $saveTo = $dir.'/'.pathinfo($saveTo, PATHINFO_FILENAME);
+  if (!file_exists($dir)) mkdir($dir, 0777, true);
+  $saveToFull = $saveTo.'.'.$format;
+  if (file_exists($saveToFull)) {
+    $hash_current = hash('sha1', $data);
+    $hash_previous = hash_file('sha1', $saveToFull);
+    if ($hash_current === $hash_previous) {
+      return;
+    }
+    $ftime = date('_Ymd_Hi', filemtime($saveToFull));
+    rename($saveToFull, $saveTo.$ftime.'.'.$format);
+  }
+  file_put_contents($saveToFull, $data);
+}
 function lz4_uncompress_stream($data, $uncompressedSize) {
   return lz4_uncompress(pack('V', $uncompressedSize).$data);
 }

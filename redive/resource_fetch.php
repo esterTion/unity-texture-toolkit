@@ -50,18 +50,15 @@ function exportSpine($asset) {
 
       // base chara skeleton
       if ($item->name == '000000_CHARA_BASE.cysp') {
-        if (!file_exists(RESOURCE_PATH_PREFIX.'spine/common/')) mkdir(RESOURCE_PATH_PREFIX.'spine/common/', 0777, true);
-        file_put_contents(RESOURCE_PATH_PREFIX.'spine/common/000000_CHARA_BASE.cysp', $item->data);
+        checkAndCreateFile(RESOURCE_PATH_PREFIX.'spine/common/000000_CHARA_BASE.cysp', $item->data);
       }
       // class type animation
       else if (preg_match('/\d\d_COMMON_BATTLE\.cysp/', $item->name)) {
-        if (!file_exists(RESOURCE_PATH_PREFIX.'spine/common/')) mkdir(RESOURCE_PATH_PREFIX.'spine/common/', 0777, true);
-        file_put_contents(RESOURCE_PATH_PREFIX.'spine/common/'.$item->name, $item->data);
+        checkAndCreateFile(RESOURCE_PATH_PREFIX.'spine/common/'.$item->name, $item->data);
       }
       // character skill animation
       else if (preg_match('/10\d{4}_BATTLE\.cysp/', $item->name)) {
-        if (!file_exists(RESOURCE_PATH_PREFIX.'spine/unit/')) mkdir(RESOURCE_PATH_PREFIX.'spine/unit/', 0777, true);
-        file_put_contents(RESOURCE_PATH_PREFIX.'spine/unit/'.$item->name, $item->data);
+        checkAndCreateFile(RESOURCE_PATH_PREFIX.'spine/unit/'.$item->name, $item->data);
       }
     }
   }
@@ -70,8 +67,7 @@ function exportAtlas($asset) {
   foreach ($asset->preloadTable as $item) {
     if ($item->typeString == 'TextAsset') {
       $item = new TextAsset($item, true);
-      if (!file_exists(RESOURCE_PATH_PREFIX.'spine/unit/')) mkdir(RESOURCE_PATH_PREFIX.'spine/unit/', 0777, true);
-      file_put_contents(RESOURCE_PATH_PREFIX.'spine/unit/'.$item->name, $item->data);
+      checkAndCreateFile(RESOURCE_PATH_PREFIX.'spine/unit/'.$item->name, $item->data);
     } else if ($item->typeString == 'Texture2D') {
       $item = new Texture2D($item, true);
       $item->exportTo(RESOURCE_PATH_PREFIX.'spine/unit/'.$item->name, 'png');
@@ -83,12 +79,11 @@ function exportStory($asset) {
   foreach ($asset->preloadTable as $item) {
     if ($item->typeString == 'TextAsset') {
       $item = new TextAsset($item, true);
-      if (!file_exists(RESOURCE_PATH_PREFIX.'story/data/')) mkdir(RESOURCE_PATH_PREFIX.'story/data/', 0777, true);
       require_once 'RediveStoryDeserializer.php';
       $parser = new RediveStoryDeserializer($item->data);
       $name = substr($item->name, 10);
-      file_put_contents(RESOURCE_PATH_PREFIX.'story/data/'.$name.'.json', json_encode($parser->commandList));
-      file_put_contents(RESOURCE_PATH_PREFIX.'story/data/'.$name.'.htm', $parser->data);
+      checkAndCreateFile(RESOURCE_PATH_PREFIX.'story/data/'.$name.'.json', json_encode($parser->commandList));
+      checkAndCreateFile(RESOURCE_PATH_PREFIX.'story/data/'.$name.'.htm', $parser->data);
 
       $storyStillName = json_decode(file_get_contents(RESOURCE_PATH_PREFIX.'spine/still/still_name.json'), true);
       $nextId = NULL;
@@ -112,8 +107,7 @@ function exportStoryStill($asset) {
   foreach ($asset->preloadTable as $item) {
     if ($item->typeString == 'TextAsset') {
       $item = new TextAsset($item, true);
-      if (!file_exists(RESOURCE_PATH_PREFIX.'spine/still/unit/')) mkdir(RESOURCE_PATH_PREFIX.'spine/still/unit/', 0777, true);
-      file_put_contents(RESOURCE_PATH_PREFIX.'spine/still/unit/'.$item->name, $item->data);
+      checkAndCreateFile(RESOURCE_PATH_PREFIX.'spine/still/unit/'.$item->name, $item->data);
     } else if ($item->typeString == 'Texture2D') {
       $item = new Texture2D($item, true);
       $item->exportTo(RESOURCE_PATH_PREFIX.'spine/still/unit/'.$item->name, 'png');
@@ -265,13 +259,12 @@ function checkSoundResource($manifest, $rules) {
       exec('acb2wavs '.$acbFileName.' -b 00000000 -a 0030D9E8 -n', $nullptr);
       $acbUnpackDir = '_acb_'.$acbFileName;
       $saveTo = RESOURCE_PATH_PREFIX. preg_replace($rule['bundleNameMatch'], $rule['exportTo'], $name);
-      if (!file_exists($saveTo)) mkdir($saveTo, 0777, true);
       foreach (['internal', 'external'] as $awbFolder)
         if (file_exists($acbUnpackDir .'/'. $awbFolder)) {
           foreach (glob($acbUnpackDir .'/'. $awbFolder.'/*.wav') as $waveFile) {
             $m4aFile = substr($waveFile, 0, -3).'m4a';
             exec('ffmpeg -hide_banner -loglevel quiet -y -i '.$waveFile.' -vbr 5 -movflags faststart '.$m4aFile, $nullptr);
-            rename($m4aFile, $saveTo.'/'.pathinfo($m4aFile, PATHINFO_BASENAME));
+            checkAndMoveFile($m4aFile, $saveTo.'/'.pathinfo($m4aFile, PATHINFO_BASENAME));
           }
         }
       delTree($acbUnpackDir);
@@ -333,8 +326,6 @@ function checkMovieResource($manifest, $rules) {
         continue;
       }
       $saveTo = RESOURCE_PATH_PREFIX. preg_replace($rule['bundleNameMatch'], $rule['exportTo'], $name);
-      $saveToFolder = dirname($saveTo);
-      if (!file_exists($saveToFolder)) mkdir($saveToFolder, 0777, true);
       $code=0;
       exec('ffmpeg -hide_banner -loglevel quiet -y -i '.$videoFile.' '.implode(' ', array_map(function($i){return '-i '.$i;}, $audioFiles)).' '.(empty($audioFiles)?'':'-filter_complex amix=inputs='.count($audioFiles).':duration=longest').' -c:v copy '.(empty($audioFiles)?'':'-c:a aac -vbr 5').' -movflags faststart out.mp4', $nullptr, $code);
       if ($code !==0 || !file_exists('out.mp4')) {
@@ -346,17 +337,6 @@ function checkMovieResource($manifest, $rules) {
       }
 
       $saveToFull = $saveTo .'.mp4';
-      if (file_exists($saveToFull)) {
-        $hash_current = hash_file('sha1', 'out.mp4');
-        $hash_previous = hash_file('sha1', $saveToFull);
-        if ($hash_current === $hash_previous) {
-          unlink('out.mp4');
-          setHashCached($name, $info['hash']);
-          continue;
-        }
-        $ftime = date('_Ymd_Hi', filemtime($saveToFull));
-        rename($saveToFull, $saveTo.$ftime.'.mp4');
-      }
 
       // avc chk
       $mp4 = new FileStream('out.mp4');
@@ -372,10 +352,10 @@ function checkMovieResource($manifest, $rules) {
         rename('out.mp4', 'out_ori.mp4');
         exec('ffmpeg -hide_banner -loglevel quiet -y -i out_ori.mp4 -c copy -c:v h264 -crf 20 -movflags faststart out.mp4', $nullptr);
         touch('out_ori.mp4', $remoteTime);
-        rename('out_ori.mp4', $saveTo.'_ori.mp4');
+        checkAndMoveFile('out_ori.mp4', $saveTo.'_ori.mp4');
       }
 
-      rename('out.mp4', $saveToFull);
+      checkAndMoveFile('out.mp4', $saveToFull);
       touch($saveToFull, $remoteTime);
 
       unlink($videoFile);

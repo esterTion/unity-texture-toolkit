@@ -220,7 +220,8 @@ if ($appinfo !== false) {
       $data = json_encode(array(
         'game'=>'cgss',
         'ver'=>$appver,
-        'link'=>'https://itunes.apple.com/jp/app/id'.$itunesid
+        'link'=>'https://itunes.apple.com/jp/app/id'.$itunesid,
+        'desc'=>$appinfo['results'][0]['releaseNotes']
       ));
       $header = [
         'X-GITHUB-EVENT: app_update',
