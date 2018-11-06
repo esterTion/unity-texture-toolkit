@@ -13,25 +13,55 @@ function parse_db_diff($diff, $master, $cbMap) {
   global $db;
   $db = $master;
   $versionDiff = [];
-
-  $parser = new Parser();
-
-  $changeset = $parser->parseFile($diff, Parser::VCS_GIT);
-  $files = $changeset->getFiles();
-  $newtable = [];
   $operates = [
     File::CREATED => 0,
     File::CHANGED => 0,
     File::DELETED => 0,
   ];
 
+  // remove other files from diff
+  $ori = fopen($diff, 'r');
+  $new = fopen($diff.'.new', 'w');
+  $observeFiles = array_keys($cbMap);
+  $line = fgets($ori);
+  $newtable = [];
+  while (!feof($ori)) {
+    if (substr($line, 0, 11) === "diff --git ") {
+      $operates[File::CHANGED]++;
+      $fname = substr(explode(' ', trim($line))[3], 2);
+      if (!in_array($fname, $observeFiles)) {
+        while (!feof($ori)) {
+          $line = fgets($ori);
+          if (trim($line) === '--- /dev/null') {
+            $operates[File::CHANGED]--;
+            $operates[File::CREATED]++;
+            $newtable[] = substr($fname, 0, -4);
+          } else if (trim($line) === '+++ /dev/null') {
+            $operates[File::CHANGED]--;
+            $operates[File::DELETED]++;
+          }
+          if (substr($line, 0, 11) === 'diff --git ') {
+            $operates[File::CHANGED]++;
+            break;
+          }
+        }
+        continue;
+      }
+    }
+    fwrite($new, $line);
+    $line = fgets($ori);
+  }
+  fclose($ori); fclose($new);
+  unlink($diff);
+  rename($diff.'.new', $diff);
+
+  $parser = new Parser();
+
+  $changeset = $parser->parseFile($diff, Parser::VCS_GIT);
+  $files = $changeset->getFiles();
+
   foreach ($files as &$file) {
     $fname = $file->getNewFilename();
-    $operates[$file->getOperation()]++;
-    if ($file->getOperation() == File::CREATED && substr($fname, 0, 10) != '+manifest_') {
-      $newtable[] = substr($fname, 0, -4);
-      continue;
-    }
     if (isset($cbMap[$fname])) {
       $data = call_user_func($cbMap[$fname], $file);
       if (!empty($data[1])) {
