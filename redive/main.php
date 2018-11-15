@@ -251,6 +251,21 @@ if ($appinfo !== false) {
       ));
       curl_exec($curl);
       curl_close($curl);
+
+      // fetch bundle manifest
+      $curl = curl_init();
+      curl_setopt_array($curl, array(
+        CURLOPT_RETURNTRANSFER=>true,
+        CURLOPT_HEADER=>0,
+        CURLOPT_SSL_VERIFYPEER=>false
+      ));
+      curl_setopt($curl, CURLOPT_URL, "http://priconne-redive.akamaized.net/dl/Bundles/${appver}/Jpn/AssetBundles/iOS/manifest/bdl_assetmanifest");
+      $manifest = curl_exec($curl);
+      file_put_contents('data/+manifest_bundle.txt', $manifest);
+      chdir('data');
+      exec('git add +manifest_bundle.txt');
+      exec('git commit -m "bundle manifest v'.$appver.'"');
+      chdir(__DIR__);
     }
   }
 }
@@ -365,7 +380,7 @@ curl_setopt_array($curl, array(
 $TruthVersion = $last_version['TruthVersion'];
 $current_ver = $TruthVersion|0;
 
-for ($i=1; $i<=10; $i++) {
+for ($i=1; $i<=20; $i++) {
   $guess = $current_ver + $i * 10;
   curl_setopt($curl, CURLOPT_URL, 'http://priconne-redive.akamaized.net/dl/Resources/'.$guess.'/Jpn/AssetBundles/iOS/manifest/manifest_assetmanifest');
   curl_exec($curl);
@@ -412,6 +427,9 @@ foreach (explode("\n", trim($manifest)) as $line) {
 curl_setopt($curl, CURLOPT_URL, 'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Movie/SP/High/manifest/moviemanifest');
 $manifest = curl_exec($curl);
 file_put_contents('data/+manifest_movie.txt', $manifest);
+curl_setopt($curl, CURLOPT_URL, 'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Movie/SP/Low/manifest/moviemanifest');
+$manifest = curl_exec($curl);
+file_put_contents('data/+manifest_movie_low.txt', $manifest);
 
 $manifest = file_get_contents('data/+manifest_masterdata.txt');
 $manifest = array_map(function ($i){ return explode(',', $i); }, explode("\n", $manifest));
