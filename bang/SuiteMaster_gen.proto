@@ -739,6 +739,7 @@ message MasterLoginBonusDetail {
   optional uint32 quantity = 5; // normal type
   optional string voiceId = 6; // normal type
   optional uint32 seq = 7; // normal type
+  optional string grantType = 8; // normal type
 }
 message MasterLoginBonusAsset {
   optional uint32 loginBonusId = 1; // normal type
@@ -814,6 +815,8 @@ message MasterStamp {
   optional uint32 seq = 2; // normal type
   optional string imageName = 3; // normal type
   optional string stampType = 4; // normal type
+  optional uint32 startAt = 5; // normal type
+  optional uint32 endAt = 6; // normal type
 }
 message uint_MasterStamp {
   optional uint32 uint_MasterStamp_key = 1; // normal type
@@ -916,6 +919,7 @@ message MasterMission {
   optional string missionTabType = 7; // normal type
   optional uint32 seq = 8; // normal type
   optional string url = 9; // normal type
+  optional uint32 eventId = 10; // normal type
 }
 message uint_MasterMission {
   optional uint32 uint_MasterMission_key = 1; // normal type
@@ -982,6 +986,8 @@ message MasterSkillOnceEffect {
   optional string onceEffectType = 4; // normal type
   optional string onceEffectValueType = 5; // normal type
   optional int32 onceEffectValue = 6; // normal type
+  optional string onceEffectConditionLifeType = 7; // normal type
+  optional uint32 onceEffectConditionLife = 8; // normal type
 }
 message MasterSkillOnceEffectList {
   repeated MasterSkillOnceEffect entries = 1; // array
@@ -2048,6 +2054,19 @@ message uint_MasterEventSituationList {
 message MasterEventSituationMap {
   repeated uint_MasterEventSituationList entries = 1; // dictionary
 }
+message MasterMissionLiveEvent {
+  optional uint32 eventId = 1; // normal type
+  repeated MasterEventAttribute attributes = 2; // array
+  repeated MasterEventCharacter characters = 3; // array
+  repeated MasterEventStory stories = 4; // array
+}
+message uint_MasterMissionLiveEvent {
+  optional uint32 uint_MasterMissionLiveEvent_key = 1; // normal type
+  optional MasterMissionLiveEvent uint_MasterMissionLiveEvent_value = 2; // sub class
+}
+message MasterMissionLiveEventMap {
+  repeated uint_MasterMissionLiveEvent entries = 1; // dictionary
+}
 message MasterNewSituationIntroductionDetail {
   optional uint32 newSituationIntroductionId = 1; // normal type
   optional uint32 situationId = 2; // normal type
@@ -2206,6 +2225,7 @@ message SuiteMasterGetResponse {
   optional MasterEventBoxGachaMap masterEventBoxGachaMap = 212; // sub class
   optional MasterLiveTryEventMap masterLiveTryEventMap = 213; // sub class
   optional MasterEventSituationMap masterEventSituationMap = 214; // sub class
+  optional MasterMissionLiveEventMap masterMissionLiveEventMap = 215; // sub class
   optional MasterNewSituationIntroductionList masterNewSituationIntroductionList = 300; // sub class
   optional MasterGachaInformationMap masterGachaInformationMap = 301; // sub class
   optional MasterGenericAnimationMap masterGenericAnimationMap = 302; // sub class
