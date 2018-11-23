@@ -244,7 +244,7 @@ if ($appinfo !== false) {
       ));
       $header = [
         'X-GITHUB-EVENT: app_update',
-        'X-HUB-SIGNATURE: sha1='.hash_hmac('sha1', $data, 'sec', false)
+        'X-HUB-SIGNATURE: sha1='.hash_hmac('sha1', $data, file_get_contents(__DIR__.'/../webhook_secret'), false)
       ];
       $curl = curl_init();
       curl_setopt_array($curl, array(

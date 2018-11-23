@@ -91,7 +91,7 @@ function do_commit($TruthVersion, $db = NULL) {
     $commitMessage[] = '- '.count($diff_send['new_table']).' new table: '. implode(', ', $diff_send['new_table']);
   }
   if (isset($versionDiff['card'])) {
-    $diff_send['card'] = array_map(function ($a){ 
+    $diff_send['card'] = array_map(function ($a)use(&$db){ 
       return ['','N','N+','R','R+','SR','SR+','SSR','SSR+'][$a['rarity']].
       $a['name'].
       ' ('.$a['condition'].'s/'.
@@ -116,6 +116,7 @@ function do_commit($TruthVersion, $db = NULL) {
           default:                            { return 'Skill '.$a; }
         }
       })($a['skill_type']).
+      ($a['rarity'] == 7 ? '/No.'.execQuery($db, 'SELECT count(id) as c FROM card_data WHERE chara_id = (SELECT chara_id FROM card_data WHERE id='.$a['id'].') AND rarity=7')[0]['c'] :'').
       ')';
     }, $versionDiff['card']);
     $commitMessage[] = "- new cards: \n  - ".implode("\n  - ", $diff_send['card']);
@@ -156,7 +157,7 @@ function do_commit($TruthVersion, $db = NULL) {
   ));
   $header = [
     'X-GITHUB-EVENT: push_direct_message',
-    'X-HUB-SIGNATURE: sha1='.hash_hmac('sha1', $data, 'sec', false)
+    'X-HUB-SIGNATURE: sha1='.hash_hmac('sha1', $data, file_get_contents(__DIR__.'/../webhook_secret'), false)
   ];
   $curl = curl_init();
   curl_setopt_array($curl, array(
@@ -225,7 +226,7 @@ if ($appinfo !== false) {
       ));
       $header = [
         'X-GITHUB-EVENT: app_update',
-        'X-HUB-SIGNATURE: sha1='.hash_hmac('sha1', $data, 'sec', false)
+        'X-HUB-SIGNATURE: sha1='.hash_hmac('sha1', $data, file_get_contents(__DIR__.'/../webhook_secret'), false)
       ];
       $curl = curl_init();
       curl_setopt_array($curl, array(
