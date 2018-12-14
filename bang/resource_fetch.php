@@ -80,6 +80,7 @@ function checkAndUpdateResource($dataVer) {
             if (shouldExportFile($itemname, $rule)) {
               $saveTo = RESOURCE_PATH_PREFIX. preg_replace($rule['nameMatch'], $rule['exportTo'], $itemname);
               $item->exportTo($saveTo, 'webp', '-lossless 1');
+              if (filemtime($saveTo. '.webp') > $currenttime)
               touch($saveTo. '.webp', $currenttime);
             }
             unset($item);

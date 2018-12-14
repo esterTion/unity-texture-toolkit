@@ -282,7 +282,7 @@ class RediveStoryDeserializer {
         $text->write('<div class="cmd">Jump to tag '.$args[0]."</div>\n");
       } else if ($cmdName == 'vo') {
         $text->write('<div class="voice cmd">voice: '.$args[0]."</div>\n");
-      } else if ($cmdName == 'movie') {
+      } else if ($cmdName == 'movie' || $cmdName == 'movie_stay') {
         $text->write('<div class="movie cmd">movie: '.$args[0]."</div>\n");
       } else if ($cmdName == 'white_out') {
         $text->write("<b>--- Switch scene ---</b><br>\n<br>\n");
@@ -306,7 +306,7 @@ class RediveStoryDeserializer {
     }
     $text->write('<script src="/static/story_data.min.js"></script></body></html>');
     $text->position = 0;
-    $this->data = str_replace("\n", "<br>", $text->readData($text->size));
+    $this->data = $text->readData($text->size);
   }
 
   private function GetCommandName($index) {

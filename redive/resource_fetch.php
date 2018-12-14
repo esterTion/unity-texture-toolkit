@@ -35,6 +35,8 @@ $resourceToExport = [
   ],
   'sound'=>[
     [ 'bundleNameMatch'=>'/^v\/vo_cmn_(\d+).acb$/', 'exportTo'=> 'sound/unit_common/$1' ],
+    [ 'bundleNameMatch'=>'/^v\/vo_navi_(\d+).acb$/', 'exportTo'=> 'sound/unit_common/$1' ],
+    [ 'bundleNameMatch'=>'/^v\/vo_enavi_(\d+).acb$/', 'exportTo'=> 'sound/unit_common/$1' ],
     [ 'bundleNameMatch'=>'/^v\/t\/vo_adv_(\d+).acb$/', 'exportTo'=> 'sound/story_vo/$1' ],
   ],
   'movie'=>[
@@ -440,7 +442,7 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
   chdir(__DIR__);
   $curl = curl_init();
   function _log($s) {echo "$s\n";}
-  checkAndUpdateResource(10004500);
+  checkAndUpdateResource(10005500);
   /*$assets = extractBundle(new FileStream('bundle/spine_000000_chara_base.cysp.unity3d'));
   $asset = new AssetFile($assets[0]);
   foreach ($asset->preloadTable as $item) {
