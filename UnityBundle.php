@@ -184,7 +184,7 @@ class MemoryStream extends Stream {
   }
 }
 
-function checkAndMoveFile(string $current, string $saveTo) {
+function checkAndMoveFile(string $current, string $saveTo, int $modifiedTime = 0) {
   if (!file_exists($current)) return;
   $dir = pathinfo($saveTo, PATHINFO_DIRNAME);
   $format = pathinfo($saveTo, PATHINFO_EXTENSION);
@@ -202,8 +202,11 @@ function checkAndMoveFile(string $current, string $saveTo) {
     rename($saveToFull, $saveTo.$ftime.'.'.$format);
   }
   rename($current, $saveToFull);
+  if ($modifiedTime !== 0) {
+    touch($saveToFull, $modifiedTime);
+  }
 }
-function checkAndCreateFile(string $saveTo, string $data) {
+function checkAndCreateFile(string $saveTo, string $data, int $modifiedTime = 0) {
   $dir = pathinfo($saveTo, PATHINFO_DIRNAME);
   $format = pathinfo($saveTo, PATHINFO_EXTENSION);
   $saveTo = $dir.'/'.pathinfo($saveTo, PATHINFO_FILENAME);
@@ -219,6 +222,9 @@ function checkAndCreateFile(string $saveTo, string $data) {
     rename($saveToFull, $saveTo.$ftime.'.'.$format);
   }
   file_put_contents($saveToFull, $data);
+  if ($modifiedTime !== 0) {
+    touch($saveToFull, $modifiedTime);
+  }
 }
 function lz4_uncompress_stream($data, $uncompressedSize) {
   return lz4_uncompress(pack('V', $uncompressedSize).$data);

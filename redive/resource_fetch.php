@@ -45,47 +45,50 @@ $resourceToExport = [
   ]
 ];
 
-function exportSpine($asset) {
+function exportSpine($asset, $remoteTime) {
   foreach ($asset->preloadTable as $item) {
     if ($item->typeString == 'TextAsset') {
       $item = new TextAsset($item, true);
 
       // base chara skeleton
       if ($item->name == '000000_CHARA_BASE.cysp') {
-        checkAndCreateFile(RESOURCE_PATH_PREFIX.'spine/common/000000_CHARA_BASE.cysp', $item->data);
+        checkAndCreateFile(RESOURCE_PATH_PREFIX.'spine/common/000000_CHARA_BASE.cysp', $item->data, $remoteTime);
       }
       // class type animation
       else if (preg_match('/\d\d_COMMON_BATTLE\.cysp/', $item->name)) {
-        checkAndCreateFile(RESOURCE_PATH_PREFIX.'spine/common/'.$item->name, $item->data);
+        checkAndCreateFile(RESOURCE_PATH_PREFIX.'spine/common/'.$item->name, $item->data, $remoteTime);
       }
       // character skill animation
       else if (preg_match('/10\d{4}_BATTLE\.cysp/', $item->name)) {
-        checkAndCreateFile(RESOURCE_PATH_PREFIX.'spine/unit/'.$item->name, $item->data);
+        checkAndCreateFile(RESOURCE_PATH_PREFIX.'spine/unit/'.$item->name, $item->data, $remoteTime);
       }
     }
   }
 }
-function exportAtlas($asset) {
+function exportAtlas($asset, $remoteTime) {
   foreach ($asset->preloadTable as $item) {
     if ($item->typeString == 'TextAsset') {
       $item = new TextAsset($item, true);
-      checkAndCreateFile(RESOURCE_PATH_PREFIX.'spine/unit/'.$item->name, $item->data);
+      checkAndCreateFile(RESOURCE_PATH_PREFIX.'spine/unit/'.$item->name, $item->data, $remoteTime);
     } else if ($item->typeString == 'Texture2D') {
       $item = new Texture2D($item, true);
-      $item->exportTo(RESOURCE_PATH_PREFIX.'spine/unit/'.$item->name, 'png');
+      $saveTo = RESOURCE_PATH_PREFIX.'spine/unit/'.$item->name;
+      $item->exportTo($saveTo, 'png');
+      if (filemtime($saveTo.'.png') > $remoteTime)
+      touch($saveTo.'.png', $remoteTime);
     }
   }
 }
 
-function exportStory($asset) {
+function exportStory($asset, $remoteTime) {
   foreach ($asset->preloadTable as $item) {
     if ($item->typeString == 'TextAsset') {
       $item = new TextAsset($item, true);
       require_once 'RediveStoryDeserializer.php';
       $parser = new RediveStoryDeserializer($item->data);
       $name = substr($item->name, 10);
-      checkAndCreateFile(RESOURCE_PATH_PREFIX.'story/data/'.$name.'.json', json_encode($parser->commandList));
-      checkAndCreateFile(RESOURCE_PATH_PREFIX.'story/data/'.$name.'.htm', $parser->data);
+      checkAndCreateFile(RESOURCE_PATH_PREFIX.'story/data/'.$name.'.json', json_encode($parser->commandList), $remoteTime);
+      checkAndCreateFile(RESOURCE_PATH_PREFIX.'story/data/'.$name.'.htm', $parser->data, $remoteTime);
 
       $storyStillName = json_decode(file_get_contents(RESOURCE_PATH_PREFIX.'spine/still/still_name.json'), true);
       $nextId = NULL;
@@ -105,14 +108,17 @@ function exportStory($asset) {
     }
   }
 }
-function exportStoryStill($asset) {
+function exportStoryStill($asset, $remoteTime) {
   foreach ($asset->preloadTable as $item) {
     if ($item->typeString == 'TextAsset') {
       $item = new TextAsset($item, true);
-      checkAndCreateFile(RESOURCE_PATH_PREFIX.'spine/still/unit/'.$item->name, $item->data);
+      checkAndCreateFile(RESOURCE_PATH_PREFIX.'spine/still/unit/'.$item->name, $item->data, $remoteTime);
     } else if ($item->typeString == 'Texture2D') {
       $item = new Texture2D($item, true);
-      $item->exportTo(RESOURCE_PATH_PREFIX.'spine/still/unit/'.$item->name, 'png');
+      $saveTo = RESOURCE_PATH_PREFIX.'spine/still/unit/'.$item->name;
+      $item->exportTo($saveTo, 'png');
+      if (filemtime($saveTo.'.png') > $remoteTime)
+      touch($saveTo.'.png', $remoteTime);
     }
   }
 }
@@ -163,6 +169,7 @@ function checkSubResource($manifest, $rules) {
         CURLOPT_URL=>'http://priconne-redive.akamaized.net/dl/pool/AssetBundles/'.substr($info['hash'],0,2).'/'.$info['hash'],
       ));
       $bundleData = curl_exec($curl);
+      $remoteTime = curl_getinfo($curl, CURLINFO_FILETIME);
       if (md5($bundleData) != $info['hash']) {
         _log('download failed  '.$name);
         continue;
@@ -174,7 +181,7 @@ function checkSubResource($manifest, $rules) {
         $asset = new AssetFile($asset);
     
         if (isset($rule['customAssetProcessor'])) {
-          call_user_func($rule['customAssetProcessor'], $asset);
+          call_user_func($rule['customAssetProcessor'], $asset, $remoteTime);
         } else
         foreach ($asset->preloadTable as &$item) {
           if ($item->typeString == 'Texture2D') {
@@ -196,6 +203,8 @@ function checkSubResource($manifest, $rules) {
               if (isset($rule['extraParam'])) $param .= ' '.$rule['extraParam'];
               if (isset($rule['extraParamCb'])) $param .= ' '.call_user_func($rule['extraParamCb'], $item);
               $item->exportTo($saveTo, 'webp', $param);
+              if (filemtime($saveTo. '.webp') > $remoteTime)
+              touch($saveTo. '.webp', $remoteTime);
             }
             unset($item);
           }
@@ -231,6 +240,7 @@ function checkSoundResource($manifest, $rules) {
         CURLOPT_URL=>'http://priconne-redive.akamaized.net/dl/pool/Sound/'.substr($info['hash'],0,2).'/'.$info['hash'],
       ));
       $acbData = curl_exec($curl);
+      $remoteTime = curl_getinfo($curl, CURLINFO_FILETIME);
       if (md5($acbData) != $info['hash']) {
         _log('download failed  '.$name);
         continue;
@@ -265,8 +275,11 @@ function checkSoundResource($manifest, $rules) {
         if (file_exists($acbUnpackDir .'/'. $awbFolder)) {
           foreach (glob($acbUnpackDir .'/'. $awbFolder.'/*.wav') as $waveFile) {
             $m4aFile = substr($waveFile, 0, -3).'m4a';
+            $finalPath = $saveTo.'/'.pathinfo($m4aFile, PATHINFO_BASENAME);
             exec('ffmpeg -hide_banner -loglevel quiet -y -i '.$waveFile.' -vbr 5 -movflags faststart '.$m4aFile, $nullptr);
-            checkAndMoveFile($m4aFile, $saveTo.'/'.pathinfo($m4aFile, PATHINFO_BASENAME));
+            checkAndMoveFile($m4aFile, $finalPath, $remoteTime);
+            if (filemtime($finalPath) > $remoteTime)
+            touch($finalPath, $remoteTime);
           }
         }
       delTree($acbUnpackDir);
@@ -347,18 +360,16 @@ function checkMovieResource($manifest, $rules) {
       $mp4->position = $ftypLen;
       $moovLen = $mp4->ulong;
       $moov = $mp4->readData($moovLen - 4);
-      $mp4->__destruct();
+      unset($mp4);
       if (strpos($moov, 'avcC') === false) {
         // not avc, reencode
         _log('reencoding to avc');
         rename('out.mp4', 'out_ori.mp4');
         exec('ffmpeg -hide_banner -loglevel quiet -y -i out_ori.mp4 -c copy -c:v h264 -crf 20 -movflags faststart out.mp4', $nullptr);
-        touch('out_ori.mp4', $remoteTime);
-        checkAndMoveFile('out_ori.mp4', $saveTo.'_ori.mp4');
+        checkAndMoveFile('out_ori.mp4', $saveTo.'_ori.mp4', $remoteTime);
       }
 
-      checkAndMoveFile('out.mp4', $saveToFull);
-      touch($saveToFull, $remoteTime);
+      checkAndMoveFile('out.mp4', $saveToFull, $remoteTime);
 
       unlink($videoFile);
       array_map('unlink', $audioFiles);
