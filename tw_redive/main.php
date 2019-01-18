@@ -175,6 +175,11 @@ function do_commit($TruthVersion, $db = NULL) {
   curl_close($curl);
 }
 
+function decrypt($string, $key, $iv) {
+	  //return trim(mcrypt_decrypt(MCRYPT_RIJNDAEL_128, $key, $string, MCRYPT_MODE_CBC, $iv), "\0");
+	  return openssl_decrypt(substr($string, 0, -32), 'AES-256-CBC', $key, OPENSSL_RAW_DATA|OPENSSL_NO_PADDING, $iv);
+}
+
 function main() {
 
 global $last_version;
@@ -293,16 +298,22 @@ $response = base64_decode($response);
 $key = substr($response, -32, 32);
 $udid = '2eae8edf-16a7-44f5-a593-a026ec46e895';
 $iv = substr(str_replace('-','',$udid),0,16);
-$response = msgpack_unpack(decrypt(substr($response, 0, -32), $key, $iv));
-
+$response = decrypt(substr($response, 0, -32), $key, $iv);
+preg_match('/required_res_ver.+(\d{8})/m', $response, $match);
 //print_r($response);
 //exit;
-if (!isset($response['data_headers']['required_res_ver'])) {
+/*if (!isset($response['data_headers']['required_res_ver'])) {
   _log('invalid response: '. json_encode($response));
   return;
 }
 $TruthVersion = $response['data_headers']['required_res_ver'];
-
+*/
+if ($m) {
+  $TruthVersion = $m[1];
+} else {
+  _log('invalid response: '. json_encode($response));
+  return;
+}
 if ($TruthVersion == $last_version['TruthVersion']) {
   _log('no update found');
   return;
