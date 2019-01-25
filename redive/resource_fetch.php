@@ -4,6 +4,9 @@ if (count(get_included_files()) == 1) define ('TEST_SUITE', __FILE__);
 require_once 'UnityAsset.php';
 
 $resourceToExport = [
+  'all' => [
+    [ 'bundleNameMatch'=>'/^a\/all_battleunitprefab_\d+\.unity3d$/', 'customAssetProcessor'=> 'exportPrefab' ],
+  ],
   'bg'=> [
     [ 'bundleNameMatch'=>'/^a\/bg_still_unit_\d+\.unity3d$/',       'nameMatch'=>'/^still_unit_(\d+)$/',     'exportTo'=>'card/full/$1' ]
   ],
@@ -119,6 +122,30 @@ function exportStoryStill($asset, $remoteTime) {
       $item->exportTo($saveTo, 'png');
       if (filemtime($saveTo.'.png') > $remoteTime)
       touch($saveTo.'.png', $remoteTime);
+    }
+  }
+}
+
+$prefabUpdated = false;
+function exportPrefab($asset, $remoteTime) {
+  global $prefabUpdated;
+  $prefabUpdated = true;
+  foreach ($asset->preloadTable as $item) {
+    if ($item->typeString == 'MonoBehaviour') {
+      $stream = $asset->stream;
+      $stream->position = $item->offset;
+      if (isset($asset->ClassStructures[$item->type1])) {
+        $deserializedStruct = ClassStructHelper::DeserializeStruct($stream, $asset->ClassStructures[$item->type1]['members']);
+        $organizedStruct = ClassStructHelper::OrganizeStruct($deserializedStruct);
+        if (isset($organizedStruct['Attack'])) {
+          $gameObjectPath = $organizedStruct['m_GameObject']['m_PathID'];
+          $gameObject = $asset->preloadTable[$gameObjectPath];
+          $stream->position = $gameObject->offset;
+          $unitId = ClassStructHelper::OrganizeStruct(ClassStructHelper::DeserializeStruct($stream, $asset->ClassStructures[$gameObject->type1]['members']))['m_Name'];
+          file_put_contents('prefabs/'.$unitId.'.json', json_encode($organizedStruct));
+          break;
+        }
+      }
     }
   }
 }
@@ -420,6 +447,16 @@ function checkAndUpdateResource($TruthVersion) {
     }
   }
 
+  global $prefabUpdated;
+  if ($prefabUpdated) {
+    chdir('prefabs');
+    exec('7za a -mx=9 ../prefabs.zip *');
+    chdir('..');
+    $lastVer = json_decode(file_get_contents('last_version'), true);
+    $lastVer['PrefabVer'] = $TruthVersion;
+    file_put_contents('last_version', json_encode($lastVer));
+  }
+
   // sound res check
   do {
     $name = "manifest/soundmanifest";
@@ -453,7 +490,7 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
   chdir(__DIR__);
   $curl = curl_init();
   function _log($s) {echo "$s\n";}
-  checkAndUpdateResource(10005500);
+  checkAndUpdateResource('10006300');
   /*$assets = extractBundle(new FileStream('bundle/spine_000000_chara_base.cysp.unity3d'));
   $asset = new AssetFile($assets[0]);
   foreach ($asset->preloadTable as $item) {

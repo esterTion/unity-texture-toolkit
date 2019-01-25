@@ -98,6 +98,7 @@ abstract class Stream {
     return unpack(/*$this->littleEndian?'e':'E'*/ 'd', $int)[1];
   }
   public function readData($size) {
+    if ($size <= 0) return '';
     return $this->read($size);
   }
   public function readDataAt($pos, $size) {

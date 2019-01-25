@@ -147,20 +147,20 @@ class AssetFile {
         for ($i=0; $i<$someCount; $i++) {
           $stream->long;
           $stream->alignStream(4);
-          $stream->long;
+          $stream->longlong;
         }
       }
 
-      /*$sharedFileCount = $stream->long;
-      var_dump($sharedFileCount);
+      $sharedFileCount = $stream->long;
       for ($i=0; $i<$sharedFileCount; $i++) {
-        $shared = [];
-        $shared['aName'] = $stream->string;
+        $shared = new class{};
+        $shared->name = $stream->string;
         $stream->position += 20;
         $sharedFileName = $stream->string;
-        $shared['fileName'] = $sharedFileName;
-        //$this->sharedAssetsList[] = $shared;
-      }*/
+        $shared->fileName = $sharedFileName;
+        $shared->index = $i;
+        $this->sharedAssetsList[] = $shared;
+      }
       $this->valid = true;
     } catch (Excepti4on $e) { }
   }
@@ -979,4 +979,163 @@ class TextureFormat {
     64 => 'ETC_RGB4Crunched',
     65 => 'ETC2_RGBA8Crunched'
   );
+}
+
+function RoundSigDigs($number, $sigdigs) {
+  $ori = $number;
+  $power = $ori == 0 ? 0 : ceil(log10(abs($number)));
+  $number *= pow(10, -$power);
+  return round($number, $sigdigs) * pow(10, $power);
+}
+class ClassStructHelper {
+  static function DeserializeStruct(Stream $stream, $members) {
+    $output = [];
+    for ($i=0; $i<count($members); $i++) {
+      $member = &$members[$i];
+      $name = $member['name'];
+      $type = $member['type'];
+      $level = $member['level'];
+      $align = ($member['flag'] & 16384) != 0;
+      $value = [
+        'level' => $level,
+        'name' => $name,
+        'type' => $type,
+        'value' => NULL
+      ];
+      if (isset($member['alignBefore'])) {
+        $stream->alignStream(4);
+      }
+      switch ($type) {
+        case 'SInt8': {
+          $value['value'] = ord($stream->byte);
+          if ($value['value'] >= 128) $value['value'] = $value['value'] - 256;
+          break;
+        }
+        case 'UInt8': {
+          $value['value'] = ord($stream->byte);
+          break;
+        }
+        case 'SInt16': case 'short': {
+          $value['value'] = $stream->short;
+          break;
+        }
+        case 'UInt16': case 'unsigned short': {
+          $value['value'] = $stream->ushort;
+          break;
+        }
+        case 'SInt32': case 'int': {
+          $value['value'] = $stream->long;
+          break;
+        }
+        case 'UInt32': case 'unsigned int': case 'Type*': {
+          $value['value'] = $stream->ulong;
+          break;
+        }
+        case 'SInt64': case 'long long': {
+          $value['value'] = $stream->longlong;
+          break;
+        }
+        case 'UInt64': case 'unsigned long long': {
+          $value['value'] = $stream->ulonglong;
+          break;
+        }
+        case 'float': {
+          $value['value'] = RoundSigDigs($stream->float, 7);
+          break;
+        }
+        case 'double': {
+          $value['value'] = RoundSigDigs($stream->double, 14);
+          break;
+        }
+        case 'bool': {
+          $value['value'] = $stream->bool;
+          break;
+        }
+        case 'string': {
+          $value['value'] = $stream->readAlignedString($stream->long);
+          $i += 3;
+          break;
+        }
+        case 'Array': {
+          $align = false;
+          if (($members[$i - 1]['flag'] & 16384) != 0) $align = true;
+          $value['size'] = $stream->long;
+          $arr = ClassStructHelper::ReadArray($members, $level, $i);
+          $dataArr = [];
+          for ($j=0; $j<$value['size']; $j++) {
+            $dataArr[] = ClassStructHelper::DeserializeStruct($stream, $arr);
+          }
+          $i += count($arr) + 1;
+          $value['value'] = $dataArr;
+          break;
+        }
+        case 'TypelessData': {
+          $size2 = $stream->long;
+          $value['value'] = $stream->readData($size2);
+          $i+=2;
+          break;
+        }
+        default: {
+          if ($align) {
+            $align = false;
+            ClassStructHelper::SetAlignBefore($members, $level, $i + 1);
+          }
+        }
+      } // switch
+      if ($align) {
+        $stream->alignStream(4);
+      }
+      $output[] = $value;
+    }
+    return $output;
+  }
+  static function ReadArray($members, $level, $index) {
+    $member2 = [];
+    for ($i = $index + 2; $i<count($members); $i++) {
+      $member3 = $members[$i];
+      if ($member3['level'] <= $level) return $member2;
+      $member2[] = $member3;
+    }
+    return $member2;
+  }
+  static function SetAlignBefore($members, $level, $index) {
+    for ($i=$index; $i<count($members); $i++) {
+      $member = $members[$i];
+      if ($member['level'] <= $level) {
+        $member['alignBefore'] = true;
+        return;
+      }
+    }
+  }
+  static function OrganizeStruct($deserializedStruct, $level = 0) {
+    $currentLevel = [];
+    $subLevels = [];
+    $lastMember = NULL;
+    
+    foreach ($deserializedStruct as $member) {
+      if ($member['level'] == $level) {
+        if (!empty($subLevels)) {
+          $lastMember[0][$lastMember[1]] = ClassStructHelper::OrganizeStruct($subLevels, $level + 1);
+          $subLevels = [];
+        }
+        $currentLevel[$member['name']] = $member['value'];
+        $lastMember = [&$currentLevel, $member['name']];
+      } else if ($member['level'] > $level) {
+        if ($member['type'] === 'Array' && !isset($member['arrProcessed'])) {
+          $member['arrProcessed'] = true;
+          $arrLevel = $member['level'];
+          $member['value'] = array_map(function ($i)use($arrLevel){return ClassStructHelper::OrganizeStruct($i, $arrLevel + 1);}, $member['value']);
+        }
+        $subLevels[] = $member;
+      }
+    }
+    if (!empty($subLevels)) {
+      $lastMember[0][$lastMember[1]] = ClassStructHelper::OrganizeStruct($subLevels, $level + 1);
+    }
+    $keys = array_keys($currentLevel);
+    if (count($keys) == 1 && $keys[0] == 'Array') {
+      $currentLevel = $currentLevel['Array'];
+    }
+    return $currentLevel;
+  }
 }

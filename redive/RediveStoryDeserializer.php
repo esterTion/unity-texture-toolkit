@@ -108,7 +108,12 @@ class CommandNumber {
   const MULTI_LIPSYNC = 102;
   const JINGLE = 103;
   const TOUCH_TO_START = 104;
-  const MAX = 105;
+  const EVENT_ADV_MOVE_HORIZONTAL = 105;
+  const BG_PAN_X = 106;
+  const BACKGROUND_BLUR = 107;
+  const SEASONAL_REWARD = 108;
+  const MINI_GAME = 109;
+  const MAX = 110;
 }
 class CommandCategory {
   const Non = 0;
@@ -222,7 +227,12 @@ define('_commandConfigList', [
   ['Number'=>CommandNumber::IGNORE_BGM, 'Name'=>"bgm_overview", 'ClassName'=>"StoryCommandBgmIgnoreStop", 'Category'=>CommandCategory::System, 'minArgCount'=>1, 'MaxArgCount'=>5],
   ['Number'=>CommandNumber::MULTI_LIPSYNC, 'Name'=>"multi_talk", 'ClassName'=>"StoryCommandMultiLipsync", 'Category'=>CommandCategory::System, 'minArgCount'=>0, 'MaxArgCount'=>1],
   ['Number'=>CommandNumber::JINGLE, 'Name'=>"jingle_start", 'ClassName'=>"StoryCommandJingle", 'Category'=>CommandCategory::System, 'minArgCount'=>1, 'MaxArgCount'=>1],
-  ['Number'=>CommandNumber::TOUCH_TO_START, 'Name'=>"touch_to_start", 'ClassName'=>"StoryCommandTouchToStart", 'Category'=>CommandCategory::System, 'minArgCount'=>0, 'MaxArgCount'=>0]
+  ['Number'=>CommandNumber::TOUCH_TO_START, 'Name'=>"touch_to_start", 'ClassName'=>"StoryCommandTouchToStart", 'Category'=>CommandCategory::System, 'minArgCount'=>0, 'MaxArgCount'=>0],
+  ['Number'=>CommandNumber::EVENT_ADV_MOVE_HORIZONTAL, 'Name'=>"event_change", 'Category'=>CommandCategory::System, 'minArgCount'=>1, 'MaxArgCount'=>3],
+  ['Number'=>CommandNumber::BG_PAN_X, 'Name'=>"bg_pan_slide", 'Category'=>CommandCategory::System, 'minArgCount'=>1, 'MaxArgCount'=>3],
+  ['Number'=>CommandNumber::BACKGROUND_BLUR, 'Name'=>"bg_blur", 'Category'=>CommandCategory::System, 'minArgCount'=>1, 'MaxArgCount'=>3],
+  ['Number'=>CommandNumber::SEASONAL_REWARD, 'Name'=>"seasonal_reward", 'Category'=>CommandCategory::System, 'minArgCount'=>0, 'MaxArgCount'=>0],
+  ['Number'=>CommandNumber::MINI_GAME, 'Name'=>"mini_game", 'Category'=>CommandCategory::System, 'minArgCount'=>0, 'MaxArgCount'=>0]
 ]);
 class RediveStoryDeserializer {
   function __construct($byte) {
