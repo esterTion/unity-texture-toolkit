@@ -12,7 +12,7 @@ $logFile = fopen('cgss.log', 'a');
 function _log($s) {
   global $logFile;
   fwrite($logFile, date('[m/d H:i] ').$s."\n");
-  //echo $s."\n";
+  echo date('[m/d H:i] ').$s."\n";
 }
 function execQuery($db, $query) {
   $returnVal = [];
@@ -22,9 +22,7 @@ function execQuery($db, $query) {
 }
 
 function decrypt256($string = '', $key = '', $iv = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0") {
-  return trim(
-          mcrypt_decrypt(MCRYPT_RIJNDAEL_256, $key, $string, MCRYPT_MODE_CBC, $iv),
-          "\0");
+  return openssl_decrypt($string, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
 }
 function decodeUDID($in) {
   $num = hexdec(substr($in, 0, 4));
@@ -248,24 +246,23 @@ if ($appinfo !== false) {
 $game_start_header = [
   'Host: apis.game.starlight-stage.jp',
   'User-Agent: BNEI0242/130 CFNetwork/758.4.3 Darwin/15.5.0',
-  'PARAM: 6e9fad10fe4b1b61cffafd7fc36ed0d32e90c674',
-  'USER_ID: 000922B231:137A242<328C557A146;268A832C537251241528442121655364561571862',
-  'PLATFORM_OS_VERSION: iPhone OS 9.3.2',
+  'PARAM: ffd62c21cfc9f1722c342b4b87539cd9fe1da431',
+  'USER-ID: 000922B231:137A242<328C557A146;268A832C537251241528442121655364561571862',
+  'PLATFORM-OS-VERSION: iPhone OS 9.3.2',
   'Proxy-Connection: keep-alive',
-  'IP_ADDRESS: 192.168.1.112',
-  'DEVICE_ID: A8448751-7ECF-4C9F-B821-05AE570801C6',
+  'IP-ADDRESS: 192.168.1.112',
+  'DEVICE-ID: A8448751-7ECF-4C9F-B821-05AE570801C6',
   'KEYCHAIN: 127767137',
-  'GRAPHICS_DEVICE_NAME: Apple A9 GPU',
-  'DEVICE_NAME: iPhone8,4',
+  'GRAPHICS-DEVICE-NAME: Apple A9 GPU',
+  'DEVICE-NAME: iPhone8,4',
   'UDID: 002423;541<818p713l356;558<788<512B1167165B452A426p575p3447527>745B625l856B6417737l515;535;726A7217263;113@551n768l838:516m832;624A287p772p121o626:634466828748373881115683521611874',
   'SID: 5348ecbff2589a204166891e1798483a',
-  'Content-Length: 984',
   'X-Unity-Version: 2017.4.2f2',
   'Connection: keep-alive',
   'CARRIER: ',
   'Accept-Language: en-us',
-  'APP_VER: '.$appver,
-  'RES_VER: 10037460',
+  'APP-VER: '.$appver,
+  'RES-VER: 10037460',
   'Accept: */*',
   'Accept-Encoding: gzip, deflate',
   'Content-Type: application/x-www-form-urlencoded',
@@ -280,7 +277,7 @@ curl_setopt_array($curl, array(
   CURLOPT_RETURNTRANSFER=>1,
   CURLOPT_SSL_VERIFYPEER=>false,
   CURLOPT_POST=>true,
-  CURLOPT_POSTFIELDS=>'2K08Y07sznT2iYguP5fKlllXf3qpoGnwUpS+lOzFmN0rQsxqGePsatS6lg5BzOt5D0nV/VdFyjSTNaxs2l5Dfwli9ExWhd8WjGGduM1I7ucfWo6m2u41wW+MCJu4Lh7emHWnNAwlBvr2oFXrDeyCxTE8MoNRfYGMuTM1VDxurml2gYJHhZsDcAwgStx6OKkqq0RheKOSlbifO37eE7RRswv44aTVbTP6rJ9Hf2P/XKtS0E9jDvJ07yiOL4hRjDC/Duzv3PugPmmEVqslQ2GAZksfv0/10LwS35maqLuSxN3IfMHxPJxE0bI5Jqzo6/1VLBLqYc4H7twxiphAHzGan6u5kf+RVwtHv8bkTdBEf8hJZJ4wjdNitIjmLlR+wlqQqiR92CtyASw8wiwG2f0vB4LejXB6hpiTeavat87pSGRv7+mhSejKEj9TkHMdqQdDQqV2gHFRB/5B16J2+bZvkwQifIDOkBH6g47H6GFhGDyi3zICGSJqLO1ILNyJfvFs+C34gRvMuhcsspvaxczFmUAeleZHYOrJM1e7ysnEOc7Pt9Br2RDQc5Tvnmol6gRYpIQrz2bUZ2jQO+CcAY4wJ3wkslA2+jQb/wv8j9gicQ3oojJ7Blitgmcnts0wDSgSO4EdX620cUJL3ujxcEzOsqydnfllGe1L0K2HCv8gzzvwhTAJo1GneIVKFzEP3rGZbJufptgtYdQoTqyaMJfRSD1yM7337n6aOv6H0TjWOLsANu4gGN/jkhx96eN+XdQRkD41YJOVWIdhJfZeHYS14bBD1B1xrIoo3DICUe9j+MGeCiPoX9g6cXaeToxutRMycFgItVJ/s05l91h2ZLYlB7GZro3Ow9bw8IpyAaR7MDrixT6R16us7zn1QQjBqOu7Cyui2nK/BAnnypNuMSMYhFmpm5912U7h3DET0aOriMVNVFl6TkdNeU1HUTRNREpoTjJSbFpHTXdNamM1WW1Oag=='
+  CURLOPT_POSTFIELDS=>'NbMPwDj1pvoIumK87sZTyzsl3k0h0xkM8g798RMqVx+GFFHCw3GFBDjrGQVmAppwZOACvTTvWdmIuys7aipb8Ccx3Nr2k6XaQfApnkCulnqhfUWYJ1qGx0fF/n4INjm5OreIWlgQJJX1k/xV/BHHkKrG/WwFULLuyLxaPiO6uf7ZKO0xecOzc7MU83szU5bpf1+PKOp1X9am0gYPOWcLH3tAvqLNNJxQgMBu44VnMc5Fylt+fouWrUDSYPNA1RjtWeIrfsbgO32lMuZxZ46rdQ4eVePfmEiUX4PzNyEsKPIW7uvY6QvFJigMg13YoI7wIl5c+xcHNVHu1ZoEK3NyP7KzQEU6j7Xv6GWvLaOKrbRT3gdf2MSUhLidHjTMR09M4X9sZ9pB+mRwKtYyNbUd1PaSYQPmUkhcYg1cZE6RofU4E5AubC4KOvv6eviqz06vEvnuaHCiS9LN8FI8GVmb73io1OAr4UjqcxeAvBOyUbdQz0y8ZXWQOFpVhbdr3KaMTqBZj3vliDzrcUgUcB6Ei9cYJCEv0TD3XUXWiuFA1Jl2GZRJJTqwIQRglrAwEKbLFbWlAZud4tLndUv1lgAtfj+R0Enn0if3/VjV9ssm+TFfkVTZgTiUSLnBsZ+r8NGSPi4MIp+wI6Or8Lg8/Xd+bvx/saYHoTvXCl8YWjbr5AGIMsy1vacBQ2m4SjuP/my5tNJB6byjQVnaLNLOhD5FDQPLaoU9n2xvOgtypeXrYRale9x3FLP6+BDD2JU2KJK3l/DjRumBFvSDTbyTbfwgc3jAnP9wJ26cRXMnKCPQkSMsAgMKwimO5vcq3Omu8aJi27ll3/vDlF4nsMqI+Us1aHMn2bTMbn5ASzfMTtb7E1xNVFl6TkdNeU1HUTRNREpoTjJSbFpHTXdNamM1WW1Oag=='
 ));
 $response = curl_exec($curl);
 curl_close($curl);
@@ -293,7 +290,7 @@ $key = substr($response, -32, 32);
 $encudid = '002423;541<818p713l356;558<788<512B1167165B452A426p575p3447527>745B625l856B6417737l515;535;726A7217263;113@551n768l838:516m832;624A287p772p121o626:634466828748373881115683521611874';
 $udid = decodeUDID($encudid);
 $iv = str_replace('-','',$udid);
-$response = msgpack_unpack(base64_decode(decrypt256(substr($response, 0, -32), $key, $iv)));
+$response = msgpack_unpack(base64_decode(decrypt256(substr($response, 0, -32), $key, hex2bin($iv))));
 
 if (!isset($response['data_headers']['required_res_ver'])) {
   _log('invalid response: '. json_encode($response));
@@ -311,7 +308,7 @@ $last_version['TruthVersion'] = $TruthVersion;
 _log("TruthVersion: ${TruthVersion}, downloading manifest");
 file_put_contents('data/!TruthVersion.txt', $TruthVersion."\n");
 curl_setopt_array($curl, array(
-  CURLOPT_URL=>'http://storages.game.starlight-stage.jp/dl/'.$TruthVersion.'/manifests/iOS_AHigh_SHigh',
+  CURLOPT_URL=>'http://asset-starlight-stage.akamaized.net/dl/'.$TruthVersion.'/manifests/iOS_AHigh_SHigh',
   CURLOPT_RETURNTRANSFER=>true,
   CURLOPT_HEADER=>0,
   CURLOPT_SSL_VERIFYPEER=>false,
@@ -357,7 +354,7 @@ $last_version['hash'] = $masterHash;
 //download bundle
 _log("downloading bundle for TruthVersion ${TruthVersion}, hash: ${masterHash}");
 curl_setopt_array($curl, array(
-  CURLOPT_URL=>'http://storages.game.starlight-stage.jp/dl/resources/Generic/'.$masterHash,
+  CURLOPT_URL=>'http://asset-starlight-stage.akamaized.net/dl/resources/Generic/'.$masterHash,
   CURLOPT_HTTPHEADER=>['X-Unity-Version: 2017.4.2f2'],
   CURLOPT_RETURNTRANSFER=>true
 ));

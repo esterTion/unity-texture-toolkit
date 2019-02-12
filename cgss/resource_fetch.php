@@ -57,7 +57,7 @@ function checkAndUpdateResource() {
     if (($rule = findRule($name, $resourceToExport)) !== false && shouldUpdate($name, $hash)) {
       _log('download '. $name);
       curl_setopt_array($curl, array(
-        CURLOPT_URL=>'http://storages.game.starlight-stage.jp/dl/resources/High/AssetBundles/iOS/'.$hash,
+        CURLOPT_URL=>'http://asset-starlight-stage.akamaized.net/dl/resources/High/AssetBundles/iOS/'.$hash,
       ));
       $bundleData = curl_exec($curl);
       $bundleTime = curl_getinfo($curl, CURLINFO_FILETIME);

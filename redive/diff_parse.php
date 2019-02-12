@@ -84,6 +84,7 @@ function diff_clan_battle($file) {
     foreach ($hunk->getLines() as $line) {
       $op = $line->getOperation();
       if ($op != Line::ADDED) continue;
+      if ($line->getNewLineNo() === 1) break 2;
       preg_match('(/\*clan_battle_id\*/(\d+))', $line->getContent(), $id);
       if (empty($id)) continue;
       $id = $id[1];
@@ -104,6 +105,7 @@ function diff_dungeon_area($file) {
     foreach ($hunk->getLines() as $line) {
       $op = $line->getOperation();
       if ($op != Line::ADDED) continue;
+      if ($line->getNewLineNo() === 1) break 2;
       preg_match('(/\*dungeon_area_id\*/(\d+))', $line->getContent(), $id);
       if (empty($id)) continue;
       $id = $id[1];
@@ -123,6 +125,7 @@ function diff_gacha($file) {
     foreach ($hunk->getLines() as $line) {
       $op = $line->getOperation();
       if ($op != Line::ADDED) continue;
+      if ($line->getNewLineNo() === 1) break 2;
       preg_match('(/\*gacha_id\*/(\d+))', $line->getContent(), $id);
       if (empty($id)) continue;
       $id = $id[1];
@@ -147,6 +150,7 @@ function diff_quest_area($file) {
     foreach ($hunk->getLines() as $line) {
       $op = $line->getOperation();
       if ($op != Line::ADDED) continue;
+      if ($line->getNewLineNo() === 1) break 2;
       preg_match('(/\*area_id\*/(\d+))', $line->getContent(), $id);
       if (empty($id)) continue;
       $id = $id[1];
@@ -296,10 +300,10 @@ function diff_event_tower($file) {
       preg_match('(/\*tower_schedule_id\*/(\d+))', $line->getContent(), $id);
       if (empty($id)) continue;
       $id = $id[1];
-      list($item) = execQuery($db, 'SELECT a.start_time as start, a.end_time as end, b.title as title FROM tower_schedule as a, tower_story_data as b WHERE a.tower_schedule_id='.$id.' AND b.value='.($id - 1000));
+      list($item) = execQuery($db, 'SELECT a.start_time as start, a.end_time as end FROM tower_schedule as a WHERE a.tower_schedule_id='.$id);
       $items[] = [
         'id' => $id,
-        'name' => $item['title'],
+        'name' => "",
         'start' => $item['start'],
         'end' => $item['end'],
         'type' => 'tower'
@@ -342,7 +346,7 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
   $mysqli->select_db('db_diff');
   chdir(__DIR__);
   chdir('data');
-  exec('D:/cygwin64/bin/git log --pretty=format:"%H %s %at"', $commits);
+  exec('git log --pretty=format:"%H %s %at"', $commits);
   $data = [];
   $commits = array_map(function ($commit) {
     preg_match('((.{40}) (.+) (\d+))',$commit,$detail);
@@ -381,7 +385,7 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
     if (!isset($commits[$no+1])) continue;
     if ($commit['skip']) continue;
     echo "\n".$commit['ver'].' '.date('Y-m-d H:i', $commit['time'] + 3600).' '.$no.'/'.count($commits);
-    exec('D:/cygwin64/bin/git diff '.$commits[$no+1]['hash'].' '.$commit['hash'].' >../a.diff');
+    exec('git diff '.$commits[$no+1]['hash'].' '.$commit['hash'].' >../a.diff');
     chdir('..');
     $master = new PDO('sqlite:'.__DIR__.'/redive.db');
     $versionDiff = parse_db_diff('a.diff', $master, [
@@ -414,6 +418,7 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
       }
     }
     $mysqli->query('REPLACE INTO redive ('.implode(',', $col).') vALUES ('.implode(',', $val).')');
+    exit;
     //if (++$i > 10) break;
     //if ($commit['ver'] < 10040000) break;
   }

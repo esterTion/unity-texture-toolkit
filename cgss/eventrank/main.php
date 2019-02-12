@@ -29,7 +29,7 @@ function lolfuscate($s) {
   $mid = implode('',array_map(function($i){
     return rand(0,9).rand(0,9).chr(ord($i)+10).rand(0,9);
   }, str_split($s)));
-  $post = rand(10000000,99999999).rand(10000000,99999999).rand(10000000,99999999).rand(10000000,99999999);
+  $post = rand(10000000,99999999).rand(10000000,99999999);
   return sprintf('%04x', strlen($s)).$mid.$post;
 }
 function unlolfuscate($in) {
@@ -41,20 +41,11 @@ function unlolfuscate($in) {
   return $text;
 }
 function encrypt256($string = '', $key, $iv) {
-  $key = utf8_encode($key);
-
-  //make it 32 chars long. pad with \0 for shorter keys
-  $key = str_pad($key, 32, "\0");
-  $padding = 32 - (strlen($string) % 32);
-  $string .= str_repeat(chr(0), $padding);
-  $encrypted = mcrypt_encrypt(MCRYPT_RIJNDAEL_256, $key, $string, MCRYPT_MODE_CBC, $iv);
-  return rtrim($encrypted);
+  return openssl_encrypt($string, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
 }
 
 function decrypt256($string = '', $key, $iv) {
-  return trim(
-          mcrypt_decrypt(MCRYPT_RIJNDAEL_256, $key, $string, MCRYPT_MODE_CBC, $iv),
-          "\0");
+  return openssl_decrypt($string, 'AES-256-CBC', $key, OPENSSL_RAW_DATA, $iv);
 }
 
 $curl=curl_init();
@@ -66,29 +57,29 @@ function callapi($path, $data) {
   global $udid;
   global $sid;
   global $salt;
-  $iv = rand(10000000,99999999).rand(10000000,99999999).rand(10000000,99999999).rand(10000000,99999999);
+  $iv = rand(10000000,99999999).rand(10000000,99999999);
   $data['viewer_id'] = $iv.base64_encode(encrypt256($viewerID, $rijndaelKey, $iv));
   $data = base64_encode(msgpack_pack($data));
   $key = rand(10000000,99999999).rand(10000000,99999999).rand(10000000,99999999).rand(10000000,99999999);
   $msgIV = str_replace('-','',$udid);
-  $body = base64_encode(encrypt256($data, $key, $msgIV).$key);
+  $body = base64_encode(encrypt256($data, $key, hex2bin($msgIV)).$key);
 
   $sid = $viewerID . $udid;
   $header = [
     'PARAM: '.sha1($udid.$viewerID.$path.$data),
     'KEYCHAIN: 127767137',
-    'USER_ID: '.lolfuscate($userID),
+    'USER-ID: '.lolfuscate($userID),
     'CARRIER:  ',
     'UDID: '.lolfuscate($udid),
-    'APP_VER: '.file_get_contents('../appver'),
-    'RES_VER: '.json_decode(file_get_contents('../last_version'),true)['TruthVersion'],
-    'IP_ADDRESS: 127.0.0.1',
-    'DEVICE_NAME: iPad5,3',
+    'APP-VER: '.file_get_contents('../appver'),
+    'RES-VER: '.json_decode(file_get_contents('../last_version'),true)['TruthVersion'],
+    'IP-ADDRESS: 127.0.0.1',
+    'DEVICE-NAME: iPad5,3',
     'X-Unity-Version: 5.4.5p1',
     'SID: '.md5($sid.$salt),
-    'GRAPHICS_DEVICE_NAME: Apple A8X GPU',
-    'DEVICE_ID: 3F015210-232E-46BD-B794-17C12F1DEB60',
-    'PLATFORM_OS_VERSION: iPhone OS 11.2.2',
+    'GRAPHICS-DEVICE-NAME: Apple A8X GPU',
+    'DEVICE-ID: 3F015210-232E-46BD-B794-17C12F1DEB60',
+    'PLATFORM-OS-VERSION: iPhone OS 11.2.2',
     'DEVICE: 1',
     'Content-Type: application/x-www-form-urlencoded',
     'User-Agent: BNEI0242/116 CFNetwork/893.14.2 Darwin/17.3.0',
@@ -111,7 +102,7 @@ function callapi($path, $data) {
   $response = base64_decode($response);
   $key = substr($response, -32, 32);
   $iv = str_replace('-','',$udid);
-  $response = msgpack_unpack(base64_decode(decrypt256(substr($response, 0, -32), $key, $iv)));
+  $response = msgpack_unpack(base64_decode(decrypt256(substr($response, 0, -32), $key, hex2bin($iv))));
   return $response;
 }
 
