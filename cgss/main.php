@@ -354,7 +354,7 @@ $last_version['hash'] = $masterHash;
 //download bundle
 _log("downloading bundle for TruthVersion ${TruthVersion}, hash: ${masterHash}");
 curl_setopt_array($curl, array(
-  CURLOPT_URL=>'http://asset-starlight-stage.akamaized.net/dl/resources/Generic/'.$masterHash,
+  CURLOPT_URL=>'http://asset-starlight-stage.akamaized.net/dl/resources/Generic/'.substr($masterHash, 0, 2).'/'.$masterHash,
   CURLOPT_HTTPHEADER=>['X-Unity-Version: 2017.4.2f2'],
   CURLOPT_RETURNTRANSFER=>true
 ));
@@ -364,8 +364,8 @@ $downloadedHash = md5($master_compressed);
 if ($downloadedHash != $masterHash) {
   _log("download failed, received hash: ${downloadedHash}");
   chdir('data');
-  exec('git add manifests.sql !TruthVersion.txt');
-  do_commit($TruthVersion);
+  //exec('git add manifests.sql !TruthVersion.txt');
+  //do_commit($TruthVersion);
   return;
 }
 
