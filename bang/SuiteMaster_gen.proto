@@ -1624,6 +1624,21 @@ message string_MasterMissionPlatformOverviewMap {
 message MasterMissionPlatformOverviewPlatformMap {
   repeated string_MasterMissionPlatformOverviewMap entries = 1; // dictionary
 }
+message MasterNewYearCard {
+  optional uint32 newYearCardId = 1; // normal type
+  optional uint32 selectStartAt = 2; // normal type
+  optional uint32 selectEndAt = 3; // normal type
+  optional uint32 receiveStartAt = 4; // normal type
+  optional uint32 receiveEndAt = 5; // normal type
+  optional string assetBundleName = 6; // normal type
+}
+message uint_MasterNewYearCard {
+  optional uint32 uint_MasterNewYearCard_key = 1; // normal type
+  optional MasterNewYearCard uint_MasterNewYearCard_value = 2; // sub class
+}
+message MasterNewYearCardMap {
+  repeated uint_MasterNewYearCard entries = 1; // dictionary
+}
 message MasterSafeAreaDevice {
   optional uint32 id = 1; // normal type
   optional string deviceName = 2; // normal type
@@ -1674,6 +1689,7 @@ message MasterEvent {
   optional string bgmFileName = 13; // normal type
   optional uint32 aggregateEndAt = 14; // normal type
   optional uint32 eventExchangesEndAt = 15; // nullable
+  optional uint32 receptionEndAt = 16; // normal type
   repeated MasterEventPointReward pointRewards = 101; // array
   repeated MasterEventRankingReward rankingRewards = 102; // array
 }
@@ -2208,6 +2224,7 @@ message SuiteMasterGetResponse {
   optional MasterCollaborationSkinMap masterCollaborationSkinMap = 91; // sub class
   optional MasterGenericStoryMap masterOpeningAreaGenericStoryMap = 92; // sub class
   optional MasterMissionPlatformOverviewPlatformMap masterMissionPlatformOverviewMap = 93; // sub class
+  optional MasterNewYearCardMap masterNewYearCardMap = 94; // sub class
   optional MasterSafeAreaDeviceMap masterSafeAreaDeviceMap = 100; // sub class
   optional MasterEventMap masterEventMap = 101; // sub class
   optional MasterEventConfigMap masterEventConfigMap = 102; // sub class
