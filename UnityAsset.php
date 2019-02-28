@@ -136,8 +136,8 @@ class AssetFile {
           throw new Exception('old gen file');
         }*/
       }
-      $this->buildType = str_replace(['.',0,1,2,3,4,5,6,7,8,9], '', ($this->m_Version));
-      $this->version = str_split(preg_replace('/[^\d]/', '', $this->m_Version), 1);
+      $this->buildType = explode('.', preg_replace('/\d/', '', $this->m_Version));
+      $this->version = explode('.', preg_replace('/\D/', '.', $this->m_Version));
       if ($this->version[0] ==2 &&$this->version[1]==0&&$this->version[2]==1&&$this->version[3]==7) {
         array_splice($this->version, 0, 4, 2017);
       }
@@ -695,6 +695,9 @@ class Texture2D {
     $this->isReadable = $stream->bool;
     $this->readAllowed = $stream->bool;
     $stream->alignStream(4);
+    if ($sourceFile->version[0] > 2018 || ($sourceFile->version[0] == 2018 && $sourceFile->version[1] >= 2)) {
+      $this->streamingMipmapsPriority = $stream->long;
+    }
     $this->imageCount = $stream->long;
     $this->textureDimension = $stream->long;
     $this->filterMode = $stream->long;
