@@ -43,7 +43,7 @@ $resourceToExport = [
     [ 'bundleNameMatch'=>'/^v\/t\/vo_adv_(\d+).acb$/', 'exportTo'=> 'sound/story_vo/$1' ],
   ],
   'movie'=>[
-    [ 'bundleNameMatch'=>'/^m\/(t\/)?(.+)_(\d[\d_]*).usm$/', 'exportTo'=> 'movie/$2/$3' ],
+    [ 'bundleNameMatch'=>'/^m\/(t\/)?(.+?)_(\d[\d_]*).usm$/', 'exportTo'=> 'movie/$2/$3' ],
     [ 'bundleNameMatch'=>'/^m\/(t\/)?(.+).usm$/', 'exportTo'=> 'movie/$2' ],
   ]
 ];
@@ -381,15 +381,20 @@ function checkMovieResource($manifest, $rules) {
       $saveToFull = $saveTo .'.mp4';
 
       // avc chk
-      $mp4 = new FileStream('out.mp4');
-      $mp4->littleEndian = false;
-      $ftypLen = $mp4->ulong;
-      $mp4->position = $ftypLen;
-      $moovLen = $mp4->ulong;
-      $moov = $mp4->readData($moovLen - 4);
-      unset($mp4);
-      if (strpos($moov, 'avcC') === false) {
-        // not avc, reencode
+      $shouldReencode = false;
+      if (filesize('out.mp4') > 10*1024*1024) $shouldReencode;
+      if (!$shouldReencode) {
+        $mp4 = new FileStream('out.mp4');
+        $mp4->littleEndian = false;
+        $ftypLen = $mp4->ulong;
+        $mp4->position = $ftypLen;
+        $moovLen = $mp4->ulong;
+        $moov = $mp4->readData($moovLen - 4);
+        unset($mp4);
+        $shouldReencode = strpos($moov, 'avcC') === false;
+      }
+      if ($shouldReencode) {
+        // > 10M / not avc, reencode
         _log('reencoding to avc');
         rename('out.mp4', 'out_ori.mp4');
         exec('ffmpeg -hide_banner -loglevel quiet -y -i out_ori.mp4 -c copy -c:v h264 -crf 20 -movflags faststart out.mp4', $nullptr);
