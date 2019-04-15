@@ -111,6 +111,7 @@ function do_commit($TruthVersion, $db = NULL) {
           case 25:                            { return 'Life Sparkle'; }
           case 26:                            { return 'Synergy'; }
           case 27:                            { return 'Coordination'; }
+          case 31:                            { return 'Tuning'; }
           default:                            { return 'Skill '.$a; }
         }
       })($a['skill_type']).
