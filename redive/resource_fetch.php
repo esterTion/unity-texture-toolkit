@@ -167,14 +167,18 @@ function parseManifest($manifest) {
   unset($manifest);
   return $list;
 }
+$cacheHashDb = new PDO('sqlite:'.__DIR__.'/cacheHash.db');
+$chkHashStmt = $cacheHashDb->prepare('SELECT hash FROM cacheHash WHERE res=?');
 function shouldUpdate($name, $hash) {
-  $cacheHash = file_exists('cacheHash.json') ? json_decode(file_get_contents('cacheHash.json'), true) : [];
-  return !(isset($cacheHash[$name]) && ($cacheHash[$name] === $hash));
+  global $chkHashStmt;
+  $chkHashStmt->execute([$name]);
+  $row = $chkHashStmt->fetch();
+  return (!empty($row) && $row['hash'] == $hash);
 }
+$setHashStmt = $cacheHashDb->prepare('REPLACE INTO cacheHash (res,hash) VALUES (?,?)');
 function setHashCached($name, $hash) {
-  $cacheHash = file_exists('cacheHash.json') ? json_decode(file_get_contents('cacheHash.json'), true) : [];
-  $cacheHash[$name] = $hash;
-  file_put_contents('cacheHash.json', json_encode($cacheHash, JSON_UNESCAPED_SLASHES));
+  global $setHashStmt;
+  $setHashStmt->execute([$name, $hash]);
 }
 
 function findRule($name, $rules) {
