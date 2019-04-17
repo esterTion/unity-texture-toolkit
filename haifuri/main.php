@@ -1,6 +1,7 @@
 <?php
 chdir(__DIR__);
 require_once 'UnityBundle.php';
+require_once 'resource_fetch.php';
 if (!file_exists('last_version')) {
   $last_version = array('MasterVer'=>-1,'AppBuild'=>33);
 } else {
@@ -188,7 +189,7 @@ chdir('data');
 exec('git add *.json !MasterVer.txt');
 exec('git commit -m '.$MasterVer);
 exec('git push origin master');
-//checkAndUpdateResource();
+if ($updateAsset) checkAndUpdateResource($assetVer['ios']);
 _log('finished');
 
 }
