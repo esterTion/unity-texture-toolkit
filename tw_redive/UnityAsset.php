@@ -1118,7 +1118,7 @@ function shouldUpdate($name, $hash) {
   global $chkHashStmt;
   $chkHashStmt->execute([$name]);
   $row = $chkHashStmt->fetch();
-  return (!empty($row) && $row['hash'] == $hash);
+  return !(!empty($row) && $row['hash'] == $hash);
 }
 $setHashStmt = $cacheHashDb->prepare('REPLACE INTO cacheHash (res,hash) VALUES (?,?)');
 function setHashCached($name, $hash) {
