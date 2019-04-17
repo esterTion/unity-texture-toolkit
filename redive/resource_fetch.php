@@ -37,14 +37,16 @@ $resourceToExport = [
     [ 'bundleNameMatch'=>'/^a\/spine_sdnormal_10\d{4}\.unity3d$/',        'customAssetProcessor'=> 'exportAtlas' ],
   ],
   'sound'=>[
-    [ 'bundleNameMatch'=>'/^v\/vo_cmn_(\d+).acb$/', 'exportTo'=> 'sound/unit_common/$1' ],
-    [ 'bundleNameMatch'=>'/^v\/vo_navi_(\d+).acb$/', 'exportTo'=> 'sound/unit_common/$1' ],
-    [ 'bundleNameMatch'=>'/^v\/vo_enavi_(\d+).acb$/', 'exportTo'=> 'sound/unit_common/$1' ],
-    [ 'bundleNameMatch'=>'/^v\/t\/vo_adv_(\d+).acb$/', 'exportTo'=> 'sound/story_vo/$1' ],
+    [ 'bundleNameMatch'=>'/^v\/vo_cmn_(\d+)\.acb$/', 'exportTo'=> 'sound/unit_common/$1' ],
+    [ 'bundleNameMatch'=>'/^v\/vo_navi_(\d+)\.acb$/', 'exportTo'=> 'sound/unit_common/$1' ],
+    [ 'bundleNameMatch'=>'/^v\/vo_enavi_(\d+)\.acb$/', 'exportTo'=> 'sound/unit_common/$1' ],
+    [ 'bundleNameMatch'=>'/^v\/t\/vo_adv_(\d+)\.acb$/', 'exportTo'=> 'sound/story_vo/$1' ],
+    [ 'bundleNameMatch'=>'/^v\/vo_btl_(\d+)\.acb$/', 'exportTo'=> 'sound/unit_battle_voice/$1' ],
+    [ 'bundleNameMatch'=>'/^v\/vo_(ci|speciallogin)_(\d+)\.acb$/', 'exportTo'=> 'sound/vo_$1/$2' ],
   ],
   'movie'=>[
-    [ 'bundleNameMatch'=>'/^m\/(t\/)?(.+?)_(\d[\d_]*).usm$/', 'exportTo'=> 'movie/$2/$3' ],
-    [ 'bundleNameMatch'=>'/^m\/(t\/)?(.+).usm$/', 'exportTo'=> 'movie/$2' ],
+    [ 'bundleNameMatch'=>'/^m\/(t\/)?(.+?)_(\d[\d_]*)\.usm$/', 'exportTo'=> 'movie/$2/$3' ],
+    [ 'bundleNameMatch'=>'/^m\/(t\/)?(.+)\.usm$/', 'exportTo'=> 'movie/$2' ],
   ]
 ];
 
@@ -386,7 +388,7 @@ function checkMovieResource($manifest, $rules) {
 
       // avc chk
       $shouldReencode = false;
-      if (filesize('out.mp4') > 10*1024*1024) $shouldReencode;
+      if (filesize('out.mp4') > 10*1024*1024) $shouldReencode = true;
       if (!$shouldReencode) {
         $mp4 = new FileStream('out.mp4');
         $mp4->littleEndian = false;
@@ -499,7 +501,7 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
   chdir(__DIR__);
   $curl = curl_init();
   function _log($s) {echo "$s\n";}
-  checkAndUpdateResource('10006500');
+  checkAndUpdateResource('10007800');
   /*$assets = extractBundle(new FileStream('bundle/spine_000000_chara_base.cysp.unity3d'));
   $asset = new AssetFile($assets[0]);
   foreach ($asset->preloadTable as $item) {
