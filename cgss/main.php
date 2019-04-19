@@ -270,6 +270,33 @@ $game_start_header = [
   'DEVICE: 1',
   'IDFA: 00000000-0000-0000-0000-000000000000',
 ];
+if (date('H') == '13') {
+  // bruteforce check
+  $curl = curl_init();
+  curl_setopt_array($curl, array(
+    CURLOPT_RETURNTRANSFER=>true,
+    CURLOPT_HEADER=>0,
+    CURLOPT_SSL_VERIFYPEER=>false,
+    CURLOPT_HTTPHEADER=>['X-Unity-Version: 2017.4.2f2', 'Range: bytes=0-0']
+  ));
+  $TruthVersion = $last_version['TruthVersion'];
+  $current_ver = $TruthVersion|0;
+
+  for ($i=1; $i<=20; $i++) {
+    $guess = $current_ver + $i * 10;
+    echo "\r$guess";
+    curl_setopt($curl, CURLOPT_URL, 'http://asset-starlight-stage.akamaized.net/dl/'.$guess.'/manifests/iOS_AHigh_SHigh');
+    curl_exec($curl);
+    $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+    if ($code == 206) {
+      $TruthVersion = $guess.'';
+      break;
+    }
+  }
+  curl_close($curl);
+} else {
+
+// normal api ver check
 $curl = curl_init();
 curl_setopt_array($curl, array(
   CURLOPT_URL => 'https://apis.game.starlight-stage.jp/load/check',
@@ -299,9 +326,11 @@ if (!isset($response['data_headers']['required_res_ver'])) {
 }
 $TruthVersion = $response['data_headers']['required_res_ver'];
 
+}
+
 global $curl;
 $curl = curl_init();
-if ($TruthVersion == $last_version['TruthVersion']) {
+if ($TruthVersion <= $last_version['TruthVersion']) {
   _log('no update found');
   return;
 }
