@@ -111,6 +111,9 @@ function do_commit($TruthVersion, $db = NULL) {
           case 25:                            { return 'Life Sparkle'; }
           case 26:                            { return 'Synergy'; }
           case 27:                            { return 'Coordination'; }
+          case 28:                            { return 'Long Act'; }
+          case 29:                            { return 'Flick Act'; }
+          case 30:                            { return 'Slide Act'; }
           case 31:                            { return 'Tuning'; }
           default:                            { return 'Skill '.$a; }
         }
