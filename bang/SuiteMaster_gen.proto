@@ -1669,6 +1669,23 @@ message uint_MasterNewYearCard {
 message MasterNewYearCardMap {
   repeated uint_MasterNewYearCard entries = 1; // dictionary
 }
+message MasterMusicJacket {
+  optional uint32 musicJacketId = 1; // normal type
+  optional uint32 musicId = 2; // normal type
+  optional uint32 seq = 3; // normal type
+  optional string jacketImage = 4; // normal type
+  optional uint32 startAt = 5; // normal type
+}
+message MasterMusicJacketList {
+  repeated MasterMusicJacket entries = 1; // array
+}
+message uint_MasterMusicJacketList {
+  optional uint32 uint_MasterMusicJacketList_key = 1; // normal type
+  optional MasterMusicJacketList uint_MasterMusicJacketList_value = 2; // sub class
+}
+message MasterMusicJacketMap {
+  repeated uint_MasterMusicJacketList entries = 1; // dictionary
+}
 message MasterBackstageTalkSet {
   optional uint32 backstageTalkSetId = 1; // normal type
   optional string backstageTalkSetAssetBundleName = 2; // normal type
@@ -2206,6 +2223,8 @@ message MasterNewSituationIntroduction {
   optional uint32 startAt = 4; // normal type
   optional uint32 endAt = 5; // normal type
   repeated MasterNewSituationIntroductionDetail details = 6; // array
+  optional string textureImageName = 7; // normal type
+  optional bool newIconFlag = 8; // normal type
 }
 message MasterNewSituationIntroductionList {
   repeated MasterNewSituationIntroduction entries = 1; // list
@@ -2362,6 +2381,7 @@ message SuiteMasterGetResponse {
   optional MasterGenericStoryMap masterOpeningAreaGenericStoryMap = 92; // sub class
   optional MasterMissionPlatformOverviewPlatformMap masterMissionPlatformOverviewMap = 93; // sub class
   optional MasterNewYearCardMap masterNewYearCardMap = 94; // sub class
+  optional MasterMusicJacketMap masterMusicJacketMap = 95; // sub class
   optional MasterBackstageTalkSetMap masterBackstageTalkSetMap = 96; // sub class
   optional MasterBackstageSpineMap masterBackstageSpineMap = 97; // sub class
   optional MasterBackstageBackgroundMap masterBackstageBackgroundMap = 98; // sub class
