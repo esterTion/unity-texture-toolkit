@@ -216,7 +216,7 @@ function diff_unit($file) {
       $items[] = [
         'id' => $id,
         'name' => $item['unit_name'],
-        'real_name' => execQuery($db, 'SELECT unit_name FROM unit_background WHERE unit_id='.$id)[0]['unit_name'],
+        'real_name' => execQuery($db, 'SELECT unit_name FROM unit_background WHERE unit_id='.$id)[0]['unit_name'] ?: '',
         'rarity' => $item['rarity']
       ];
     }
