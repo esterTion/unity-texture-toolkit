@@ -470,7 +470,7 @@ function checkAndUpdateResource($TruthVersion) {
 
   // sound res check
   do {
-    $name = "manifest/soundmanifest";
+    $name = "manifest/sound2manifest";
     if (isset($manifest[$name]) && shouldUpdate($name, $manifest[$name]['hash'])) {
       curl_setopt_array($curl, array(
         CURLOPT_URL=>'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Sound/'.$name,
@@ -488,7 +488,7 @@ function checkAndUpdateResource($TruthVersion) {
 
   // movie res check
   do {
-    $name = "manifest/moviemanifest";
+    $name = "manifest/movie2manifest";
     curl_setopt_array($curl, array(
       CURLOPT_URL=>'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Movie/SP/High/'.$name,
     ));

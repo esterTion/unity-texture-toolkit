@@ -12,7 +12,7 @@ $logFile = fopen('redive.log', 'a');
 function _log($s) {
   global $logFile;
   fwrite($logFile, date('[m/d H:i] ').$s."\n");
-  //echo $s."\n";
+  echo $s."\n";
 }
 function execQuery($db, $query) {
   $returnVal = [];
@@ -415,7 +415,7 @@ file_put_contents('data/+manifest_manifest.txt', $manifest);
 foreach (explode("\n", trim($manifest)) as $line) {
   list($manifestName) = explode(',', $line);
   if ($manifestName == 'manifest/soundmanifest') {
-    curl_setopt($curl, CURLOPT_URL, 'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Sound/manifest/soundmanifest');
+    curl_setopt($curl, CURLOPT_URL, 'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Sound/manifest/sound2manifest');
     $manifest = curl_exec($curl);
     file_put_contents('data/+manifest_sound.txt', $manifest);
   } else {
@@ -424,10 +424,10 @@ foreach (explode("\n", trim($manifest)) as $line) {
     file_put_contents('data/+manifest_'.substr($manifestName, 9, -14).'.txt', $manifest);
   }
 }
-curl_setopt($curl, CURLOPT_URL, 'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Movie/SP/High/manifest/moviemanifest');
+curl_setopt($curl, CURLOPT_URL, 'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Movie/SP/High/manifest/movie2manifest');
 $manifest = curl_exec($curl);
 file_put_contents('data/+manifest_movie.txt', $manifest);
-curl_setopt($curl, CURLOPT_URL, 'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Movie/SP/Low/manifest/moviemanifest');
+curl_setopt($curl, CURLOPT_URL, 'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Movie/SP/Low/manifest/movie2manifest');
 $manifest = curl_exec($curl);
 file_put_contents('data/+manifest_movie_low.txt', $manifest);
 
