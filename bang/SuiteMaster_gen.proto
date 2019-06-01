@@ -1692,6 +1692,10 @@ message MasterBackstageTalkSet {
   optional string timelineAssetBundleName = 3; // normal type
   optional string description = 4; // normal type
   optional string voiceAssetBundleName = 5; // normal type
+  optional string title = 6; // normal type
+  repeated uint32 characterIds = 7; // array
+  optional uint32 seasonSpecialId = 8; // normal type
+  optional string backstageTalkSetType = 9; // normal type
 }
 message uint_MasterBackstageTalkSet {
   optional uint32 uint_MasterBackstageTalkSet_key = 1; // normal type
