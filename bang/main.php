@@ -13,7 +13,7 @@ $logFile = fopen('bang.log', 'a');
 function _log($s) {
   global $logFile;
   fwrite($logFile, date('[m/d H:i] ').$s."\n");
-  //echo $s."\n";
+  echo $s."\n";
 }
 
 function parseProto($file) {
@@ -150,9 +150,9 @@ function processDict(&$arr) {
   }
 }
 
-function prettifyJSON($in) {
+function prettifyJSON($in, Stream $out = NULL, $returnData = true) {
   $in = new MemoryStream($in);
-  $out = new MemoryStream('');
+  if ($out == NULL) $out = new MemoryStream('');
 
   $offset = 0;
   $length = $in->size;
@@ -210,6 +210,7 @@ function prettifyJSON($in) {
     }
     $offset++;
   }
+  if (!$returnData) return;
   $out->seek(0);
   $output = $out->readData($out->size);
   unset($out);
@@ -316,8 +317,13 @@ exec('git rm *.json --cached');
 chdir(__DIR__);
 foreach (glob('data/*.json') as $file) {$file!='data/AssetBundleInfo.json'&&unlink($file);}
 
+$i = 0;
 foreach ($master as $part=>&$data) {
-  file_put_contents("data/${part}.json", prettifyJSON(json_encode($data, JSON_UNESCAPED_SLASHES+JSON_UNESCAPED_UNICODE)));
+  //echo (++$i)."/$count $part\n";
+  $json = json_encode($data, JSON_UNESCAPED_SLASHES+JSON_UNESCAPED_UNICODE);
+  fclose(fopen("data/${part}.json", 'w'));
+  prettifyJSON($json, new FileStream("data/${part}.json"), false);
+  unset($json);
 }
 
 $situationMap = &$master['masterCharacterSituationMap'];

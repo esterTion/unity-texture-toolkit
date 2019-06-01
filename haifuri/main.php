@@ -165,7 +165,8 @@ foreach ($response['Signatures'] as $item) {
     continue;
   }
   $dec = DecryptMaster($response, $item['Iv'], $item['Salt']);
-  file_put_contents($fname, prettifyJSON(json_encode(json_decode($dec, true), JSON_UNESCAPED_SLASHES+JSON_UNESCAPED_UNICODE)));
+  fclose(fopen($fname, 'w'));
+  prettifyJSON(json_encode(json_decode($dec, true), JSON_UNESCAPED_SLASHES+JSON_UNESCAPED_UNICODE), new FileStream($fname), false);
   $last_version[$item['MasterName']] = $item['Sha1'];
 }
 
@@ -179,7 +180,8 @@ if ($updateAsset) {
     _log("Downloading assets manifest ver $ver for $platform");
     curl_setopt($curl, CURLOPT_URL, "https://prd-static.haifuri.app/assets/$platform/$ver/FileSystemOverrideRecords");
     $manifest = gzdecode(DecryptSaveData(curl_exec($curl)));
-    file_put_contents("data/AssetManifest_${platform}.json", prettifyJSON(json_encode(json_decode($manifest), JSON_UNESCAPED_SLASHES+JSON_UNESCAPED_UNICODE)));
+    fclose(fopen("data/AssetManifest_${platform}.json", 'w'));
+    prettifyJSON(json_encode(json_decode($manifest), JSON_UNESCAPED_SLASHES+JSON_UNESCAPED_UNICODE), new FileStream("data/AssetManifest_${platform}.json"), false);
   }
 }
 
@@ -197,9 +199,9 @@ _log('finished');
 main();
 
 
-function prettifyJSON($in) {
+function prettifyJSON($in, Stream $out = NULL, $returnData = true) {
   $in = new MemoryStream($in);
-  $out = new MemoryStream('');
+  if ($out == NULL) $out = new MemoryStream('');
 
   $offset = 0;
   $length = $in->size;
@@ -257,6 +259,7 @@ function prettifyJSON($in) {
     }
     $offset++;
   }
+  if (!$returnData) return;
   $out->seek(0);
   $output = $out->readData($out->size);
   unset($out);
