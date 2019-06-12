@@ -470,16 +470,13 @@ function checkAndUpdateResource($TruthVersion) {
 
   // sound res check
   do {
-    $name = "manifest/sound2manifest";
+    $name = "manifest/soundmanifest";
     if (isset($manifest[$name]) && shouldUpdate($name, $manifest[$name]['hash'])) {
+      $name = "manifest/sound2manifest";
       curl_setopt_array($curl, array(
         CURLOPT_URL=>'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Sound/'.$name,
       ));
       $submanifest = curl_exec($curl);
-      if (md5($submanifest) != $manifest[$name]['hash']) {
-        _log('download failed  '.$name);
-        continue;
-      }
       $submanifest = parseManifest($submanifest);
       checkSoundResource($submanifest, $resourceToExport['sound']);
       setHashCached($name, $manifest[$name]['hash']);
@@ -501,7 +498,7 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
   chdir(__DIR__);
   $curl = curl_init();
   function _log($s) {echo "$s\n";}
-  checkAndUpdateResource('10007800');
+  checkAndUpdateResource('10009600');
   /*$assets = extractBundle(new FileStream('bundle/spine_000000_chara_base.cysp.unity3d'));
   $asset = new AssetFile($assets[0]);
   foreach ($asset->preloadTable as $item) {
