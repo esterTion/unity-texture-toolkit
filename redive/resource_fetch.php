@@ -472,9 +472,8 @@ function checkAndUpdateResource($TruthVersion) {
   do {
     $name = "manifest/soundmanifest";
     if (isset($manifest[$name]) && shouldUpdate($name, $manifest[$name]['hash'])) {
-      $name = "manifest/sound2manifest";
       curl_setopt_array($curl, array(
-        CURLOPT_URL=>'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Sound/'.$name,
+        CURLOPT_URL=>'http://priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Sound/manifest/sound2manifest',
       ));
       $submanifest = curl_exec($curl);
       $submanifest = parseManifest($submanifest);
