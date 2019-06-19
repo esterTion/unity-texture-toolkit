@@ -848,6 +848,7 @@ message MasterDegree {
   optional string degreeType = 6; // normal type
   optional string iconImageName = 7; // normal type
   optional string description = 8; // normal type
+  optional uint32 characterId = 9; // normal type
 }
 message uint_MasterDegree {
   optional uint32 uint_MasterDegree_key = 1; // normal type
@@ -1818,6 +1819,99 @@ message string_MasterEventConfig {
 message MasterEventConfigMap {
   repeated string_MasterEventConfig entries = 1; // dictionary
 }
+message MasterVibratableDevice {
+  optional uint32 id = 1; // normal type
+  optional string deviceName = 2; // normal type
+}
+message string_MasterVibratableDevice {
+  optional string string_MasterVibratableDevice_key = 1; // normal type
+  optional MasterVibratableDevice string_MasterVibratableDevice_value = 2; // sub class
+}
+message MasterVibratableDeviceMap {
+  repeated string_MasterVibratableDevice entries = 1; // dictionary
+}
+message MasterElection {
+  optional uint32 electionId = 1; // normal type
+  optional string assetBundleName = 2; // normal type
+  optional uint32 publicStartAt = 3; // normal type
+  optional uint32 publicEndAt = 4; // normal type
+  optional uint32 voteStartAt = 5; // normal type
+  optional uint32 voteEndAt = 6; // normal type
+  optional uint32 interimAggregationStartAt = 7; // normal type
+  optional uint32 interimReportAt = 8; // normal type
+  optional uint32 aggregationStartAt = 9; // normal type
+  optional uint32 aggregationEndAt = 10; // normal type
+  optional uint32 resultReportStartAt = 11; // normal type
+  optional uint32 resultReportEndAt = 12; // normal type
+  optional uint32 snsShareId = 13; // normal type
+  optional string electionWebviewUrl = 14; // normal type
+  optional string electionOfficialSiteUrl = 15; // normal type
+  optional uint32 electionTicketId = 16; // normal type
+}
+message uint_MasterElection {
+  optional uint32 uint_MasterElection_key = 1; // normal type
+  optional MasterElection uint_MasterElection_value = 2; // sub class
+}
+message MasterElectionMap {
+  repeated uint_MasterElection entries = 1; // dictionary
+}
+message MasterElectionBand {
+  optional uint32 electionId = 1; // normal type
+  optional uint32 bandId = 2; // normal type
+  optional uint32 priority = 3; // normal type
+  optional string imageUrl = 4; // normal type
+}
+message uint_MasterElectionBand {
+  optional uint32 uint_MasterElectionBand_key = 1; // normal type
+  optional MasterElectionBand uint_MasterElectionBand_value = 2; // sub class
+}
+message MasterElectionBandElectionMap {
+  repeated uint_MasterElectionBand entries = 1; // dictionary
+}
+message uint_MasterElectionBandElectionMap {
+  optional uint32 uint_MasterElectionBandElectionMap_key = 1; // normal type
+  optional MasterElectionBandElectionMap uint_MasterElectionBandElectionMap_value = 2; // sub class
+}
+message MasterElectionBandMap {
+  repeated uint_MasterElectionBandElectionMap entries = 1; // dictionary
+}
+message MasterElectionTicket {
+  optional uint32 electionTicketId = 1; // normal type
+  optional string name = 2; // normal type
+}
+message uint_MasterElectionTicket {
+  optional uint32 uint_MasterElectionTicket_key = 1; // normal type
+  optional MasterElectionTicket uint_MasterElectionTicket_value = 2; // sub class
+}
+message MasterElectionTicketMap {
+  repeated uint_MasterElectionTicket entries = 1; // dictionary
+}
+message MasterSnsShareReward {
+  optional uint32 snsShareId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string resourceType = 3; // normal type
+  optional uint32 resourceId = 4; // normal type
+  optional uint32 quantity = 5; // normal type
+}
+message uint_MasterSnsShareReward {
+  optional uint32 uint_MasterSnsShareReward_key = 1; // normal type
+  optional MasterSnsShareReward uint_MasterSnsShareReward_value = 2; // sub class
+}
+message MasterSnsShareRewardMap {
+  repeated uint_MasterSnsShareReward entries = 1; // dictionary
+}
+message MasterSnsShare {
+  optional uint32 snsShareId = 1; // normal type
+  optional uint32 startAt = 2; // normal type
+  optional uint32 endAt = 3; // normal type
+}
+message uint_MasterSnsShare {
+  optional uint32 uint_MasterSnsShare_key = 1; // normal type
+  optional MasterSnsShare uint_MasterSnsShare_value = 2; // sub class
+}
+message MasterSnsShareMap {
+  repeated uint_MasterSnsShare entries = 1; // dictionary
+}
 message MasterEventAttribute {
   optional uint32 eventId = 1; // normal type
   optional string attribute = 2; // normal type
@@ -2393,6 +2487,12 @@ message SuiteMasterGetResponse {
   optional MasterSafeAreaDeviceMap masterSafeAreaDeviceMap = 100; // sub class
   optional MasterEventMap masterEventMap = 101; // sub class
   optional MasterEventConfigMap masterEventConfigMap = 102; // sub class
+  optional MasterVibratableDeviceMap masterVibratableDeviceMap = 103; // sub class
+  optional MasterElectionMap masterElectionMap = 104; // sub class
+  optional MasterElectionBandMap masterElectionBandMap = 105; // sub class
+  optional MasterElectionTicketMap masterElectionTicketMap = 106; // sub class
+  optional MasterSnsShareRewardMap masterSnsShareRewardMap = 107; // sub class
+  optional MasterSnsShareMap masterSnsShareMap = 108; // sub class
   optional MasterStoryEventMap masterStoryEventMap = 201; // sub class
   optional MasterEventLiveBoostMap masterEventLiveBoostMap = 202; // sub class
   optional MasterEventExchangesList masterEventExchangesList = 203; // sub class
