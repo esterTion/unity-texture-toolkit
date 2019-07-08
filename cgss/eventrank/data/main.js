@@ -51,31 +51,38 @@ function loadedIndex(data) {
 }
 var chart;
 function loadedData(data) {
-	var axises = [{
-		allowDecimals: false,
-		title: {
-			text: 'score'
-		}
-	}],
-		series = [],
-		keys = Object.keys(data.score);
-	keys.sort(function (a, b) { return a - b; });
-	keys.forEach(function (i) {
-		series.push({
-			name: 'score - ' + i,
-			type: 'line',
-			yAxis: 0,
-			data: data.score[i]
+	var axises = [], series = [], keys, yAxis = 0;
+	if (data.score) {
+		axises.push({
+			allowDecimals: false,
+			title: {
+				text: 'score'
+			},
+			lineColor: Highcharts.getOptions().colors[yAxis]
 		});
-	});
+		keys = Object.keys(data.score);
+		keys.sort(function (a, b) { return a - b; });
+		keys.forEach(function (i) {
+			series.push({
+				name: 'score - ' + i,
+				type: 'line',
+				yAxis: yAxis,
+				marker: {
+					enabled: false
+				},
+				data: data.score[i]
+			});
+		});
+		yAxis++;
+	}
 	if (data.pt) {
 		axises.push({
 			allowDecimals: false,
 			title: {
 				text: 'pt'
 			},
-			lineColor: Highcharts.getOptions().colors[1],
-			opposite: true
+			lineColor: Highcharts.getOptions().colors[yAxis],
+			opposite: !!yAxis
 		});
 		keys = Object.keys(data.pt);
 		keys.sort(function (a, b) { return a - b; });
@@ -83,11 +90,15 @@ function loadedData(data) {
 			series.push({
 				name: 'pt - ' + i,
 				type: 'line',
-				yAxis: 1,
+				yAxis: yAxis,
+				marker: {
+					enabled: false
+				},
 				data: data.pt[i],
 				dashStyle: 'Dash'
 			});
 		});
+		yAxis++;
 	}
 	if (chart) chart.destroy();
 	chart = new Highcharts.chart({
@@ -134,11 +145,46 @@ function loadedData(data) {
 		},
 		series: series,
 		exporting: {
-			filename: 'a',
-			sourceHeight: document.querySelector('.content').offsetHeight,
-			sourceWidth: document.querySelector('.content').offsetWidth
+			filename: 'DereSute_event_border',
+			enabled: true,
+			buttons: {
+				contextButton: {
+					menuItems: [
+						'downloadPNG',
+						'downloadJPEG',
+						'downloadSVG'
+					]
+				}
+			}
 		}
 	});
+	var legendGroupElement = chart.legend.group.element, prevFoundItem = null, prevFoundTime = 0;
+	var legendClicker = function (e) {
+		var findLegend = e.target, current = performance.now();
+		while (legendGroupElement.contains(findLegend)) {
+			if (findLegend.classList.contains('highcharts-legend-item')) break;
+			findLegend = findLegend.parentNode;
+		}
+		if (!legendGroupElement.contains(findLegend)) return;
+		if (prevFoundItem != null && findLegend == prevFoundItem && current - prevFoundTime <= 500) {
+			e.preventDefault();
+			e.stopPropagation();
+			var currentOn = 0;
+			chart.legend.allItems.forEach(function (i) {
+				i.visible && ++currentOn;
+			});			
+			chart.legend.allItems.forEach(function (i) {
+				i.setVisible(currentOn <= 1 || i.legendGroup.element == findLegend, false);
+			})
+			chart.redraw();
+			prevFoundItem = null;
+			return;
+		}
+		prevFoundItem = findLegend;
+		prevFoundTime = current;
+	};
+	legendGroupElement.addEventListener('click', legendClicker);
+	legendGroupElement.addEventListener('touchend', legendClicker);
 }
 
 window.addEventListener('load', function () {

@@ -5,13 +5,26 @@ date_default_timezone_set("Asia/Shanghai");
 $rijndaelKey = "s%5VNQ(H$&Bqb6#3+78h29!Ft4wSg)ex";
 $salt = "r!I@nt8e5i=";
 
+/*
+DereGuide (blown)
 $userID  = '775891250';
 $viewerID = '910841675';
 $udid = "600a5efd-cae5-41ff-a0c7-7deda751c5ed";
 
+Self created account (blown)
 $userID = '807297179';
 $viewerID = '995100198';
 $udid = unlolfuscate('002423;541<818p713l356;558<788<512B1167165B452A426p575p3447527>745B625l856B6417737l515;535;726A7217263;113@551n768l838:516m832;624A287p772p121o626:634466828748373881115683521611874');
+
+account from stat
+$userID = "253867193";
+$viewerID = "112284050";
+$udid = "0c4eb0b4-cf99-43b5-a9b6-18550611b7dc";
+*/
+
+$userID = "272779236";
+$viewerID = "326646583";
+$udid = unlolfuscate("002422<557=158>256o855?652;831=563?8557826o117=148<635B7217735>637p776p488:4747225C278=215?858k7377425>566C721C476l531>588A123m743n567o815A857m363o42673358426683716");
 
 function _log($s) {
   //global $logFile;
@@ -130,25 +143,34 @@ $type = $current['type'];
 $fetchPt    = false;
 $fetchScore = false;
 switch ($type) {
-  case 1:
+  case 1: {
     $fetchPt = true;
     $fetchScore = true;
     $ptTable = 'atapon_point_rank_disp';
     $scoreTable = 'atapon_score_rank_disp';
     $path = '/event/atapon/ranking_list';
     break;
-  case 3:
+  }
+  case 3: {
     $fetchPt = true;
     $fetchScore = true;
     $ptTable = 'medley_point_rank_disp';
     $scoreTable = 'medley_score_rank_disp';
     $path = '/event/medley/ranking_list';
     break;
-  case 5:
+  }
+  case 5: {
     $fetchScore = true;
     $scoreTable = 'tour_score_rank_disp';
     $path = '/event/tour/ranking_list';
     break;
+  }
+  case 7: {
+    $fetchPt = true;
+    $ptTable = 'carnival_point_rank_disp';
+    $path = '/event/carnival/ranking_list';
+    break;
+  }
 }
 
 $ptBorders=[];
@@ -156,7 +178,7 @@ if ($fetchPt) {
   foreach(execQuery($db, "SELECT rank_min FROM $ptTable WHERE event_id=$id") as $row) {
     $ptBorders[] = $row['rank_min']+0;
   }
-  $ptBorders[]= 501;
+  if (!in_array(501, $ptBorders)) $ptBorders[]= 501;
 }
 $scoreBorders=[1];
 if ($fetchScore) {
