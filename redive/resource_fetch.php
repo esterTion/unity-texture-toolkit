@@ -33,7 +33,7 @@ $resourceToExport = [
   'spine'=>[
     [ 'bundleNameMatch'=>'/^a\/spine_000000_chara_base\.cysp\.unity3d$/', 'customAssetProcessor'=> 'exportSpine' ],
     [ 'bundleNameMatch'=>'/^a\/spine_\d\d_common_battle\.cysp\.unity3d$/', 'customAssetProcessor'=> 'exportSpine' ],
-    [ 'bundleNameMatch'=>'/^a\/spine_10\d\d01_battle\.cysp\.unity3d$/',   'customAssetProcessor'=> 'exportSpine' ],
+    [ 'bundleNameMatch'=>'/^a\/spine_1\d\d\d01_battle\.cysp\.unity3d$/',   'customAssetProcessor'=> 'exportSpine' ],
     [ 'bundleNameMatch'=>'/^a\/spine_sdnormal_10\d{4}\.unity3d$/',        'customAssetProcessor'=> 'exportAtlas' ],
   ],
   'sound'=>[
@@ -64,7 +64,7 @@ function exportSpine($asset, $remoteTime) {
         checkAndCreateFile(RESOURCE_PATH_PREFIX.'spine/common/'.$item->name, $item->data, $remoteTime);
       }
       // character skill animation
-      else if (preg_match('/10\d{4}_BATTLE\.cysp/', $item->name)) {
+      else if (preg_match('/1\d{5}_BATTLE\.cysp/', $item->name)) {
         checkAndCreateFile(RESOURCE_PATH_PREFIX.'spine/unit/'.$item->name, $item->data, $remoteTime);
       }
     }
@@ -497,7 +497,10 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
   chdir(__DIR__);
   $curl = curl_init();
   function _log($s) {echo "$s\n";}
-  checkAndUpdateResource('10009800');
+  if (!file_exists('data/!TruthVersion.txt')) exit;
+  $ver = trim(file_get_contents('data/!TruthVersion.txt'));
+  var_dump($ver);
+  checkAndUpdateResource($ver);
   /*$assets = extractBundle(new FileStream('bundle/spine_000000_chara_base.cysp.unity3d'));
   $asset = new AssetFile($assets[0]);
   foreach ($asset->preloadTable as $item) {
