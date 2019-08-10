@@ -318,6 +318,7 @@ chdir(__DIR__);
 foreach (glob('data/*.json') as $file) {$file!='data/AssetBundleInfo.json'&&unlink($file);}
 
 $i = 0;
+ini_set("memory_limit",256 *1024*1024);
 foreach ($master as $part=>&$data) {
   //echo (++$i)."/$count $part\n";
   $json = json_encode($data, JSON_UNESCAPED_SLASHES+JSON_UNESCAPED_UNICODE);
