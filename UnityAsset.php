@@ -843,21 +843,7 @@ class Texture2D {
       unset($bmp);
       $transcodeFile = 'output.bmp';
     } else if ($this->outputMethod == 'pvr') {
-      /*fclose(fopen('output.pvr','wb'));
-      $pvr = new FileStream('output.pvr');
-      $pvr->write(hex2bin('5056520300000000'));
-      $pvr->write(pack('P', [
-        TextureFormat::PVRTC_RGB2 => 0,
-        TextureFormat::PVRTC_RGB4 => 2,
-        TextureFormat::PVRTC_RGBA2 => 1,
-        TextureFormat::PVRTC_RGBA4 => 3,
-      ][$this->textureFormat]));
-      $pvr->write(hex2bin('0000000000000000'));
-      $pvr->write(pack('V', $this->height));
-      $pvr->write(pack('V', $this->width));
-      $pvr->write(hex2bin('0100000001000000010000000100000000000000'));
-      $pvr->write($this->imageData);
-      unset($pvr);*/
+      // https://github.com/esterTion/pvrtc-decompress/
       file_put_contents('output.pvr', $this->imageData);
       exec('pvr-decompress output.pvr output.bmp '.implode(' ', [$this->width, $this->height, [
         TextureFormat::PVRTC_RGB2 => 1,
