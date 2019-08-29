@@ -5,7 +5,7 @@ require_once 'UnityAsset.php';
 
 $resourceToExport = [
   [ 'bundleNameMatch'=>'/^characters\/resourceset\/res(\d+)$/', 'namePrefix'=>'$1_', 'nameMatch'=>'/^(.+)$/',     'exportTo'=>'card/$1' ],
-  [ 'bundleNameMatch'=>'/^title\/(.+)$/', 'namePrefix'=>'$1_', 'nameMatch'=>'/^(.+?)_title_bg$/',     'exportTo'=>'title_bg/$1' ]
+  [ 'bundleNameMatch'=>'/^title\/(.+)$/', 'namePrefix'=>'$1_', 'nameMatch'=>'/^(.+?)_title_bg$/',     'exportTo'=>'title_bg/$1', 'extraParamCb'=>function(&$item){return ($item->width==$item->height)?'-s '.$item->width.'x'.($item->width/16*10):'';} ]
 ];
 
 function shouldExportFile($name, $rule) {
@@ -83,7 +83,10 @@ function checkAndUpdateResource($dataVer) {
             }
             if (shouldExportFile($itemname, $rule)) {
               $saveTo = RESOURCE_PATH_PREFIX. preg_replace($rule['nameMatch'], $rule['exportTo'], $itemname);
-              $item->exportTo($saveTo, 'webp', '-lossless 1');
+              $param = '-lossless 1';
+              if (isset($rule['extraParam'])) $param .= ' '.$rule['extraParam'];
+              if (isset($rule['extraParamCb'])) $param .= ' '.call_user_func($rule['extraParamCb'], $item);
+              $item->exportTo($saveTo, 'webp', $param);
               if (filemtime($saveTo. '.webp') > $currenttime)
               touch($saveTo. '.webp', $currenttime);
             }
