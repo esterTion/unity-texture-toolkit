@@ -118,6 +118,9 @@ function do_commit($TruthVersion, $db = NULL) {
           case 32:                            { return 'Skill Boost Cute'; }
           case 33:                            { return 'Skill Boost Cool'; }
           case 34:                            { return 'Skill Boost Passion'; }
+          case 35:                            { return 'Motif Vocal'; }
+          case 36:                            { return 'Motif Dance'; }
+          case 37:                            { return 'Motif Visual'; }
           default:                            { return 'Skill '.$a; }
         }
       })($a['skill_type']).
