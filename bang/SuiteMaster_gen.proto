@@ -11,6 +11,20 @@ message MasterSubscriptionCountBonusReward {
 message MasterSubscriptionCountBonusRewardList {
   repeated MasterSubscriptionCountBonusReward entries = 1; // list
 }
+message MasterTimerWordingCollection {
+  optional uint32 id = 1; // normal type
+  optional string name = 2; // normal type
+  optional string wording = 3; // normal type
+  optional uint32 startAt = 4; // normal type
+  optional uint32 endAt = 5; // normal type
+}
+message uint_MasterTimerWordingCollection {
+  optional uint32 uint_MasterTimerWordingCollection_key = 1; // normal type
+  optional MasterTimerWordingCollection uint_MasterTimerWordingCollection_value = 2; // sub class
+}
+message MasterTimerWordingCollectionMap {
+  repeated uint_MasterTimerWordingCollection entries = 1; // dictionary
+}
 message MasterMusicAchievement {
   optional uint32 musicId = 1; // normal type
   optional string achievementType = 2; // normal type
@@ -39,6 +53,7 @@ message MasterMusicGetResponse {
   optional string transitionMethod = 18; // normal type
   optional uint32 transitionId = 19; // normal type
   optional string phonetic = 20; // normal type
+  optional string musicDataType = 21; // normal type
 }
 message MasterMusicListGetResponse {
   repeated MasterMusicGetResponse entries = 1; // array
@@ -2402,6 +2417,8 @@ message MasterNewSituationIntroductionDetail {
   optional string voiceId = 5; // normal type
   optional float situationPositionX = 6; // normal type
   optional string newSituationText = 7; // normal type
+  optional string live2dPresetVoice = 8; // normal type
+  optional bool isExistLive2dSpecialVoice = 9; // normal type
 }
 message MasterNewSituationIntroduction {
   optional uint32 newSituationIntroductionId = 1; // normal type
@@ -2501,6 +2518,7 @@ message MasterSubscriptionDetailList {
 }
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
+  optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
   optional MasterMusicListGetResponse masterMusicList = 1; // sub class
   optional MasterMusicDifficultyListGetResponse masterMusicDifficultyList = 2; // sub class
   optional MasterMultiLiveDifficultyMap masterMultiLiveDifficultyMap = 28; // sub class
