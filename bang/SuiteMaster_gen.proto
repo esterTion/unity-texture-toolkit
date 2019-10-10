@@ -310,6 +310,7 @@ message MasterGacha {
   optional uint32 gachaCeilingCountParentGachaId = 22; // normal type
   optional string gachaSealName = 23; // normal type
   optional uint32 gachaCeilingCountBeforeInheritGachaId = 24; // normal type
+  optional string attentionAssetBundleName = 25; // normal type
 }
 message ulong_MasterGacha {
   optional uint32 ulong_MasterGacha_key = 1; // normal type
@@ -494,6 +495,7 @@ message MasterBand {
   optional uint32 seq = 10; // normal type
   optional string bandType = 11; // normal type
   optional string introductions = 12; // normal type
+  optional string phonetic = 13; // normal type
 }
 message uint_MasterBand {
   optional uint32 uint_MasterBand_key = 1; // normal type
@@ -2516,6 +2518,16 @@ message MasterSubscriptionDetail {
 message MasterSubscriptionDetailList {
   repeated MasterSubscriptionDetail list = 1; // list
 }
+message MasterGraphicalInformation {
+  optional uint32 graphicalInformationId = 1; // normal type
+  optional uint32 viewStartAt = 2; // normal type
+  optional uint32 viewEndAt = 3; // normal type
+  optional string transitionMethod = 4; // normal type
+  optional string slideAssetBundleName = 5; // normal type
+}
+message MasterGraphicalInformationList {
+  repeated MasterGraphicalInformation entries = 1; // list
+}
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
   optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
@@ -2648,4 +2660,5 @@ message SuiteMasterGetResponse {
   optional MasterGachaCeilingConfigMap masterGachaCeilingConfigMap = 303; // sub class
   optional MasterGachaSealInformationMap masterGachaSealInformationMap = 304; // sub class
   optional MasterSubscriptionDetailList masterSubscriptionDetailList = 306; // sub class
+  optional MasterGraphicalInformationList masterGraphicalInformationList = 308; // sub class
 }
