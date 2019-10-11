@@ -6,7 +6,7 @@ message AssetBundleElement {
   optional string category = 4; // normal type
   optional uint32 crc = 5; // normal type
   repeated string dependencies = 6; // array
-  optional int32 fileSize = 7; // normal type
+  optional int64 fileSize = 7; // normal type
 }
 message string_AssetBundleElement {
   optional string string_AssetBundleElement_key = 1; // normal type

@@ -15,8 +15,8 @@ message MasterTimerWordingCollection {
   optional uint32 id = 1; // normal type
   optional string name = 2; // normal type
   optional string wording = 3; // normal type
-  optional uint32 startAt = 4; // normal type
-  optional uint32 endAt = 5; // normal type
+  optional uint64 startAt = 4; // normal type
+  optional uint64 endAt = 5; // normal type
 }
 message uint_MasterTimerWordingCollection {
   optional uint32 uint_MasterTimerWordingCollection_key = 1; // normal type
@@ -48,8 +48,8 @@ message MasterMusicGetResponse {
   repeated MasterMusicAchievement achievements = 13; // array
   optional string jacketImage = 14; // normal type
   optional uint32 seq = 15; // normal type
-  optional uint32 publishedAt = 16; // normal type
-  optional uint32 closedAt = 17; // normal type
+  optional uint64 publishedAt = 16; // normal type
+  optional uint64 closedAt = 17; // normal type
   optional string transitionMethod = 18; // normal type
   optional uint32 transitionId = 19; // normal type
   optional string phonetic = 20; // normal type
@@ -84,7 +84,7 @@ message MasterMusicDifficultyGetResponse {
   optional uint32 scoreB = 8; // normal type
   optional uint32 scoreC = 9; // normal type
   optional uint32 scoreSS = 10; // normal type
-  optional uint32 publishedAt = 11; // normal type
+  optional uint64 publishedAt = 11; // normal type
 }
 message MasterMusicDifficultyListGetResponse {
   repeated MasterMusicDifficultyGetResponse entries = 1; // array
@@ -110,7 +110,7 @@ message MasterCharacterProfile {
   optional string characterVoice = 3; // normal type
   optional string school = 4; // normal type
   optional uint32 schoolYear = 5; // normal type
-  optional uint32 birthday = 6; // normal type
+  optional uint64 birthday = 6; // normal type
   optional string constellation = 7; // normal type
   optional string favoriteFood = 8; // normal type
   optional string hatedFood = 9; // normal type
@@ -215,7 +215,7 @@ message MasterCharacterSituation {
   optional MasterEpisodeList episodes = 14; // sub class
   optional MasterTraining training = 15; // sub class
   optional uint32 costumeId = 16; // normal type
-  optional uint32 releasedAt = 17; // normal type
+  optional uint64 releasedAt = 17; // normal type
 }
 message uint_MasterCharacterSituation {
   optional uint32 uint_MasterCharacterSituation_key = 1; // normal type
@@ -289,8 +289,8 @@ message MasterGacha {
   optional uint32 gachaId = 1; // normal type
   optional string gachaName = 2; // normal type
   optional string gachaDisplayType = 3; // normal type
-  optional uint32 publishedAt = 4; // nullable
-  optional uint32 closedAt = 5; // nullable
+  optional uint64 publishedAt = 4; // nullable
+  optional uint64 closedAt = 5; // nullable
   repeated MasterGachaDetail details = 6; // array
   repeated MasterGachaRarityRate rates = 7; // array
   repeated MasterGachaPaymentMethod paymentMethods = 8; // array
@@ -313,7 +313,7 @@ message MasterGacha {
   optional string attentionAssetBundleName = 25; // normal type
 }
 message ulong_MasterGacha {
-  optional uint32 ulong_MasterGacha_key = 1; // normal type
+  optional uint64 ulong_MasterGacha_key = 1; // normal type
   optional MasterGacha ulong_MasterGacha_value = 2; // sub class
 }
 message MasterGachaMap {
@@ -437,8 +437,8 @@ message MasterShoplist {
   optional uint32 releaseMainStory = 8; // normal type
   optional uint32 releaseBandStory = 9; // normal type
   optional MasterShopListConditionList conditions = 10; // sub class
-  optional uint32 startAt = 11; // nullable
-  optional uint32 endAt = 12; // nullable
+  optional uint64 startAt = 11; // nullable
+  optional uint64 endAt = 12; // nullable
 }
 message uint_MasterShoplist {
   optional uint32 uint_MasterShoplist_key = 1; // normal type
@@ -555,7 +555,7 @@ message MasterMainStory {
   optional string scenarioId = 6; // normal type
   optional uint32 releasePlayerRank = 8; // normal type
   optional string releaseConditions = 9; // normal type
-  optional uint32 publishedAt = 10; // normal type
+  optional uint64 publishedAt = 10; // normal type
   repeated PlayerResource rewards = 11; // array
   optional string coverImage = 12; // normal type
   optional string backgroundImage = 13; // normal type
@@ -579,7 +579,7 @@ message MasterBandStory {
   optional string scenarioId = 7; // normal type
   optional uint32 releasePlayerRank = 9; // normal type
   optional string releaseConditions = 10; // normal type
-  optional uint32 publishedAt = 11; // normal type
+  optional uint64 publishedAt = 11; // normal type
   repeated PlayerResource rewards = 12; // array
   optional string coverImage = 13; // normal type
   optional string backgroundImage = 14; // normal type
@@ -652,7 +652,7 @@ message MasterCostume {
   optional uint32 seq = 6; // normal type
   optional string sdResourceName = 7; // normal type
   optional string howToGet = 8; // normal type
-  optional uint32 publishedAt = 9; // normal type
+  optional uint64 publishedAt = 9; // normal type
 }
 message uint_MasterCostume {
   optional uint32 uint_MasterCostume_key = 1; // normal type
@@ -687,7 +687,7 @@ message MasterAreaItemSpawnMap {
   repeated string_MasterAreaItemSpawn entries = 1; // dictionary
 }
 message ServerSystem {
-  optional uint32 serverDate = 1; // normal type
+  optional uint64 serverDate = 1; // normal type
   optional int32 timeZoneRawOffset = 2; // normal type
 }
 message MasterCharacterRarity {
@@ -714,8 +714,8 @@ message MasterExchanges {
   optional uint32 exchangeLimit = 8; // nullable
   optional string reset = 9; // normal type
   optional string badge = 10; // normal type
-  optional uint32 publishedAt = 11; // nullable
-  optional uint32 closedAt = 12; // nullable
+  optional uint64 publishedAt = 11; // nullable
+  optional uint64 closedAt = 12; // nullable
   optional string caption = 13; // normal type
   optional bool recommendFlg = 14; // normal type
   optional bool allowDuplicationFlg = 15; // normal type
@@ -755,8 +755,8 @@ message MasterPurchase {
   optional string description = 4; // normal type
   optional string label = 5; // normal type
   optional uint32 purchaseLimit = 6; // normal type
-  optional uint32 publishedAt = 7; // nullable
-  optional uint32 closedAt = 8; // nullable
+  optional uint64 publishedAt = 7; // nullable
+  optional uint64 closedAt = 8; // nullable
   repeated MasterPurchaseDetail detail = 9; // list
   optional uint32 seq = 10; // normal type
   optional uint32 purchaseMenuId = 11; // normal type
@@ -810,8 +810,8 @@ message MasterLoginBonus {
   optional string loginBonusType = 2; // normal type
   optional string caption = 3; // normal type
   optional string assetBundleName = 4; // normal type
-  optional uint32 publishedAt = 5; // normal type
-  optional uint32 closedAt = 6; // normal type
+  optional uint64 publishedAt = 5; // normal type
+  optional uint64 closedAt = 6; // normal type
   repeated MasterLoginBonusDetail details = 7; // array
   optional MasterLoginBonusAssetMap assetMap = 8; // sub class
 }
@@ -826,8 +826,8 @@ message MasterHomeBanner {
   optional uint32 homeBannerId = 1; // normal type
   optional uint32 seq = 2; // normal type
   optional string assetBundleName = 3; // normal type
-  optional uint32 publishedAt = 4; // normal type
-  optional uint32 closedAt = 5; // normal type
+  optional uint64 publishedAt = 4; // normal type
+  optional uint64 closedAt = 5; // normal type
   optional string transitionMethod = 6; // normal type
   optional string url = 7; // normal type
   optional uint32 releaseRankFrom = 8; // normal type
@@ -868,8 +868,8 @@ message MasterStamp {
   optional uint32 seq = 2; // normal type
   optional string imageName = 3; // normal type
   optional string stampType = 4; // normal type
-  optional uint32 startAt = 5; // normal type
-  optional uint32 endAt = 6; // normal type
+  optional uint64 startAt = 5; // normal type
+  optional uint64 endAt = 6; // normal type
 }
 message uint_MasterStamp {
   optional uint32 uint_MasterStamp_key = 1; // normal type
@@ -934,8 +934,8 @@ message MasterCommonConfig {
   optional uint32 commonConfigId = 1; // normal type
   optional string commonConfigType = 2; // normal type
   optional string value = 3; // normal type
-  optional uint32 startAt = 4; // normal type
-  optional uint32 endAt = 5; // normal type
+  optional uint64 startAt = 4; // normal type
+  optional uint64 endAt = 5; // normal type
 }
 message uint_MasterCommonConfig {
   optional uint32 uint_MasterCommonConfig_key = 1; // normal type
@@ -968,8 +968,8 @@ message MasterMission {
   optional string missionType = 2; // normal type
   optional string transitionMethod = 3; // normal type
   optional uint32 transitionId = 4; // normal type
-  optional uint32 startAt = 5; // normal type
-  optional uint32 endAt = 6; // normal type
+  optional uint64 startAt = 5; // normal type
+  optional uint64 endAt = 6; // normal type
   optional string missionTabType = 7; // normal type
   optional uint32 seq = 8; // normal type
   optional string url = 9; // normal type
@@ -1080,8 +1080,8 @@ message MasterGenericStory {
   optional string backgroundImage = 8; // normal type
   optional uint32 releasePlayerRank = 9; // normal type
   optional string releaseConditions = 10; // normal type
-  optional uint32 startAt = 11; // normal type
-  optional uint32 endAt = 12; // normal type
+  optional uint64 startAt = 11; // normal type
+  optional uint64 endAt = 12; // normal type
   repeated PlayerResource rewards = 13; // array
   optional bool priorityFlg = 14; // normal type
   optional string genericStoryType = 15; // normal type
@@ -1097,8 +1097,8 @@ message MasterGenericStoryMap {
 message MasterSeasonBasic {
   optional uint32 seasonBasicId = 1; // normal type
   optional string seasonBasicType = 2; // normal type
-  optional uint32 startAt = 3; // normal type
-  optional uint32 endAt = 4; // normal type
+  optional uint64 startAt = 3; // normal type
+  optional uint64 endAt = 4; // normal type
   optional uint32 seasonId = 5; // normal type
 }
 message uint_MasterSeasonBasic {
@@ -1112,8 +1112,8 @@ message MasterSeasonSpecial {
   optional uint32 seasonSpecialId = 1; // normal type
   optional string seasonSpecialType = 2; // normal type
   optional string description = 3; // normal type
-  optional uint32 startAt = 4; // normal type
-  optional uint32 endAt = 5; // normal type
+  optional uint64 startAt = 4; // normal type
+  optional uint64 endAt = 5; // normal type
   optional bool repeatFlg = 6; // normal type
   optional bool areaSpecialResourceFlg = 7; // normal type
   optional string actionSetType = 8; // normal type
@@ -1176,12 +1176,12 @@ message MasterQualifyTournament {
   optional string bgmAssetBundleName = 5; // normal type
   optional string bgmFileName = 6; // normal type
   optional uint32 playCount = 7; // normal type
-  optional uint32 startAt = 8; // normal type
-  optional uint32 endAt = 9; // normal type
-  optional uint32 entryStartAt = 10; // normal type
-  optional uint32 entryEndAt = 11; // normal type
-  optional uint32 publicStartAt = 12; // normal type
-  optional uint32 publicEndAt = 13; // normal type
+  optional uint64 startAt = 8; // normal type
+  optional uint64 endAt = 9; // normal type
+  optional uint64 entryStartAt = 10; // normal type
+  optional uint64 entryEndAt = 11; // normal type
+  optional uint64 publicStartAt = 12; // normal type
+  optional uint64 publicEndAt = 13; // normal type
   optional string qualifyTournamentType = 14; // normal type
   optional string place = 15; // normal type
 }
@@ -1244,12 +1244,12 @@ message MasterEventStoryMemorialConfig {
   optional uint32 eventId = 1; // normal type
   optional uint32 bandId = 2; // normal type
   optional string imageFileName = 3; // normal type
-  optional uint32 publishedAt = 4; // normal type
+  optional uint64 publishedAt = 4; // normal type
   optional uint32 eventStoryMemorialReleaseConditionId = 5; // normal type
   repeated uint32 characterIdList = 6; // array
   optional uint32 musicId = 7; // nullable
   optional string seasonType = 8; // normal type
-  optional uint32 eventPublicEndAt = 101; // normal type
+  optional uint64 eventPublicEndAt = 101; // normal type
 }
 message uint_MasterEventStoryMemorialConfig {
   optional uint32 uint_MasterEventStoryMemorialConfig_key = 1; // normal type
@@ -1329,8 +1329,8 @@ message MasterMiracleTicket {
   optional string miracleTicketEndAtType = 3; // normal type
   optional string miracleTicketName = 4; // normal type
   optional uint32 resourceId = 5; // normal type
-  optional uint32 exchangeStartAt = 6; // normal type
-  optional uint32 exchangeEndAt = 7; // normal type
+  optional uint64 exchangeStartAt = 6; // normal type
+  optional uint64 exchangeEndAt = 7; // normal type
   optional uint32 exchangeEndMinutes = 8; // normal type
   optional string bannerImageUrl = 9; // normal type
   optional string miracleTicketExchangesName = 10; // normal type
@@ -1366,8 +1366,8 @@ message MasterSpecialLottery {
   optional uint32 seq = 2; // normal type
   optional string caption = 3; // normal type
   optional string assetBundleName = 4; // normal type
-  optional uint32 startAt = 5; // normal type
-  optional uint32 endAt = 6; // normal type
+  optional uint64 startAt = 5; // normal type
+  optional uint64 endAt = 6; // normal type
 }
 message MasterSpecialLotteryList {
   repeated MasterSpecialLottery entries = 1; // array
@@ -1384,8 +1384,8 @@ message MasterBirthdayStory {
   optional uint32 seq = 2; // normal type
   optional string caption = 3; // normal type
   optional string scenarioId = 6; // normal type
-  optional uint32 startAt = 7; // normal type
-  optional uint32 endAt = 8; // normal type
+  optional uint64 startAt = 7; // normal type
+  optional uint64 endAt = 8; // normal type
   optional PlayerResourceList rewards = 9; // sub class
 }
 message uint_MasterBirthdayStory {
@@ -1401,8 +1401,8 @@ message MasterBirthdayPage {
   optional string assetBundleName = 3; // normal type
   optional uint32 birthdayStoryId = 4; // normal type
   optional uint32 actionSetId = 5; // normal type
-  optional uint32 startAt = 6; // normal type
-  optional uint32 endAt = 7; // normal type
+  optional uint64 startAt = 6; // normal type
+  optional uint64 endAt = 7; // normal type
   optional uint32 openingAnimationLoginBonusId = 8; // normal type
   optional string birthdayCardAssetBundleName = 9; // normal type
   optional uint32 bandMemberBackstageTalkSetId = 10; // normal type
@@ -1549,7 +1549,7 @@ message MasterFourFrameCartoon {
   optional uint32 seq = 2; // normal type
   optional string title = 3; // normal type
   optional string assetBundleName = 4; // normal type
-  optional uint32 publicStartAt = 5; // normal type
+  optional uint64 publicStartAt = 5; // normal type
   optional string subTitle = 6; // normal type
 }
 message uint_MasterFourFrameCartoon {
@@ -1572,8 +1572,8 @@ message MasterFourFrameCartoonCharacterMap {
 message MasterMusicVideo {
   optional uint32 musicId = 1; // normal type
   optional string assetBundleName = 2; // normal type
-  optional uint32 startAt = 3; // normal type
-  optional uint32 endAt = 4; // normal type
+  optional uint64 startAt = 3; // normal type
+  optional uint64 endAt = 4; // normal type
   optional int32 musicStartDelayMilliseconds = 5; // normal type
   optional uint32 seq = 6; // normal type
   optional string title = 7; // normal type
@@ -1603,8 +1603,8 @@ message MasterBandStoryChapterDetail {
   optional uint32 bandStoryChapterId = 2; // normal type
   optional uint32 eventId = 3; // nullable
   optional uint32 releaseBandStoryId = 4; // nullable
-  optional uint32 startAt = 5; // normal type
-  optional uint32 endAt = 6; // normal type
+  optional uint64 startAt = 5; // normal type
+  optional uint64 endAt = 6; // normal type
   optional string supplement = 7; // normal type
   optional string appeal = 8; // normal type
   optional string releaseConditions = 9; // normal type
@@ -1619,8 +1619,8 @@ message MasterBandStoryChapter {
   optional uint32 seq = 4; // normal type
   optional string mainTitle = 5; // normal type
   optional string subTitle = 6; // normal type
-  optional uint32 publishedAt = 7; // normal type
-  optional uint32 closedAt = 8; // normal type
+  optional uint64 publishedAt = 7; // normal type
+  optional uint64 closedAt = 8; // normal type
   optional uint32 chapterNumber = 9; // normal type
   optional MasterBandStoryChapterDetailList masterBandStoryChapterDetailList = 101; // sub class
 }
@@ -1640,8 +1640,8 @@ message MasterNewMusicIntroduction {
   optional uint32 costumeId3 = 6; // nullable
   optional uint32 costumeId4 = 7; // nullable
   optional uint32 costumeId5 = 8; // nullable
-  optional uint32 startAt = 9; // normal type
-  optional uint32 endAt = 10; // normal type
+  optional uint64 startAt = 9; // normal type
+  optional uint64 endAt = 10; // normal type
 }
 message uint_MasterNewMusicIntroduction {
   optional uint32 uint_MasterNewMusicIntroduction_key = 1; // normal type
@@ -1718,10 +1718,10 @@ message MasterMissionPlatformOverviewPlatformMap {
 }
 message MasterNewYearCard {
   optional uint32 newYearCardId = 1; // normal type
-  optional uint32 selectStartAt = 2; // normal type
-  optional uint32 selectEndAt = 3; // normal type
-  optional uint32 receiveStartAt = 4; // normal type
-  optional uint32 receiveEndAt = 5; // normal type
+  optional uint64 selectStartAt = 2; // normal type
+  optional uint64 selectEndAt = 3; // normal type
+  optional uint64 receiveStartAt = 4; // normal type
+  optional uint64 receiveEndAt = 5; // normal type
   optional string assetBundleName = 6; // normal type
 }
 message uint_MasterNewYearCard {
@@ -1736,7 +1736,7 @@ message MasterMusicJacket {
   optional uint32 musicId = 2; // normal type
   optional uint32 seq = 3; // normal type
   optional string jacketImage = 4; // normal type
-  optional uint32 startAt = 5; // normal type
+  optional uint64 startAt = 5; // normal type
 }
 message MasterMusicJacketList {
   repeated MasterMusicJacket entries = 1; // array
@@ -1826,7 +1826,7 @@ message MasterSafeAreaDeviceMap {
 message MasterEventPointReward {
   optional uint32 id = 1; // normal type
   optional uint32 eventId = 2; // normal type
-  optional uint32 point = 3; // normal type
+  optional uint64 point = 3; // normal type
   optional string rewardType = 4; // normal type
   optional uint32 rewardId = 5; // normal type
   optional uint32 rewardQuantity = 6; // normal type
@@ -1847,18 +1847,18 @@ message MasterEvent {
   optional string eventType = 2; // normal type
   optional string eventName = 3; // normal type
   optional string assetBundleName = 4; // normal type
-  optional uint32 startAt = 5; // normal type
-  optional uint32 endAt = 6; // normal type
+  optional uint64 startAt = 5; // normal type
+  optional uint64 endAt = 6; // normal type
   optional bool enableFlg = 7; // normal type
-  optional uint32 publicStartAt = 8; // normal type
-  optional uint32 publicEndAt = 9; // normal type
-  optional uint32 distributionStartAt = 10; // normal type
-  optional uint32 distributionEndAt = 11; // normal type
+  optional uint64 publicStartAt = 8; // normal type
+  optional uint64 publicEndAt = 9; // normal type
+  optional uint64 distributionStartAt = 10; // normal type
+  optional uint64 distributionEndAt = 11; // normal type
   optional string bgmAssetBundleName = 12; // normal type
   optional string bgmFileName = 13; // normal type
-  optional uint32 aggregateEndAt = 14; // normal type
-  optional uint32 eventExchangesEndAt = 15; // nullable
-  optional uint32 receptionEndAt = 16; // normal type
+  optional uint64 aggregateEndAt = 14; // normal type
+  optional uint64 eventExchangesEndAt = 15; // nullable
+  optional uint64 receptionEndAt = 16; // normal type
   repeated MasterEventPointReward pointRewards = 101; // array
   repeated MasterEventRankingReward rankingRewards = 102; // array
 }
@@ -1894,16 +1894,16 @@ message MasterVibratableDeviceMap {
 message MasterElection {
   optional uint32 electionId = 1; // normal type
   optional string assetBundleName = 2; // normal type
-  optional uint32 publicStartAt = 3; // normal type
-  optional uint32 publicEndAt = 4; // normal type
-  optional uint32 voteStartAt = 5; // normal type
-  optional uint32 voteEndAt = 6; // normal type
-  optional uint32 interimAggregationStartAt = 7; // normal type
-  optional uint32 interimReportAt = 8; // normal type
-  optional uint32 aggregationStartAt = 9; // normal type
-  optional uint32 aggregationEndAt = 10; // normal type
-  optional uint32 resultReportStartAt = 11; // normal type
-  optional uint32 resultReportEndAt = 12; // normal type
+  optional uint64 publicStartAt = 3; // normal type
+  optional uint64 publicEndAt = 4; // normal type
+  optional uint64 voteStartAt = 5; // normal type
+  optional uint64 voteEndAt = 6; // normal type
+  optional uint64 interimAggregationStartAt = 7; // normal type
+  optional uint64 interimReportAt = 8; // normal type
+  optional uint64 aggregationStartAt = 9; // normal type
+  optional uint64 aggregationEndAt = 10; // normal type
+  optional uint64 resultReportStartAt = 11; // normal type
+  optional uint64 resultReportEndAt = 12; // normal type
   optional uint32 snsShareId = 13; // normal type
   optional string electionWebviewUrl = 14; // normal type
   optional string electionOfficialSiteUrl = 15; // normal type
@@ -1963,8 +1963,8 @@ message MasterSnsShareRewardMap {
 }
 message MasterSnsShare {
   optional uint32 snsShareId = 1; // normal type
-  optional uint32 startAt = 2; // normal type
-  optional uint32 endAt = 3; // normal type
+  optional uint64 startAt = 2; // normal type
+  optional uint64 endAt = 3; // normal type
 }
 message uint_MasterSnsShare {
   optional uint32 uint_MasterSnsShare_key = 1; // normal type
@@ -2045,7 +2045,7 @@ message MasterEventStory {
   optional string scenarioId = 6; // normal type
   optional string coverImage = 7; // normal type
   optional string backgroundImage = 8; // normal type
-  optional uint32 releasePt = 9; // normal type
+  optional uint64 releasePt = 9; // normal type
   optional string releaseConditions = 10; // normal type
   optional uint32 bandStoryId = 11; // nullable
   optional uint32 backgroundImageId = 12; // normal type
@@ -2086,8 +2086,8 @@ message MasterEventExchanges {
   optional uint32 exchangeLimit = 8; // nullable
   optional string reset = 9; // normal type
   optional string badge = 10; // normal type
-  optional uint32 publishedAt = 11; // nullable
-  optional uint32 closedAt = 12; // nullable
+  optional uint64 publishedAt = 11; // nullable
+  optional uint64 closedAt = 12; // nullable
   optional bool recommendFlg = 13; // normal type
   optional bool allowDuplicationFlg = 14; // normal type
 }
@@ -2258,8 +2258,8 @@ message MasterEventBoxGacha {
   optional uint32 eventId = 2; // normal type
   optional string name = 3; // normal type
   optional string resourceName = 4; // normal type
-  optional uint32 publishedAt = 5; // normal type
-  optional uint32 closedAt = 6; // normal type
+  optional uint64 publishedAt = 5; // normal type
+  optional uint64 closedAt = 6; // normal type
   repeated uint_MasterEventBoxGachaDetailList detailsMap = 101; // dictionary
 }
 message uint_MasterEventBoxGacha {
@@ -2426,8 +2426,8 @@ message MasterNewSituationIntroduction {
   optional uint32 newSituationIntroductionId = 1; // normal type
   optional uint32 gachaId = 2; // normal type
   optional string logoPosition = 3; // normal type
-  optional uint32 startAt = 4; // normal type
-  optional uint32 endAt = 5; // normal type
+  optional uint64 startAt = 4; // normal type
+  optional uint64 endAt = 5; // normal type
   repeated MasterNewSituationIntroductionDetail details = 6; // array
   optional string textureImageName = 7; // normal type
   optional bool newIconFlag = 8; // normal type
@@ -2456,8 +2456,8 @@ message MasterGenericAnimation {
   optional uint32 seq = 2; // normal type
   optional string assetBundleName = 3; // normal type
   optional bool priorityFlg = 4; // normal type
-  optional uint32 startAt = 5; // normal type
-  optional uint32 endAt = 6; // normal type
+  optional uint64 startAt = 5; // normal type
+  optional uint64 endAt = 6; // normal type
   optional string genericAnimationType = 7; // normal type
 }
 message uint_MasterGenericAnimation {
@@ -2520,8 +2520,8 @@ message MasterSubscriptionDetailList {
 }
 message MasterGraphicalInformation {
   optional uint32 graphicalInformationId = 1; // normal type
-  optional uint32 viewStartAt = 2; // normal type
-  optional uint32 viewEndAt = 3; // normal type
+  optional uint64 viewStartAt = 2; // normal type
+  optional uint64 viewEndAt = 3; // normal type
   optional string transitionMethod = 4; // normal type
   optional string slideAssetBundleName = 5; // normal type
 }
