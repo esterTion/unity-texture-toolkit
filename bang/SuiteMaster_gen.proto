@@ -25,6 +25,20 @@ message uint_MasterTimerWordingCollection {
 message MasterTimerWordingCollectionMap {
   repeated uint_MasterTimerWordingCollection entries = 1; // dictionary
 }
+message MasterMissionLabel {
+  optional uint32 labelId = 1; // normal type
+  optional string missionTabType = 2; // normal type
+  optional string tabLabel = 3; // normal type
+  optional uint64 startAt = 4; // normal type
+  optional uint64 endAt = 5; // normal type
+}
+message uint_MasterMissionLabel {
+  optional uint32 uint_MasterMissionLabel_key = 1; // normal type
+  optional MasterMissionLabel uint_MasterMissionLabel_value = 2; // sub class
+}
+message MasterMissionLabelMap {
+  repeated uint_MasterMissionLabel entries = 1; // dictionary
+}
 message MasterMusicAchievement {
   optional uint32 musicId = 1; // normal type
   optional string achievementType = 2; // normal type
@@ -254,6 +268,7 @@ message MasterGachaDetail {
   optional uint32 situationId = 3; // normal type
   optional uint32 weight = 4; // normal type
   optional bool pickup = 5; // normal type
+  optional uint32 filter = 6; // normal type
 }
 message MasterGachaRarityRate {
   optional uint32 gachaId = 1; // normal type
@@ -271,6 +286,7 @@ message MasterGachaPaymentMethod {
   optional bool pickup = 7; // normal type
   optional uint32 maxSpinLimit = 8; // nullable
   optional uint32 costItemQuantity = 9; // normal type
+  optional uint32 stepNumber = 10; // normal type
 }
 message MasterGachaExtra {
   optional uint32 limit = 1; // normal type
@@ -284,6 +300,48 @@ message MasterGachaViewLive2d {
   optional uint32 gachaId = 1; // normal type
   optional uint32 seq = 2; // normal type
   optional uint32 situationId = 3; // normal type
+}
+message MasterGachaStepup {
+  optional uint32 gachaId = 1; // normal type
+  optional uint32 stepNumber = 2; // normal type
+  optional string balloonType = 3; // normal type
+}
+message MasterGachaStepupDetail {
+  optional uint32 gachaId = 1; // normal type
+  optional uint32 stepNumber = 2; // normal type
+  optional uint32 situationId = 3; // normal type
+  optional uint32 characterId = 4; // normal type
+  optional uint32 rarityIndex = 5; // normal type
+  optional uint32 weight = 6; // normal type
+}
+message MasterGachaStepupRarityRate {
+  optional uint32 gachaId = 1; // normal type
+  optional uint32 stepNumber = 2; // normal type
+  optional uint32 rarityIndex = 3; // normal type
+  optional float rate = 4; // normal type
+  optional uint32 weightTotal = 5; // normal type
+}
+message MasterGachaStepupExtra {
+  optional uint32 gachaId = 1; // normal type
+  optional uint32 stepNumber = 2; // normal type
+  optional uint32 seq = 3; // normal type
+  optional uint32 spinLimit = 4; // normal type
+  optional string resourceType = 5; // normal type
+  optional uint32 resourceId = 6; // normal type
+  optional uint32 resourceQuantity = 7; // normal type
+  optional uint32 expiredDays = 8; // normal type
+  optional string grantType = 9; // normal type
+  optional string description = 10; // normal type
+}
+message MasterGachaLapAchievement {
+  optional uint32 gachaId = 1; // normal type
+  optional uint32 lapCount = 2; // normal type
+  optional uint32 seq = 3; // normal type
+  optional string resourceType = 4; // normal type
+  optional uint32 resourceId = 5; // normal type
+  optional uint32 resourceQuantity = 6; // normal type
+  optional uint32 expiredDays = 7; // normal type
+  optional string grantType = 8; // normal type
 }
 message MasterGacha {
   optional uint32 gachaId = 1; // normal type
@@ -311,6 +369,15 @@ message MasterGacha {
   optional string gachaSealName = 23; // normal type
   optional uint32 gachaCeilingCountBeforeInheritGachaId = 24; // normal type
   optional string attentionAssetBundleName = 25; // normal type
+  repeated MasterGachaStepup stepup = 26; // array
+  repeated MasterGachaStepupDetail stepupDetails = 27; // array
+  repeated MasterGachaStepupRarityRate stepupRates = 28; // array
+  repeated MasterGachaStepupExtra stepupExtras = 29; // array
+  repeated MasterGachaLapAchievement gachaLapAchievement = 30; // array
+  optional string gachaStepupType = 31; // normal type
+  optional uint32 spinLapNumber = 32; // normal type
+  optional uint32 lapLimit = 33; // normal type
+  optional uint32 spinLimit = 34; // normal type
 }
 message ulong_MasterGacha {
   optional uint64 ulong_MasterGacha_key = 1; // normal type
@@ -978,6 +1045,7 @@ message MasterMission {
   optional uint32 bandId = 12; // normal type
   optional string characterAttribute = 13; // normal type
   repeated uint32 areaItemCategoryIds = 14; // array
+  optional string resetType = 15; // normal type
 }
 message uint_MasterMission {
   optional uint32 uint_MasterMission_key = 1; // normal type
@@ -1758,6 +1826,7 @@ message MasterBackstageTalkSet {
   repeated uint32 characterIds = 7; // array
   optional uint32 seasonSpecialId = 8; // normal type
   optional string backstageTalkSetType = 9; // normal type
+  optional uint32 seasonBasicId = 10; // normal type
 }
 message uint_MasterBackstageTalkSet {
   optional uint32 uint_MasterBackstageTalkSet_key = 1; // normal type
@@ -2051,11 +2120,17 @@ message MasterEventStory {
   optional uint32 backgroundImageId = 12; // normal type
   repeated MasterEventStoryReward rewards = 101; // array
 }
+message MasterEventAttributeAndCharacterBonus {
+  optional uint32 eventId = 1; // normal type
+  optional float pointPercent = 2; // normal type
+  optional float parameterPercent = 3; // normal type
+}
 message MasterStoryEvent {
   optional uint32 eventId = 1; // normal type
   repeated MasterEventAttribute attributes = 101; // array
   repeated MasterEventCharacter characters = 102; // array
   repeated MasterEventStory stories = 103; // array
+  optional MasterEventAttributeAndCharacterBonus eventAttributeAndCharacterBonus = 104; // sub class
 }
 message uint_MasterStoryEvent {
   optional uint32 uint_MasterStoryEvent_key = 1; // normal type
@@ -2171,7 +2246,8 @@ message MasterChallengeEvent {
   repeated MasterEventStory stories = 103; // array
   repeated MasterEventMusic musics = 104; // array
   repeated MasterEventChallengeCost challengeCosts = 105; // array
-  repeated MasterEventCharacterParameterBonus eventCharacterParameterBonus = 106; // array
+  optional MasterEventCharacterParameterBonus eventCharacterParameterBonus = 106; // sub class
+  optional MasterEventAttributeAndCharacterBonus eventAttributeAndCharacterBonus = 107; // sub class
 }
 message uint_MasterChallengeEvent {
   optional uint32 uint_MasterChallengeEvent_key = 1; // normal type
@@ -2227,7 +2303,8 @@ message MasterVersusEvent {
   repeated MasterEventCharacter characters = 102; // array
   repeated MasterEventStory stories = 103; // array
   repeated MasterEventMusic musics = 104; // array
-  repeated MasterEventCharacterParameterBonus eventCharacterParameterBonus = 105; // array
+  optional MasterEventCharacterParameterBonus eventCharacterParameterBonus = 105; // sub class
+  optional MasterEventAttributeAndCharacterBonus eventAttributeAndCharacterBonus = 106; // sub class
 }
 message uint_MasterVersusEvent {
   optional uint32 uint_MasterVersusEvent_key = 1; // normal type
@@ -2354,6 +2431,7 @@ message MasterLiveTryEvent {
   optional MasterLiveTryMissionTypeSequenceMap masterLiveTryMissionTypeSequenceMap = 203; // sub class
   optional MasterLiveTryMissionRewardMap masterLiveTryMissionRewardMap = 204; // sub class
   optional MasterLiveTryLevelRewardDifficultyMap masterLiveTryLevelRewardDifficultyMap = 205; // sub class
+  optional MasterEventAttributeAndCharacterBonus eventAttributeAndCharacterBonus = 206; // sub class
 }
 message uint_MasterLiveTryEvent {
   optional uint32 uint_MasterLiveTryEvent_key = 1; // normal type
@@ -2382,6 +2460,7 @@ message MasterMissionLiveEvent {
   repeated MasterEventAttribute attributes = 2; // array
   repeated MasterEventCharacter characters = 3; // array
   repeated MasterEventStory stories = 4; // array
+  optional MasterEventAttributeAndCharacterBonus eventAttributeAndCharacterBonus = 5; // sub class
 }
 message uint_MasterMissionLiveEvent {
   optional uint32 uint_MasterMissionLiveEvent_key = 1; // normal type
@@ -2531,6 +2610,7 @@ message MasterGraphicalInformationList {
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
   optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
+  optional MasterMissionLabelMap masterMissionLabelMap = 310; // sub class
   optional MasterMusicListGetResponse masterMusicList = 1; // sub class
   optional MasterMusicDifficultyListGetResponse masterMusicDifficultyList = 2; // sub class
   optional MasterMultiLiveDifficultyMap masterMultiLiveDifficultyMap = 28; // sub class
