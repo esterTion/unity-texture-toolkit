@@ -31,7 +31,7 @@ $resourceToExport = [
     [ 'bundleNameMatch'=>'/^a\/storydata_spine_full_\d+.unity3d$/',      'customAssetProcessor'=> 'exportStoryStill' ],
   ],
   'spine'=>[
-    [ 'bundleNameMatch'=>'/^a\/spine_000000_chara_base\.cysp\.unity3d$/', 'customAssetProcessor'=> 'exportSpine' ],
+    [ 'bundleNameMatch'=>'/^a\/spine_[01]\d{5}_(chara_base|dear|no_weapon|posing|race|run_jump|smile)\.cysp\.unity3d$/', 'customAssetProcessor'=> 'exportSpine' ],
     [ 'bundleNameMatch'=>'/^a\/spine_\d\d_common_battle\.cysp\.unity3d$/', 'customAssetProcessor'=> 'exportSpine' ],
     [ 'bundleNameMatch'=>'/^a\/spine_1\d\d\d01_battle\.cysp\.unity3d$/',   'customAssetProcessor'=> 'exportSpine' ],
     [ 'bundleNameMatch'=>'/^a\/spine_sdnormal_1\d{5}\.unity3d$/',        'customAssetProcessor'=> 'exportAtlas' ],
@@ -56,8 +56,9 @@ function exportSpine($asset, $remoteTime) {
       $item = new TextAsset($item, true);
 
       // base chara skeleton
-      if ($item->name == '000000_CHARA_BASE.cysp') {
-        checkAndCreateFile(RESOURCE_PATH_PREFIX.'spine/common/000000_CHARA_BASE.cysp', $item->data, $remoteTime);
+      if (preg_match('/[01]\d{5}_(CHARA_BASE|DEAR|NO_WEAPON|POSING|RACE|RUN_JUMP|SMILE)\.cysp/', $item->name)) {
+        echo $item->name."\n";
+        checkAndCreateFile(RESOURCE_PATH_PREFIX.'spine/common/'.$item->name, $item->data, $remoteTime);
       }
       // class type animation
       else if (preg_match('/\d\d_COMMON_BATTLE\.cysp/', $item->name)) {
