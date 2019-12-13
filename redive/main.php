@@ -538,6 +538,7 @@ foreach (execQuery($db, 'SELECT unit_id,motion_type,unit_name FROM unit_data WHE
 foreach (execQuery($db, 'SELECT unit_id FROM unit_rarity WHERE rarity=6') as $row) {
   $info[$row['unit_id']]['hasRarity6'] = true;
 }
+$info['107001']['hasSpecialBase'] = true;
 file_put_contents(RESOURCE_PATH_PREFIX.'spine/classMap.json', json_encode($info));
 
 unset($name);

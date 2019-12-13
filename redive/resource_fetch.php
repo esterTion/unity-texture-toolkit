@@ -31,7 +31,7 @@ $resourceToExport = [
     [ 'bundleNameMatch'=>'/^a\/storydata_spine_full_\d+.unity3d$/',      'customAssetProcessor'=> 'exportStoryStill' ],
   ],
   'spine'=>[
-    [ 'bundleNameMatch'=>'/^a\/spine_[01]\d{5}_(chara_base|dear|no_weapon|posing|race|run_jump|smile)\.cysp\.unity3d$/', 'customAssetProcessor'=> 'exportSpine' ],
+    [ 'bundleNameMatch'=>'/^a\/spine_[01]\d{5}_(chara_base|dear|no_weapon|posing|race|run_jump|smile|common_battle)\.cysp\.unity3d$/', 'customAssetProcessor'=> 'exportSpine' ],
     [ 'bundleNameMatch'=>'/^a\/spine_\d\d_common_battle\.cysp\.unity3d$/', 'customAssetProcessor'=> 'exportSpine' ],
     [ 'bundleNameMatch'=>'/^a\/spine_1\d\d\d01_battle\.cysp\.unity3d$/',   'customAssetProcessor'=> 'exportSpine' ],
     [ 'bundleNameMatch'=>'/^a\/spine_sdnormal_1\d{5}\.unity3d$/',        'customAssetProcessor'=> 'exportAtlas' ],
