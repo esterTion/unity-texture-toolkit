@@ -39,6 +39,23 @@ message uint_MasterMissionLabel {
 message MasterMissionLabelMap {
   repeated uint_MasterMissionLabel entries = 1; // dictionary
 }
+message MasterMissionGroup {
+  optional uint32 missionGroupId = 1; // normal type
+  optional string missionTabType = 2; // normal type
+  optional string missionResetType = 3; // normal type
+  optional string assetBundleName = 4; // normal type
+  optional string url = 5; // normal type
+  optional uint64 startAt = 6; // normal type
+  optional uint64 endAt = 7; // normal type
+  optional uint64 rewardEndAt = 8; // normal type
+}
+message uint_MasterMissionGroup {
+  optional uint32 uint_MasterMissionGroup_key = 1; // normal type
+  optional MasterMissionGroup uint_MasterMissionGroup_value = 2; // sub class
+}
+message MasterMissionGroupMap {
+  repeated uint_MasterMissionGroup entries = 1; // dictionary
+}
 message MasterMusicAchievement {
   optional uint32 musicId = 1; // normal type
   optional string achievementType = 2; // normal type
@@ -1046,6 +1063,7 @@ message MasterMission {
   optional string characterAttribute = 13; // normal type
   repeated uint32 areaItemCategoryIds = 14; // array
   optional string resetType = 15; // normal type
+  optional uint32 missionGroupId = 16; // normal type
 }
 message uint_MasterMission {
   optional uint32 uint_MasterMission_key = 1; // normal type
@@ -2611,6 +2629,7 @@ message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
   optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
   optional MasterMissionLabelMap masterMissionLabelMap = 310; // sub class
+  optional MasterMissionGroupMap masterMissionGroupMap = 315; // sub class
   optional MasterMusicListGetResponse masterMusicList = 1; // sub class
   optional MasterMusicDifficultyListGetResponse masterMusicDifficultyList = 2; // sub class
   optional MasterMultiLiveDifficultyMap masterMultiLiveDifficultyMap = 28; // sub class
