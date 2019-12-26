@@ -29,6 +29,7 @@ $resourceToExport = [
     [ 'bundleNameMatch'=>'/^a\/storydata_still_\d+.unity3d$/',      'nameMatch'=>'/^still_(\d+)$/i',      'exportTo'=>'card/story/$1', 'extraParamCb'=>function(&$item){return ($item->width!=$item->height)?'-s '.$item->width.'x'.($item->width/16*9):'';} ],
     [ 'bundleNameMatch'=>'/^a\/storydata_\d+.unity3d$/',      'customAssetProcessor'=> 'exportStory' ],
     [ 'bundleNameMatch'=>'/^a\/storydata_spine_full_\d+.unity3d$/',      'customAssetProcessor'=> 'exportStoryStill' ],
+    [ 'bundleNameMatch'=>'/^a\/storydata_movie_\d+.unity3d$/',      'customAssetProcessor'=> 'exportSubtitle' ],
   ],
   'spine'=>[
     [ 'bundleNameMatch'=>'/^a\/spine_[01]\d{5}_(chara_base|dear|no_weapon|posing|race|run_jump|smile|common_battle)\.cysp\.unity3d$/', 'customAssetProcessor'=> 'exportSpine' ],
@@ -84,6 +85,31 @@ function exportAtlas($asset, $remoteTime) {
       touch($saveTo.'.png', $remoteTime);
     }
   }
+}
+function exportSubtitle($asset, $remoteTime) {
+  foreach ($asset->preloadTable as $item) {
+    if ($item->typeString == 'MonoBehaviour') {
+      $stream = $asset->stream;
+      $stream->position = $item->offset;
+      if (isset($asset->ClassStructures[$item->type1])) {
+        $deserializedStruct = ClassStructHelper::DeserializeStruct($stream, $asset->ClassStructures[$item->type1]['members']);
+        $organizedStruct = ClassStructHelper::OrganizeStruct($deserializedStruct);
+        $vttblocks = ['WEBVTT'];
+        foreach ($organizedStruct['recordList'] as $cue) {
+          $vttblocks[] = vtttime($cue['data']['startTime'])." --> ".vtttime($cue['data']['endTime'])."\n".$cue['data']['text'];
+        }
+        checkAndCreateFile(RESOURCE_PATH_PREFIX.'movie/vtts/'.substr($organizedStruct['m_Name'], 6).'.vtt', implode("\n\n", $vttblocks), $remoteTime);
+      }
+    }
+  }
+}
+function vtttime($time) {
+  $h = str_pad(floor($time / 3600), 2, '0', STR_PAD_LEFT);
+  $time -= $h * 3600;
+  $m = str_pad(floor($time / 60), 2, '0', STR_PAD_LEFT);
+  $time -= $m * 60;
+  $s = str_pad(number_format($time, 3), 6, '0', STR_PAD_LEFT);
+  return implode(':', [$h, $m, $s]);
 }
 
 function exportStory($asset, $remoteTime) {
