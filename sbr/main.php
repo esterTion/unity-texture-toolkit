@@ -4,7 +4,7 @@
 
 chdir(__DIR__);
 require_once 'UnityBundle.php';
-//require_once 'resource_fetch.php';
+require_once 'resource_fetch.php';
 if (!file_exists('last_version')) {
   $last_version = [];
 } else {
@@ -259,16 +259,6 @@ function main () {
     return true;
 }
 
-function GeneratePBKDF2Key($password, $salt) {
-    return hash_pbkdf2('SHA1', $password, $salt, 1024, 32+16, true);
-}
-function getAssetUrl(string $path) {
-    $path = explode('/', trim($path, '/'));
-    $path = array_map(function ($i) {
-        return xxhash64($i, 0x33DC7CB65408BDF, true);
-    }, $path);
-    return implode('/', $path);
-}
 function asset() {
     global $last_version;
     $curl = curl_init();
@@ -279,7 +269,7 @@ function asset() {
         CURLOPT_SSL_VERIFYPEER=>false
     ]);
     
-    curl_setopt($curl, CURLOPT_URL, 'https://prod-dlc-cache.showbyrock-fes.com/asset/'.getAssetUrl('ios/filelist'));
+    curl_setopt($curl, CURLOPT_URL, 'https://prod-dlc-cache.showbyrock-fes.com/asset/'.getAssetUrl('ios//filelist'));
     $assets_infos_enc = curl_exec($curl);
     $hash = hash('sha1', $assets_infos_enc);
     if (!empty($last_version['asset_infos']) && $last_version['asset_infos'] == $hash) {
@@ -308,9 +298,79 @@ function asset() {
         ];
     }
     ksort($assets);
+    $assetInfosJson = json_encode($assets, JSON_UNESCAPED_UNICODE + JSON_UNESCAPED_SLASHES);
+
+    try {
+      curl_setopt($curl, CURLOPT_URL, 'https://prod-dlc-cache.showbyrock-fes.com/asset/'.getAssetUrl('ios//ios'));
+      $assets_manifest_enc = curl_exec($curl);
+      if (xxhash64($assets_manifest_enc, SBR_HASH_SEED) != dechex($assets[getAssetUrl('ios')]['hash'])) {
+        throw new Exception('manfiest asset hash mismatch');
+      }
+      $assets_manifest_dec = decryptAsset_SBR($assets_manifest_enc);
+      $assets_manifest = extractBundle(new MemoryStream($assets_manifest_dec));
+      $asset = new AssetFile($assets_manifest[0]);
+      $item = $asset->preloadTable[2];
+      $asset->stream->position = $item->offset;
+      $data = $asset->stream->readData($item->size);
+      
+      $s = new MemoryStream($data);
+      $s->littleEndian = true;
+      $name = $s->readAlignedString($s->long);
+      $c = $s->long;
+      $assetManifest = [];
+      $assetManifest['name'] = [];
+      $hashParts = [];
+      $replaceParts = [[], []];
+      foreach (['ios', 'cri/sound/livese', 'cri/sound/music', 'cri/sound/commonbgm', 'cri/sound/advbgm', 'cri/sound/commonse', 'cri/sound/advvoice', 'cri/sound/skillvoice', 'cri/sound/partnervoice', 'cri/sound/gamevoice', 'cri/sound/generalvoice', 'cri/sound/gachavoice', 'cri/sound/systemvoice', 'cri/movie', 'cri/titlemovie', 'commonse'] as $pathPart) {
+        $hashParts[$pathPart] = xxhash64($pathPart, SBR_HASH_SEED, true);
+        $replaceParts[0][] = $hashParts[$pathPart];
+        $replaceParts[1][] = $pathPart;
+      }
+      for ($i=0; $i<$c; $i++) {
+          $a = $s->long;
+          $b = $s->readAlignedString($s->long);
+          $assetManifest['name'][$a] = $b;
+          foreach (explode('/', $b) as $pathPart) {
+            if (!isset($hashParts[$pathPart])) {
+              $hashParts[$pathPart] = xxhash64($pathPart, SBR_HASH_SEED, true);
+              $replaceParts[0][] = $hashParts[$pathPart];
+              $replaceParts[1][] = $pathPart;
+            }
+          }
+      }
+      $assetManifest['variant'] = [];
+      $c = $s->long;
+      for ($i=0; $i<$c; $i++) {
+          $assetManifest['variant'][] = $s->long;
+      }
+      $assetManifest['info'] = [];
+      $c = $s->long;
+      for ($i=0; $i<$c; $i++) {
+          $a = $s->long;
+          $hash = bin2hex($s->readData(16));
+          $dep_c = $s->long;
+          $dep = [];
+          for ($j=0; $j<$dep_c; $j++) {
+              $dep[] = $s->long;
+          }
+          $assetManifest['info'][$a] = [
+              'hash' => $hash,
+              'dependencies' => $dep,
+          ];
+      }
+      file_put_contents('data/asset_manifest.json', json_encode($assetManifest, JSON_UNESCAPED_SLASHES + JSON_PRETTY_PRINT));
+      $assetInfosJson = str_replace($replaceParts[0], $replaceParts[1], $assetInfosJson);
+      $assets = json_decode($assetInfosJson, true);
+      $assetInfosJson = json_encode($assets, JSON_UNESCAPED_UNICODE + JSON_UNESCAPED_SLASHES);
+      unset($asset);
+      array_map('unlink', $assets_manifest);
+    } catch (Exception $e) {
+      _log('dl manifest failed '. $e->getMessage());
+    }
+
     fclose(fopen("data/asset_infos.json", 'w'));
     $out = new FileStream("data/asset_infos.json");
-    prettifyJSON(json_encode($assets, JSON_UNESCAPED_UNICODE + JSON_UNESCAPED_SLASHES), $out, false);
+    prettifyJSON($assetInfosJson, $out, false);
     $last_version['asset_infos'] = $hash;
     file_put_contents('last_version', json_encode($last_version));
     file_put_contents('data/!version.json', json_encode($last_version, JSON_PRETTY_PRINT));
