@@ -256,6 +256,24 @@ function main () {
     }
     file_put_contents('last_version', json_encode($last_version));
     file_put_contents('data/!version.json', json_encode($last_version, JSON_PRETTY_PRINT));
+
+    $myumon_basics = json_decode(file_get_contents('data/myumon_basics.json'), true);
+    $myumons = json_decode(file_get_contents('data/myumons.json'), true);
+    $myumon_name = [];
+    foreach ($myumon_basics as $i) {
+      $myumon_name[$i['id']] = $i['name'];
+    }
+    $card_name = [];
+    $model_name = [];
+    foreach ($myumons as $i) {
+      $card_name[$i['id']] = $i['name'].$myumon_name[$i['myumon_basic_id']];
+      if (!isset($model_name[$i['asset_id']])) {
+        $model_name[$i['asset_id']] = $card_name[$i['id']];
+      }
+    }
+    file_put_contents(RESOURCE_PATH_PREFIX.'card/index.json', json_encode($card_name));
+    file_put_contents(RESOURCE_PATH_PREFIX.'spine/index.json', json_encode($model_name));
+
     return true;
 }
 
@@ -379,12 +397,13 @@ function asset() {
 $dbUpdate = main();
 $assetUpdate = asset();
 if ($dbUpdate || $assetUpdate) {
+    $d = date_create(null, new DateTimeZone('Asia/Tokyo'));
     chdir('data');
     exec('git add .');
-    exec('git commit -m update');
+    exec('git commit -m "'.$d->format('Y/m/d H:i').'"');
     exec('git push origin master');
     chdir(__DIR__);
 }
 if ($assetUpdate) {
-    // checkAndUpdateResource();
+    checkAndUpdateResource();
 }
