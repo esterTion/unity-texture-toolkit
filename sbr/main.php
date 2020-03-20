@@ -89,9 +89,8 @@ function prettifyJSON($in, Stream $out = NULL, $returnData = true) {
 function main () {
     global $last_version;
 
-    /*
-    $appver = file_exists('appver') ? file_get_contents('appver') : '2.1.0';
-    $itunesid = 1195834442;
+    $appver = file_exists('appver') ? file_get_contents('appver') : '1.1.0';
+    $itunesid = 1485202694;
     $curl = curl_init();
     curl_setopt_array($curl, array(
         CURLOPT_URL=>'https://itunes.apple.com/lookup?id='.$itunesid.'&lang=ja_jp&country=jp&rnd='.rand(10000000,99999999),
@@ -135,7 +134,6 @@ function main () {
         }
       }
     }
-    */
 
     $curl = curl_init();
     $headers = [
@@ -398,9 +396,13 @@ $dbUpdate = main();
 $assetUpdate = asset();
 if ($dbUpdate || $assetUpdate) {
     $d = date_create(null, new DateTimeZone('Asia/Tokyo'));
+    $msg = [];
+    if ($dbUpdate) $msg[] = 'db';
+    if ($assetUpdate) $msg[] = 'asset';
+    $msg = $d->format('Y/m/d H:i').' '.implode(' & ', $msg);
     chdir('data');
     exec('git add .');
-    exec('git commit -m "'.$d->format('Y/m/d H:i').'"');
+    exec('git commit -m "'.$msg.'"');
     exec('git push origin master');
     chdir(__DIR__);
 }
