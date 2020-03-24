@@ -110,7 +110,7 @@ function main () {
           file_put_contents('appver', $appver);
           _log('new game version: '. $appver);
           $data = json_encode(array(
-            'game'=>'bangdream',
+            'game'=>'sbr',
             'ver'=>$appver,
             'link'=>'https://itunes.apple.com/jp/app/id'.$itunesid,
             'desc'=>$appinfo['results'][0]['releaseNotes']
@@ -216,7 +216,6 @@ function main () {
         }
         $updated_tables[$name] = $version;
     }
-    print_r($updated_tables);
 
     if (empty($updated_tables)) {
         _log('no update found');
@@ -408,4 +407,25 @@ if ($dbUpdate || $assetUpdate) {
 }
 if ($assetUpdate) {
     checkAndUpdateResource();
+    $spineAssets = glob(RESOURCE_PATH_PREFIX.'spine/model/humanmodel*.skel');
+    $model_name = json_decode(file_get_contents(RESOURCE_PATH_PREFIX.'spine/index.json'), true);
+    $model_name_update = false;
+    $extra_model_name = [
+      501 => '[現実世界]シアン',
+      10100 => '[クリティクリスタ]ロージア',
+      10200 => '[クリティクリスタ]ツキノ',
+      10300 => '[クリティクリスタ]ホルミー',
+      10400 => '[クリティクリスタ]ジャクリン',
+      99100 => 'ラメカ・パシャリコワ',
+    ];
+    foreach ($spineAssets as $i) {
+      $id = intval(substr(pathinfo($i, PATHINFO_FILENAME), 10));
+      if (!isset($model_name[$id])) {
+        $model_name_update = true;
+        $model_name[$id] = isset($extra_model_name[$id]) ? $extra_model_name[$id] : $id;
+      }
+    }
+    if ($model_name_update) {
+      file_put_contents(RESOURCE_PATH_PREFIX.'spine/index.json', json_encode($model_name));
+    }
 }
