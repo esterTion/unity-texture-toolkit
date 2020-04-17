@@ -431,7 +431,8 @@ function checkMovieResource($manifest, $rules) {
         _log('reencoding to avc');
         rename('out.mp4', 'out_ori.mp4');
         exec('ffmpeg -hide_banner -loglevel quiet -y -i out_ori.mp4 -c copy -c:v h264 -crf 20 -movflags faststart out.mp4', $nullptr);
-        checkAndMoveFile('out_ori.mp4', $saveTo.'_ori.mp4', $remoteTime);
+        //checkAndMoveFile('out_ori.mp4', $saveTo.'_ori.mp4', $remoteTime);
+        unlink('out_ori.mp4');
       }
 
       checkAndMoveFile('out.mp4', $saveToFull, $remoteTime);
@@ -497,21 +498,17 @@ function checkAndUpdateResource($TruthVersion) {
 
   // sound res check
   do {
-    $name = "manifest/soundmanifest";
-    if (isset($manifest[$name]) && shouldUpdate($name, $manifest[$name]['hash'])) {
-      curl_setopt_array($curl, array(
-        CURLOPT_URL=>'http://prd-priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Sound/manifest/sound2manifest',
-      ));
-      $submanifest = curl_exec($curl);
-      $submanifest = parseManifest($submanifest);
-      checkSoundResource($submanifest, $resourceToExport['sound']);
-      setHashCached($name, $manifest[$name]['hash']);
-    }
+    curl_setopt_array($curl, array(
+      CURLOPT_URL=>'http://prd-priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Sound/manifest/sound2manifest',
+    ));
+    $submanifest = curl_exec($curl);
+    $submanifest = parseManifest($submanifest);
+    checkSoundResource($submanifest, $resourceToExport['sound']);
   } while(0);
 
   // movie res check
   do {
-    $name = "manifest/movie2manifest";
+    $name = "manifest/moviemanifest";
     curl_setopt_array($curl, array(
       CURLOPT_URL=>'http://prd-priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Movie/SP/High/'.$name,
     ));
