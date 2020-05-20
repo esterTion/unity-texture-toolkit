@@ -72,7 +72,9 @@ function checkAndUpdateResource($dataVer) {
     
         foreach ($asset->preloadTable as &$item) {
           if ($item->typeString == 'Texture2D') {
-            $item = new Texture2D($item, true);
+            try {
+              $item = new Texture2D($item, true);
+            } catch (Exception $e) { continue; }
             $itemname = $item->name;
             if (isset($rule['namePrefix'])) {
               $itemname = preg_replace($rule['bundleNameMatch'], $rule['namePrefix'], $name).$itemname;
@@ -85,7 +87,7 @@ function checkAndUpdateResource($dataVer) {
               $saveTo = RESOURCE_PATH_PREFIX. preg_replace($rule['nameMatch'], $rule['exportTo'], $itemname);
               $param = '-lossless 1';
               if (isset($rule['extraParam'])) $param .= ' '.$rule['extraParam'];
-              if (isset($rule['extraParamCb'])) $param .= ' '.call_user_func($rule['extraParamCb'], $item);
+              if (isset($rule['extraParamCb'])) @$param .= ' '.call_user_func($rule['extraParamCb'], $item);
               $item->exportTo($saveTo, 'webp', $param);
               if (filemtime($saveTo. '.webp') > $currenttime)
               touch($saveTo. '.webp', $currenttime);
@@ -119,7 +121,8 @@ if (defined('TEST_SUITE') && TEST_SUITE == __FILE__) {
   $curl = curl_init();
   function _log($s) {echo "$s\n";}
   var_dump(trim(file_get_contents('data/!dataVersion.txt')));
-  checkAndUpdateResource(trim(file_get_contents('data/!dataVersion.txt')));
+  $verHash = trim(file_get_contents('version_hash.txt'));
+  checkAndUpdateResource(trim(file_get_contents('data/!dataVersion.txt')).'_'.$verHash);
   /*$asset = new AssetFile('CAB-4856cccde53d6f3bfd0054253f1639a8');
   foreach ($asset->preloadTable as &$item) {
     if ($item->typeString == 'Texture2D') {

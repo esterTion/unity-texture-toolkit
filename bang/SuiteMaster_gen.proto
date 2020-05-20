@@ -2705,6 +2705,32 @@ message MasterGraphicalInformation {
 message MasterGraphicalInformationList {
   repeated MasterGraphicalInformation entries = 1; // list
 }
+message MasterDailyLiveReward {
+  optional uint32 id = 1; // normal type
+  optional string resourceType = 2; // normal type
+  optional uint32 resourceId = 3; // normal type
+  optional uint32 quantity = 4; // normal type
+  optional uint32 clearLiveNum = 5; // normal type
+  optional string rewardType = 6; // normal type
+}
+message MasterDailyLiveRewardList {
+  repeated MasterDailyLiveReward entries = 1; // list
+}
+message MasterEventMovie {
+  optional uint32 eventId = 1; // normal type
+  optional string type = 2; // normal type
+  optional string assetBundleName = 3; // normal type
+}
+message MasterEventMovieList {
+  repeated MasterEventMovie entries = 1; // list
+}
+message MasterDailyLive {
+  optional uint32 id = 1; // normal type
+  optional uint32 clearLiveNum = 2; // normal type
+}
+message MasterDailyLiveList {
+  repeated MasterDailyLive entries = 1; // list
+}
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
   optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
@@ -2847,4 +2873,7 @@ message SuiteMasterGetResponse {
   optional MasterSubscriptionDetailList masterSubscriptionDetailList = 306; // sub class
   optional MasterGraphicalInformationList masterGraphicalInformationList = 308; // sub class
   optional MasterBandStoryMap masterMorfonicaStoryMap = 401; // sub class
+  optional MasterDailyLiveRewardList masterDailyLiveRewardList = 405; // sub class
+  optional MasterEventMovieList masterEventMovieList = 406; // sub class
+  optional MasterDailyLiveList masterDailyLiveList = 409; // sub class
 }

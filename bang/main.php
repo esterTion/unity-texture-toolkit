@@ -304,6 +304,7 @@ file_put_contents('master.dat', decrypt(curl_exec($curl), 'mikumikulukaluka', 'l
 $masterData = new FileStream('master.dat');
 //$masterData = new FileStream('master');
 
+ini_set("memory_limit",256 *1024*1024);
 $MasterProto = parseProto('SuiteMaster_gen.proto');
 $master = parseProtoBuf('SuiteMasterGetResponse', $masterData->size, $masterData, $MasterProto);
 processDict($master);
@@ -318,7 +319,6 @@ chdir(__DIR__);
 foreach (glob('data/*.json') as $file) {$file!='data/AssetBundleInfo.json'&&unlink($file);}
 
 $i = 0;
-ini_set("memory_limit",256 *1024*1024);
 foreach ($master as $part=>&$data) {
   //echo (++$i)."/$count $part\n";
   $json = json_encode($data, JSON_UNESCAPED_SLASHES+JSON_UNESCAPED_UNICODE);
@@ -343,6 +343,8 @@ $last_version['master'] = $masterVer;
 
 if ($dataVer != $last_version['data']) {
 
+$verHash = trim(file_get_contents('version_hash.txt'));
+
 _log('downloading manifest');
 $header = [
   'User-Agent: band/0 CFNetwork/758.4.3 Darwin/15.5.0',
@@ -350,10 +352,13 @@ $header = [
   'X-Unity-Version: 5.4.1f1'
 ];
 curl_setopt_array($curl, array(
-  CURLOPT_URL => 'https://d2ktlshvcuasnf.cloudfront.net/Release/'.$dataVer.'/iOS/AssetBundleInfo',
+  CURLOPT_URL => 'https://d2ktlshvcuasnf.cloudfront.net/Release/'.$dataVer.'_'.$verHash.'/iOS/AssetBundleInfo',
   CURLOPT_HTTPHEADER=>$header
 ));
 file_put_contents('manifest.dat', curl_exec($curl));
+$code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
+if ($code == 200) {
+
 $bundleInfoData = new FileStream('manifest.dat');
 $bundleInfoProto = parseProto('AssetBundleInfo_gen.proto');
 _log('dumping manifest');
@@ -371,6 +376,8 @@ $dataUpdated = true;
 
 }
 
+}
+
 if (!empty($commit)) {
   chdir('data');
   exec('git add *.json !dataVersion.txt !masterDataVersion.txt');
@@ -382,5 +389,5 @@ chdir(__DIR__);
 file_put_contents('last_version', json_encode($last_version));
 
 if (isset($dataUpdated)) {
-  checkAndUpdateResource($dataVer);
+  checkAndUpdateResource($dataVer.'_'.$verHash);
 }
