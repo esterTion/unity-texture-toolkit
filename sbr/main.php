@@ -35,6 +35,7 @@ function prettifyJSON($in, Stream $out = NULL, $returnData = true) {
         $skipNext = false;
         while (1) {
           $char = $in->readData(1);
+          if ($char === '') throw new Exception('JSON Prettfier: Unexpected EOF');
           $out->write($char);
           $offset++;
           if ($skipNext) $skipNext = false;
@@ -201,7 +202,6 @@ function main () {
     $response = msgpack_unpack(curl_exec($curl));
     //$response = msgpack_unpack(file_get_contents("masterdata-tables.dat"));
     $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-    print_r($response);
     
     if (empty($response['body']['table_versions'])) {
         _log("get masterdata failed $code");
@@ -242,7 +242,7 @@ function main () {
     
         $response = msgpack_unpack(curl_exec($curl));
         $code = curl_getinfo($curl, CURLINFO_HTTP_CODE);
-        if (empty($response['body']['records'])) {
+        if (!isset($response['body']['records'])) {
             _log("download $name failed $code");
             continue;
         }
@@ -286,8 +286,8 @@ function asset() {
     
     curl_setopt($curl, CURLOPT_URL, 'https://prod-dlc-cache.showbyrock-fes.com/asset/'.getAssetUrl('ios/filelist'));
     $assets_infos_enc = curl_exec($curl);
-    $hash = hash('sha1', $assets_infos_enc);
-    if (!empty($last_version['asset_infos']) && $last_version['asset_infos'] == $hash) {
+    $info_hash = hash('sha1', $assets_infos_enc);
+    if (!empty($last_version['asset_infos']) && $last_version['asset_infos'] == $info_hash) {
         return false;
     }
     _log('new asset versions');
@@ -318,8 +318,10 @@ function asset() {
     try {
       curl_setopt($curl, CURLOPT_URL, 'https://prod-dlc-cache.showbyrock-fes.com/asset/'.getAssetUrl('ios/ios'));
       $assets_manifest_enc = curl_exec($curl);
-      if (xxhash64($assets_manifest_enc, SBR_HASH_SEED) != dechex($assets[getAssetUrl('ios')]['hash'])) {
-        throw new Exception('manfiest asset hash mismatch');
+      $gotHash = xxhash64($assets_manifest_enc, SBR_HASH_SEED);
+      $expectedHash = str_pad(dechex($assets[getAssetUrl('ios')]['hash']), 16, '0', STR_PAD_LEFT);
+      if ($gotHash != $expectedHash) {
+        throw new Exception("manfiest asset hash mismatch, expected $expectedHash got $gotHash");
       }
       $assets_manifest_dec = decryptAsset_SBR($assets_manifest_enc);
       $assets_manifest = extractBundle(new MemoryStream($assets_manifest_dec));
@@ -381,14 +383,16 @@ function asset() {
       array_map('unlink', $assets_manifest);
     } catch (Exception $e) {
       _log('dl manifest failed '. $e->getMessage());
+      return false;
     }
 
     fclose(fopen("data/asset_infos.json", 'w'));
     $out = new FileStream("data/asset_infos.json");
     prettifyJSON($assetInfosJson, $out, false);
-    $last_version['asset_infos'] = $hash;
+    $last_version['asset_infos'] = $info_hash;
     file_put_contents('last_version', json_encode($last_version));
     file_put_contents('data/!version.json', json_encode($last_version, JSON_PRETTY_PRINT));
+    return true;
 }
 
 $dbUpdate = main();
