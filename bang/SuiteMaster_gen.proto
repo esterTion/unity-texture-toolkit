@@ -274,6 +274,7 @@ message MasterCharacterInfo {
   optional uint32 bandId = 9; // normal type
   optional string sdAssetBundleName = 10; // normal type
   optional uint32 defaultCostumeId = 11; // normal type
+  optional string nickname = 15; // normal type
 }
 message uint_MasterCharacterInfo {
   optional uint32 uint_MasterCharacterInfo_key = 1; // normal type
@@ -837,6 +838,8 @@ message MasterAreaItemSpawn {
   optional string spawnName = 2; // normal type
   optional uint32 seq = 3; // normal type
   optional uint32 areaId = 4; // normal type
+  optional string inject = 5; // normal type
+  optional bool showUnsetObjectFlg = 6; // normal type
 }
 message string_MasterAreaItemSpawn {
   optional string string_MasterAreaItemSpawn_key = 1; // normal type
@@ -951,11 +954,21 @@ message MasterLoginBonusDetail {
   optional uint32 seq = 7; // normal type
   optional string grantType = 8; // normal type
 }
+message MasterLoginBonusAssetLive2D {
+  optional uint32 characterId = 1; // normal type
+  optional string costumeBundleName = 2; // normal type
+  optional string serif = 3; // normal type
+  optional string voiceBundleName = 4; // normal type
+  optional string voice = 5; // normal type
+  optional string motion = 6; // normal type
+  optional string expression = 7; // normal type
+}
 message MasterLoginBonusAsset {
   optional uint32 loginBonusId = 1; // normal type
   optional uint32 days = 2; // normal type
   optional string resourceName = 3; // normal type
   optional string voiceId = 4; // normal type
+  optional MasterLoginBonusAssetLive2D live2d = 5; // sub class
 }
 message uint_MasterLoginBonusAsset {
   optional uint32 uint_MasterLoginBonusAsset_key = 1; // normal type
@@ -973,6 +986,7 @@ message MasterLoginBonus {
   optional uint64 closedAt = 6; // normal type
   repeated MasterLoginBonusDetail details = 7; // array
   optional MasterLoginBonusAssetMap assetMap = 8; // sub class
+  optional uint32 itemThumbnailOffset = 9; // normal type
 }
 message uint_MasterLoginBonus {
   optional uint32 uint_MasterLoginBonus_key = 1; // normal type
@@ -1281,6 +1295,7 @@ message MasterSeasonSpecial {
   optional bool repeatFlg = 6; // normal type
   optional bool areaSpecialResourceFlg = 7; // normal type
   optional string actionSetType = 8; // normal type
+  optional uint32 missionGroupId = 9; // normal type
 }
 message uint_MasterSeasonSpecial {
   optional uint32 uint_MasterSeasonSpecial_key = 1; // normal type
@@ -2162,6 +2177,8 @@ message MasterDecoPins {
   optional uint32 decoPinsSize = 5; // normal type
   optional string assetBundleName = 6; // normal type
   optional string description = 7; // normal type
+  optional uint32 decoPinsTypeId = 8; // normal type
+  optional bool isCollaboration = 9; // normal type
 }
 message uint_MasterDecoPins {
   optional uint32 uint_MasterDecoPins_key = 1; // normal type
@@ -2272,6 +2289,8 @@ message MasterEventItem {
   optional string itemName = 3; // normal type
   optional string resourceName = 4; // normal type
   optional string description = 5; // normal type
+  optional string eventItemOverrideName = 6; // normal type
+  optional string assetBundleName = 7; // normal type
 }
 message uint_MasterEventItem {
   optional uint32 uint_MasterEventItem_key = 1; // normal type
@@ -2724,6 +2743,18 @@ message MasterEventMovie {
 message MasterEventMovieList {
   repeated MasterEventMovie entries = 1; // list
 }
+message MasterCollaboOriginalMusicPage {
+  optional uint32 collaboOriginalPageId = 1; // normal type
+  optional string assetBundleName = 2; // normal type
+  optional string ruleSlideBundleName = 3; // normal type
+  optional string url = 4; // normal type
+  repeated uint32 musicIdList = 5; // array
+  optional uint64 publishedAt = 6; // normal type
+  optional uint64 closedAt = 7; // normal type
+}
+message MasterCollaboOriginalMusicPageList {
+  repeated MasterCollaboOriginalMusicPage entries = 1; // array
+}
 message MasterDailyLive {
   optional uint32 id = 1; // normal type
   optional uint32 clearLiveNum = 2; // normal type
@@ -2875,5 +2906,7 @@ message SuiteMasterGetResponse {
   optional MasterBandStoryMap masterMorfonicaStoryMap = 401; // sub class
   optional MasterDailyLiveRewardList masterDailyLiveRewardList = 405; // sub class
   optional MasterEventMovieList masterEventMovieList = 406; // sub class
+  optional MasterCollaboOriginalMusicPageList masterCollaboOriginalMusicPageList = 408; // sub class
+  optional MasterBandStoryMap masterRaiseASuilenStoryMap = 402; // sub class
   optional MasterDailyLiveList masterDailyLiveList = 409; // sub class
 }
