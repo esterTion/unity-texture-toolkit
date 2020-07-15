@@ -43,7 +43,7 @@ $resourceToExport = [
     [ 'bundleNameMatch'=>'/^v\/vo_enavi_(\d+)\.acb$/', 'exportTo'=> 'sound/unit_common/$1' ],
     [ 'bundleNameMatch'=>'/^v\/t\/vo_adv_(\d+)\.acb$/', 'exportTo'=> 'sound/story_vo/$1' ],
     [ 'bundleNameMatch'=>'/^v\/vo_btl_(\d+)\.acb$/', 'exportTo'=> 'sound/unit_battle_voice/$1' ],
-    [ 'bundleNameMatch'=>'/^v\/vo_(ci|speciallogin|btg)_(\d+)\.acb$/', 'exportTo'=> 'sound/vo_$1/$2' ],
+    [ 'bundleNameMatch'=>'/^v\/vo_(ci|speciallogin|btg|title)_(\d+)\.acb$/', 'exportTo'=> 'sound/vo_$1/$2' ],
   ],
   'movie'=>[
     [ 'bundleNameMatch'=>'/^m\/(t\/)?(.+?)_(\d[\d_]*)\.usm$/', 'exportTo'=> 'movie/$2/$3' ],
