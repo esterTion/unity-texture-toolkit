@@ -300,7 +300,7 @@ curl_setopt_array($curl, array(
   CURLOPT_URL => 'https://api.star.craftegg.jp/api/suite/master',
   CURLOPT_HTTPHEADER=>$header
 ));
-file_put_contents('master.dat', decrypt(curl_exec($curl), 'mikumikulukaluka', 'lukalukamikumiku'));
+file_put_contents('master.dat', bzdecompress(decrypt(curl_exec($curl), 'mikumikulukaluka', 'lukalukamikumiku')));
 $masterData = new FileStream('master.dat');
 //$masterData = new FileStream('master');
 
