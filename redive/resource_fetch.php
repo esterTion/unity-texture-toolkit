@@ -218,6 +218,21 @@ function findRule($name, $rules) {
   return false;
 }
 
+$chkTextureHashStmt = $cacheHashDb->prepare('SELECT hash FROM textureHash WHERE res=?');
+function textureHasUpdated($name, Texture2D &$item) {
+  global $chkTextureHashStmt;
+  $hash = crc32($item->imageData);
+  $item->imageDataHash = $hash;
+  $chkTextureHashStmt->execute([$name]);
+  $row = $chkTextureHashStmt->fetch();
+  return !(!empty($row) && $row['hash'] == $hash);
+}
+$setTextureHashStmt = $cacheHashDb->prepare('REPLACE INTO textureHash (res,hash) VALUES (?,?)');
+function updateTextureHash($name, Texture2D &$item) {
+  global $setTextureHashStmt;
+  $setTextureHashStmt->execute([$name, $item->imageDataHash]);
+}
+
 define('RESOURCE_PATH_PREFIX', '/data/home/web/_redive/');
 
 function checkSubResource($manifest, $rules) {
@@ -230,6 +245,7 @@ function checkSubResource($manifest, $rules) {
       ));
       $bundleData = curl_exec($curl);
       $remoteTime = curl_getinfo($curl, CURLINFO_FILETIME);
+      $remoteTime = time();
       if (md5($bundleData) != $info['hash']) {
         _log('download failed  '.$name);
         continue;
@@ -257,7 +273,7 @@ function checkSubResource($manifest, $rules) {
             if (isset($rule['namePrefixCb'])) {
               $itemname = preg_replace_callback($rule['bundleNameMatch'], $rule['namePrefixCb'], $name).$itemname;
             }
-            if (shouldExportFile($itemname, $rule)) {
+            if (shouldExportFile($itemname, $rule) && textureHasUpdated("$name:$itemname", $item)) {
               $saveTo = RESOURCE_PATH_PREFIX. preg_replace($rule['nameMatch'], $rule['exportTo'], $itemname);
               $param = '-lossless 1';
               if (isset($rule['extraParam'])) $param .= ' '.$rule['extraParam'];
@@ -265,6 +281,7 @@ function checkSubResource($manifest, $rules) {
               $item->exportTo($saveTo, 'webp', $param);
               if (filemtime($saveTo. '.webp') > $remoteTime)
               touch($saveTo. '.webp', $remoteTime);
+              updateTextureHash("$name:$itemname", $item);
             }
             unset($item);
           }
@@ -301,6 +318,7 @@ function checkSoundResource($manifest, $rules) {
       ));
       $acbData = curl_exec($curl);
       $remoteTime = curl_getinfo($curl, CURLINFO_FILETIME);
+      $remoteTime = time();
       if (md5($acbData) != $info['hash']) {
         _log('download failed  '.$name);
         continue;
@@ -367,6 +385,7 @@ function checkMovieResource($manifest, $rules) {
       ));
       curl_exec($curl);
       $remoteTime = curl_getinfo($curl, CURLINFO_FILETIME);
+      $remoteTime = time();
       if (md5_file($usmFilePath) != $info['hash']) {
         _log('download failed  '.$name);
         unlink($usmFilePath);

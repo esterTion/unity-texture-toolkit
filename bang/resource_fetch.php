@@ -33,6 +33,21 @@ function findRule($name, $rules) {
   return false;
 }
 
+$chkTextureHashStmt = $cacheHashDb->prepare('SELECT hash FROM textureHash WHERE res=?');
+function textureHasUpdated($name, Texture2D &$item) {
+  global $chkTextureHashStmt;
+  $hash = crc32($item->imageData);
+  $item->imageDataHash = $hash;
+  $chkTextureHashStmt->execute([$name]);
+  $row = $chkTextureHashStmt->fetch();
+  return !(!empty($row) && $row['hash'] == $hash);
+}
+$setTextureHashStmt = $cacheHashDb->prepare('REPLACE INTO textureHash (res,hash) VALUES (?,?)');
+function updateTextureHash($name, Texture2D &$item) {
+  global $setTextureHashStmt;
+  $setTextureHashStmt->execute([$name, $item->imageDataHash]);
+}
+
 define('RESOURCE_PATH_PREFIX', '/data/home/web/_redive/bang/');
 //define('RESOURCE_PATH_PREFIX', 'D:/cygwin64/home/ester/quickcode/bang/img/');
 
@@ -83,7 +98,7 @@ function checkAndUpdateResource($dataVer) {
               var_dump($itemname);
               continue;
             }
-            if (shouldExportFile($itemname, $rule)) {
+            if (shouldExportFile($itemname, $rule) && textureHasUpdated("$name:$itemname", $item)) {
               $saveTo = RESOURCE_PATH_PREFIX. preg_replace($rule['nameMatch'], $rule['exportTo'], $itemname);
               $param = '-lossless 1';
               if (isset($rule['extraParam'])) $param .= ' '.$rule['extraParam'];
@@ -91,6 +106,7 @@ function checkAndUpdateResource($dataVer) {
               $item->exportTo($saveTo, 'webp', $param);
               if (filemtime($saveTo. '.webp') > $currenttime)
               touch($saveTo. '.webp', $currenttime);
+              updateTextureHash("$name:$itemname", $item);
             }
             unset($item);
           }
