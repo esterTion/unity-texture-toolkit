@@ -2178,6 +2178,7 @@ message MasterEventItem {
   optional string description = 5; // normal type
   optional string eventItemOverrideName = 6; // normal type
   optional string assetBundleName = 7; // normal type
+  optional string unitName = 8; // normal type
 }
 message uint_MasterEventItem {
   optional uint32 uint_MasterEventItem_key = 1; // normal type
@@ -2333,14 +2334,26 @@ message uint_MasterEventBoxGachaDetailList {
   optional uint32 uint_MasterEventBoxGachaDetailList_key = 1; // normal type
   optional MasterEventBoxGachaDetailList uint_MasterEventBoxGachaDetailList_value = 2; // sub class
 }
+message MasterEventBoxGachaLive2d {
+  optional uint32 live2dId = 1; // normal type
+  optional string costumeBundleName = 2; // normal type
+}
+message MasterEventBoxGachaLive2dThreshold {
+  optional string commonsLive2dCategory = 1; // normal type
+  optional uint32 threshold = 2; // normal type
+}
 message MasterEventBoxGacha {
   optional uint32 eventBoxGachaId = 1; // normal type
   optional uint32 eventId = 2; // normal type
   optional string name = 3; // normal type
-  optional string resourceName = 4; // normal type
   optional uint64 publishedAt = 5; // normal type
   optional uint64 closedAt = 6; // normal type
+  optional string rewardItemName = 7; // normal type
+  optional string rewardBgBundleName = 8; // normal type
+  optional string assetBundleName = 9; // normal type
   repeated uint_MasterEventBoxGachaDetailList detailsMap = 101; // dictionary
+  repeated MasterEventBoxGachaLive2d live2dList = 102; // list
+  repeated MasterEventBoxGachaLive2dThreshold thresholdList = 103; // list
 }
 message uint_MasterEventBoxGacha {
   optional uint32 uint_MasterEventBoxGacha_key = 1; // normal type
