@@ -121,6 +121,8 @@ function do_commit($TruthVersion, $db = NULL) {
           case 35:                            { return 'Motif Vocal'; }
           case 36:                            { return 'Motif Dance'; }
           case 37:                            { return 'Motif Visual'; }
+          case 38:                            { return 'Trico Symphony'; }
+          case 39:                            { return 'Alternate'; }
           default:                            { return 'Skill '.$a; }
         }
       })($a['skill_type']).
@@ -150,11 +152,11 @@ function do_commit($TruthVersion, $db = NULL) {
   exec('git commit -m "'.implode("\n", $commitMessage).'"');
   exec('git rev-parse HEAD', $hash);
   $versionDiff['hash'] = $hash[0];
-  require_once __DIR__.'/../mysql.php';
-  $mysqli->select_db('db_diff');
-  $mysqli->query('REPLACE INTO cgss (ver,should_rechk_date,data) vALUES ('.$TruthVersion.','.$rechk_date.',"'.$mysqli->real_escape_string(brotli_compress(
+  $diff_db = new PDO('sqlite:'.__DIR__.'/../db_diff.db');
+  $stmt = $diff_db->prepare('REPLACE INTO cgss (ver,should_rechk_date,data) VALUES (?,?,?)');
+  $stmt->execute([$TruthVersion, $rechk_date, brotli_compress(
     json_encode($versionDiff, JSON_UNESCAPED_SLASHES), 11, BROTLI_TEXT
-  )).'")');
+  )]);
   exec('git push origin master');
   
   $data = json_encode(array(

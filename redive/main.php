@@ -152,13 +152,12 @@ function do_commit($TruthVersion, $db = NULL, $extraMsg = '') {
   exec('git commit -m "'.implode("\n", $commitMessage).'"');
   exec('git rev-parse HEAD', $hash);
   $versionDiff['hash'] = $hash[0];
-  require_once __DIR__.'/../mysql.php';
-  $mysqli->select_db('db_diff');
+  $diff_db = new PDO('sqlite:'.__DIR__.'/../db_diff.db');
 
   $col = ['ver','data'];
-  $val = [$TruthVersion, '"'.$mysqli->real_escape_string(brotli_compress(
+  $val = [$TruthVersion, brotli_compress(
     json_encode($versionDiff, JSON_UNESCAPED_SLASHES), 11, BROTLI_TEXT
-  )).'"'];
+  )];
   $chkTypes = [
     'clan_battle',
     'dungeon_area',
@@ -176,7 +175,8 @@ function do_commit($TruthVersion, $db = NULL, $extraMsg = '') {
       $val[] = 1;
     }
   }
-  $mysqli->query('REPLACE INTO redive ('.implode(',', $col).') VALUES ('.implode(',', $val).')');
+  $stmt = $diff_db->prepare('REPLACE INTO redive ('.implode(',', $col).') VALUES ('.implode(',', array_map(function (){return '?';}, $val)).')');
+  $stmt->execute($val);
   exec('git push origin master');
   
   $data = json_encode(array(
@@ -422,7 +422,7 @@ foreach (explode("\n", trim($manifest)) as $line) {
     file_put_contents('data/+manifest_'.substr($manifestName, 9, -14).'.txt', $manifest);
   }
 }
-curl_setopt($curl, CURLOPT_URL, 'http://prd-priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Movie/SP/High/manifest/sound2manifest');
+curl_setopt($curl, CURLOPT_URL, 'http://prd-priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Sound/manifest/sound2manifest');
 $manifest = curl_exec($curl);
 file_put_contents('data/+manifest_sound.txt', $manifest);
 curl_setopt($curl, CURLOPT_URL, 'http://prd-priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Movie/SP/High/manifest/moviemanifest');
@@ -554,6 +554,8 @@ chdir('data');
 exec('git add *.sql !TruthVersion.txt +manifest_*.txt');
 do_commit($TruthVersion, $db);
 unset($db);
+
+if (file_exists(__DIR__.'/action_after_update.php')) require_once __DIR__.'/action_after_update.php';
 
 checkAndUpdateResource($TruthVersion);
 
