@@ -37,41 +37,32 @@ class AssetFile {
       $this->fileGen = $stream->long;
       $dataOffset = $stream->long;
 
-      switch ($this->fileGen) {
-        case 6:
-          $stream->position = $dataEnd - $tableSize + 1;
-          break;
-        case 7:
-          $stream->position = $dataEnd - $tableSize + 1;
-          $this->m_Version = $stream->string;
-          break;
-        case 8:
-          $stream->position = $dataEnd - $tableSize + 1;
-          $this->m_Version = $stream->string;
-          $this->platform = $stream->long;
-          break;
-        case 9:
-          $stream->position += 4;
-          $this->m_Version = $stream->string;
-          $this->platform = $stream->long;
-          break;
-        case 14:
-        case 15:
-        case 16:
-        case 17:
-          $stream->position += 4;
-          $this->m_Version = $stream->string;
-          $this->platform = $stream->long;
-          $this->baseDefinitions = $stream->readBoolean();
-          break;
-        default:
-          return;
+      if ($this->fileGen >= 9) {
+        $endian = $stream->byte;
+        $stream->readData(3);
+      } else {
+        $stream->position = $dataEnd - $tableSize;
+        $endian = $stream->byte;
       }
-
-      if ($this->platform > 255 || $this->platform < 0) {
-        $this->platform = unpack('V', pack('N', $this->platform))[1];
+      if ($this->fileGen >= 22) {
+        $tableSize = $stream->ulong;
+        $dataEnd = $stream->longlong;
+        $dataOffset = $stream->longlong;
+      }
+      if ($endian === "\0") {
         $stream->littleEndian = true;
       }
+
+      if ($this->fileGen >= 7) {
+        $this->m_Version = $stream->string;
+      }
+      if ($this->fileGen >= 8) {
+        $this->platform = $stream->long;
+      }
+      if ($this->fileGen >= 13) {
+        $this->baseDefinitions = $stream->byte === "\x01";
+      }
+
       switch ($this->platform) {
         case -2:  $this->platformStr = 'Unity Package'; break;
         case 4:   $this->platformStr = 'OSX'; break;
@@ -95,7 +86,7 @@ class AssetFile {
         if ($this->fileGen < 14) {
           throw new Exception('fileGen < 14');
         } else {
-          $this->readBase5();
+          $this->readSerializedType();
         }
       }
 
@@ -165,7 +156,7 @@ class AssetFile {
     } catch (Excepti4on $e) { }
   }
 
-  private function readBase5() {
+  private function readSerializedType() {
     $stream = $this->stream;
     $classID = $stream->long;
     if ($this->fileGen > 15) {
@@ -185,13 +176,17 @@ class AssetFile {
     }
     $stream->position += 16;
     if ($this->baseDefinitions) {
+      $nodeInfoSize = 24;
+      if ($this->fileGen >= 19) {
+        $nodeInfoSize += 8;
+      }
       $varCount = $stream->long;
       $stringSize = $stream->long;
-      $stream->position += $varCount * 24;
+      $stream->position += $varCount * $nodeInfoSize;
       $stringReader = new MemoryStream($stringSize?$stream->readData($stringSize):'');
       $className = '';
       $classVar = [];
-      $stream->position -= $varCount * 24 + $stringSize;
+      $stream->position -= $varCount * $nodeInfoSize + $stringSize;
       for ($i=0; $i<$varCount; $i++) {
         $stream->readInt16();
         $level = ord($stream->readData(1));
@@ -216,6 +211,9 @@ class AssetFile {
         $size = $stream->long;
         $flag2 = $stream->readInt32() != 0;
         $flag = $stream->long;
+        if ($this->fileGen >= 19) {
+          $RefTypeHash = $stream->ulonglong;
+        }
         if (!$flag2) {
           $className = $varTypeStr . ' ' . $varNameStr;
         } else {
@@ -237,6 +235,11 @@ class AssetFile {
       );
       //aClass.SubItems.Add(classID.ToString());
       $this->ClassStructures[$classID] = $aClass;
+
+      if ($this->fileGen >= 21) {
+        $arrSize = $stream->long;
+        $stream->position += $arrSize * 4;
+      }
     }
   }
 
