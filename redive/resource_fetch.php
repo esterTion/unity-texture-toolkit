@@ -253,7 +253,7 @@ function checkSubResource($manifest, $rules) {
       $bundleData = new MemoryStream($bundleData);
       $assets = extractBundle($bundleData);
       foreach ($assets as $asset) {
-        if (substr($asset, -4,4) == '.resS') continue;
+        if (substr($asset, -5,5) == '.resS') continue;
         $asset = new AssetFile($asset);
     
         if (isset($rule['customAssetProcessor'])) {

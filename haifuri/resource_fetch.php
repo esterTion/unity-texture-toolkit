@@ -72,7 +72,7 @@ function checkAndUpdateResource($ver) {
       try{
       
       foreach ($assets as $asset) {
-        if (substr($asset, -4,4) == '.resS') continue;
+        if (substr($asset, -5,5) == '.resS') continue;
         $asset = new AssetFile($asset);
     
         foreach ($asset->preloadTable as &$item) {
