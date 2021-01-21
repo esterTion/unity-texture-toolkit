@@ -605,6 +605,8 @@ message MasterArea {
   optional uint32 releasePlayerRank = 8; // normal type
   optional uint64 publishedAt = 9; // nullable
   optional uint64 closedAt = 10; // nullable
+  optional uint64 displayStartAt = 11; // normal type
+  optional uint64 displayEndAt = 12; // normal type
 }
 message uint_MasterArea {
   optional uint32 uint_MasterArea_key = 1; // normal type
@@ -1826,6 +1828,8 @@ message MasterBackstageTalkSet {
   optional uint32 seasonSpecialId = 8; // normal type
   optional string backstageTalkSetType = 9; // normal type
   optional uint32 seasonBasicId = 10; // normal type
+  optional uint32 areaId = 11; // normal type
+  optional bool forceMoveBackstageFlg = 12; // normal type
 }
 message uint_MasterBackstageTalkSet {
   optional uint32 uint_MasterBackstageTalkSet_key = 1; // normal type
@@ -1855,6 +1859,7 @@ message MasterBackstageBackground {
   optional uint32 specialSeasonId = 2; // normal type
   optional string resourceAssetBundleName = 3; // normal type
   optional uint32 priority = 4; // normal type
+  optional uint32 areaId = 5; // normal type
 }
 message uint_MasterBackstageBackground {
   optional uint32 uint_MasterBackstageBackground_key = 1; // normal type
@@ -1868,6 +1873,7 @@ message MasterBackstageMusic {
   optional uint32 specialSeasonId = 2; // normal type
   optional string resourceAssetBundleName = 3; // normal type
   optional uint32 priority = 4; // normal type
+  optional uint32 areaId = 5; // normal type
 }
 message uint_MasterBackstageMusic {
   optional uint32 uint_MasterBackstageMusic_key = 1; // normal type
@@ -2048,6 +2054,8 @@ message MasterDecoFrame {
   optional uint32 maxLevel = 4; // normal type
   optional string assetBundleName = 5; // normal type
   optional string description = 6; // normal type
+  optional uint32 seq = 7; // normal type
+  optional string resourceName = 8; // normal type
 }
 message uint_MasterDecoFrame {
   optional uint32 uint_MasterDecoFrame_key = 1; // normal type
@@ -2554,6 +2562,8 @@ message MasterGenericAnimation {
   optional uint64 startAt = 5; // normal type
   optional uint64 endAt = 6; // normal type
   optional string genericAnimationType = 7; // normal type
+  optional bool sideMarginflg = 8; // normal type
+  optional bool notDeleteFlg = 9; // normal type
 }
 message uint_MasterGenericAnimation {
   optional uint32 uint_MasterGenericAnimation_key = 1; // normal type
@@ -2844,6 +2854,133 @@ message MasterDigestStoryDetail {
 message MasterDigestStoryDetailList {
   repeated MasterDigestStoryDetail entries = 1; // list
 }
+message MasterMultiBandRoom {
+  optional uint32 multiBandRoomId = 1; // normal type
+  optional uint32 bandId = 2; // normal type
+  optional uint32 skinLaneId = 3; // normal type
+  optional uint64 startAt = 4; // normal type
+  optional uint64 endAt = 5; // normal type
+}
+message MasterMultiBandRoomList {
+  repeated MasterMultiBandRoom entries = 1; // list
+}
+message MasterMultiLiveCountConfig {
+  optional uint32 multiLiveCountId = 1; // normal type
+  optional string type = 2; // normal type
+  optional uint64 startAt = 3; // normal type
+  optional uint64 endAt = 4; // normal type
+}
+message MasterMultiLiveCountConfigList {
+  repeated MasterMultiLiveCountConfig entries = 1; // list
+}
+message Resource {
+  optional string resourceType = 1; // normal type
+  optional uint32 resourceId = 2; // normal type
+  optional uint32 quantity = 3; // normal type
+}
+message ResourceList {
+  repeated Resource entries = 1; // list
+}
+message MasterMultiLiveCountReward {
+  optional uint32 multiLiveCountId = 1; // normal type
+  optional uint64 count = 2; // normal type
+  repeated ResourceList rewardList = 3; // list
+}
+message MasterMultiLiveCountRewardList {
+  repeated MasterMultiLiveCountReward entries = 1; // list
+}
+message MasterMultiLiveCountDayReward {
+  optional uint32 day = 1; // normal type
+  optional uint64 startAt = 2; // normal type
+  optional uint64 endAt = 3; // normal type
+  optional MasterMultiLiveCountRewardList rewardList = 4; // sub class
+}
+message MasterMultiLiveCountDayRewardList {
+  repeated MasterMultiLiveCountDayReward entries = 1; // list
+}
+message MasterCountdownReward {
+  optional MasterMultiLiveCountRewardList allReward = 1; // sub class
+  optional MasterMultiLiveCountDayRewardList dayReward = 2; // sub class
+  optional ResourceList liveBoostUseBonusReward = 3; // sub class
+  optional uint64 startAt = 4; // normal type
+  optional uint64 endAt = 5; // normal type
+}
+message MasterSpecialPage {
+  optional uint32 specialPageId = 1; // normal type
+  optional string title = 2; // normal type
+  optional string transitionType = 3; // normal type
+  optional uint64 publishedAt = 4; // normal type
+  optional uint64 closedAt = 5; // normal type
+}
+message MasterSpecialPageList {
+  repeated MasterSpecialPage entries = 1; // list
+}
+message MasterBroadcastProgramSpecialPage {
+  optional uint32 broadcastProgramSpecialPageId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string tabTitle = 3; // normal type
+  optional uint64 broadcastStartAt = 4; // normal type
+  optional uint64 broadcastEndAt = 5; // normal type
+  optional string assetBundleName = 6; // normal type
+  optional string linkUrl = 7; // normal type
+}
+message MasterBroadcastProgramSpecialPageList {
+  repeated MasterBroadcastProgramSpecialPage entries = 1; // list
+}
+message MasterPlaybackListSpecialPage {
+  optional uint32 playbackListSpecialPageId = 1; // normal type
+  optional uint32 tabId = 2; // normal type
+  optional string tabTitle = 3; // normal type
+  optional uint64 publishedAt = 4; // normal type
+}
+message MasterPlaybackListSpecialPageList {
+  repeated MasterPlaybackListSpecialPage entries = 1; // list
+}
+message MasterPlaybackListSpecialPageDetail {
+  optional uint32 playbackListSpecialPageId = 1; // normal type
+  optional uint32 tabId = 2; // normal type
+  optional uint32 seq = 3; // normal type
+  optional string transitionType = 4; // normal type
+  optional uint32 transitionId = 5; // normal type
+}
+message MasterPlaybackListSpecialPageDetailList {
+  repeated MasterPlaybackListSpecialPageDetail entries = 1; // list
+}
+message MasterMultiBandRoomDifficulty {
+  optional uint32 id = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional uint32 bandId = 3; // normal type
+  optional string difficulty = 4; // normal type
+  optional string multiLiveDifficultyType = 5; // normal type
+  optional float bonusRate = 6; // normal type
+}
+message MasterMultiBandRoomDifficultyList {
+  repeated MasterMultiBandRoomDifficulty entries = 1; // list
+}
+message MasterWeeklyMultiBandRoomDifficulty {
+  optional uint32 id = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional uint32 dayOfWeek = 3; // normal type
+  optional uint32 bandId = 4; // normal type
+  optional string difficulty = 5; // normal type
+  optional string multiLiveDifficultyType = 6; // normal type
+  optional float bonusRate = 7; // normal type
+}
+message MasterWeeklyMultiBandRoomDifficultyList {
+  repeated MasterWeeklyMultiBandRoomDifficulty entries = 1; // list
+}
+message MasterCountDownPage {
+  optional uint32 id = 1; // normal type
+  optional string assetBundleName = 2; // normal type
+  optional string bgmAssetBundleName = 3; // normal type
+  optional string bgmFileName = 4; // normal type
+  optional string url = 5; // normal type
+  optional uint64 publishedAt = 6; // normal type
+  optional uint64 closedAt = 7; // normal type
+}
+message MasterCountDownPageList {
+  repeated MasterCountDownPage entries = 1; // list
+}
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
   optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
@@ -2993,4 +3130,14 @@ message SuiteMasterGetResponse {
   optional MasterBandStoryChapterSpecialPageList masterBandStoryChapterSpecialPageList = 602; // sub class
   optional MasterDigestPrecedingStoryList masterDigestPrecedingStoryList = 603; // sub class
   optional MasterDigestStoryDetailList masterDigestStoryDetailList = 604; // sub class
+  optional MasterMultiBandRoomList masterMultiBandRoomList = 605; // sub class
+  optional MasterMultiLiveCountConfigList masterMultiLiveCountConfigList = 606; // sub class
+  optional MasterCountdownReward masterCountdownReward = 607; // sub class
+  optional MasterSpecialPageList masterSpecialPageList = 608; // sub class
+  optional MasterBroadcastProgramSpecialPageList masterBroadcastProgramSpecialPageList = 609; // sub class
+  optional MasterPlaybackListSpecialPageList masterPlaybackListSpecialPageList = 610; // sub class
+  optional MasterPlaybackListSpecialPageDetailList masterPlaybackListSpecialPageDetailList = 611; // sub class
+  optional MasterMultiBandRoomDifficultyList masterMultiBandRoomDifficultyList = 612; // sub class
+  optional MasterWeeklyMultiBandRoomDifficultyList masterWeeklyMultiBandRoomDifficultyList = 613; // sub class
+  optional MasterCountDownPageList masterCountDownPageList = 614; // sub class
 }
