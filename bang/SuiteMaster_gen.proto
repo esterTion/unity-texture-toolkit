@@ -157,6 +157,7 @@ message MasterMusicDifficultyGetResponse {
   optional uint32 scoreC = 9; // normal type
   optional uint32 scoreSS = 10; // normal type
   optional uint64 publishedAt = 11; // normal type
+  optional bool enableSpecialNotes = 12; // normal type
 }
 message MasterMusicDifficultyListGetResponse {
   repeated MasterMusicDifficultyGetResponse entries = 1; // array
@@ -244,6 +245,7 @@ message MasterCharacterInfo {
   optional string sdAssetBundleName = 10; // normal type
   optional uint32 defaultCostumeId = 11; // normal type
   optional string nickname = 15; // normal type
+  optional string colorCode = 16; // normal type
 }
 message uint_MasterCharacterInfo {
   optional uint32 uint_MasterCharacterInfo_key = 1; // normal type
@@ -290,6 +292,7 @@ message MasterCharacterSituation {
   optional uint32 costumeId = 16; // normal type
   optional uint64 releasedAt = 17; // normal type
   optional uint32 seq = 18; // normal type
+  optional bool isLimitedBirthdaySituation = 19; // normal type
 }
 message uint_MasterCharacterSituation {
   optional uint32 uint_MasterCharacterSituation_key = 1; // normal type
@@ -355,6 +358,8 @@ message MasterGachaExtra {
   optional uint32 resourceQuantity = 4; // normal type
   optional uint32 seq = 5; // normal type
   optional uint32 expiredDays = 6; // nullable
+  optional string gachaExtraType = 7; // normal type
+  optional string gachaExtraName = 8; // normal type
 }
 message MasterGachaViewLive2d {
   optional uint32 gachaId = 1; // normal type
@@ -440,6 +445,8 @@ message MasterGacha {
   optional uint32 spinLimit = 34; // normal type
   optional string gachaLotteryType = 35; // normal type
   optional uint32 comebackDays = 36; // normal type
+  optional uint32 relationGachaId = 37; // normal type
+  optional bool isDailyReset = 38; // normal type
 }
 message ulong_MasterGacha {
   optional uint64 ulong_MasterGacha_key = 1; // normal type
@@ -629,6 +636,7 @@ message MasterBand {
   optional string bandType = 11; // normal type
   optional string introductions = 12; // normal type
   optional string phonetic = 13; // normal type
+  optional uint32 musicId = 14; // normal type
 }
 message uint_MasterBand {
   optional uint32 uint_MasterBand_key = 1; // normal type
@@ -1426,6 +1434,7 @@ message MasterMiracleTicket {
   optional uint32 exchangeEndMinutes = 8; // normal type
   optional string bannerImageUrl = 9; // normal type
   optional string miracleTicketExchangesName = 10; // normal type
+  optional string lineupImageBundleName = 11; // normal type
 }
 message uint_MasterMiracleTicket {
   optional uint32 uint_MasterMiracleTicket_key = 1; // normal type
@@ -1500,6 +1509,8 @@ message MasterBirthdayPage {
   optional uint32 bandMemberBackstageTalkSetId = 10; // normal type
   optional uint32 nonBandMemberBackstageTalkSetId = 11; // normal type
   optional uint32 characterProfileLive2dId = 12; // normal type
+  optional string transitionMethod = 13; // normal type
+  optional uint32 transitionId = 14; // normal type
 }
 message uint_MasterBirthdayPage {
   optional uint32 uint_MasterBirthdayPage_key = 1; // normal type
@@ -1601,6 +1612,7 @@ message MasterPickupSituation {
   optional uint32 performance = 5; // normal type
   optional uint32 technique = 6; // normal type
   optional uint32 visual = 7; // normal type
+  optional uint32 hiddenFlg = 8; // normal type
 }
 message MasterPickupSituationList {
   repeated MasterPickupSituation entries = 1; // array
@@ -1725,6 +1737,9 @@ message uint_MasterBandStoryChapter {
 message MasterBandStoryChapterMap {
   repeated uint_MasterBandStoryChapter entries = 1; // dictionary
 }
+message MasterNewMusicIntroductionBandNameList {
+  repeated string entries = 1; // list
+}
 message MasterNewMusicIntroduction {
   optional uint32 newMusicIntroductionId = 1; // normal type
   optional uint32 musicId = 2; // normal type
@@ -1736,6 +1751,8 @@ message MasterNewMusicIntroduction {
   optional uint32 costumeId5 = 8; // nullable
   optional uint64 startAt = 9; // normal type
   optional uint64 endAt = 10; // normal type
+  optional MasterNewMusicIntroductionBandNameList bandNameList = 11; // sub class
+  optional string tieUpBandNameBundle = 12; // normal type
 }
 message uint_MasterNewMusicIntroduction {
   optional uint32 uint_MasterNewMusicIntroduction_key = 1; // normal type
@@ -2633,6 +2650,8 @@ message MasterGraphicalInformation {
   optional string slideAssetBundleName = 5; // normal type
   optional uint32 transitionId = 6; // normal type
   optional string targetUserType = 7; // normal type
+  optional string transitionMethod2 = 8; // normal type
+  optional uint32 transitionId2 = 9; // normal type
 }
 message MasterGraphicalInformationList {
   repeated MasterGraphicalInformation entries = 1; // list
@@ -2709,7 +2728,7 @@ message MasterMission {
   optional uint32 seq = 8; // normal type
   optional uint32 valueId = 17; // normal type
   optional MasterMissionDetailList detailList = 18; // sub class
-  optional string labelType = 19; // normal type
+  optional string labelText = 19; // normal type
   optional uint32 typeIndex = 20; // normal type
 }
 message MasterMissionList {
@@ -2983,6 +3002,91 @@ message MasterCountDownPage {
 message MasterCountDownPageList {
   repeated MasterCountDownPage entries = 1; // list
 }
+message MasterPanelMissionReward {
+  optional string resourceType = 1; // normal type
+  optional uint32 resourceId = 2; // normal type
+  optional uint32 quantity = 3; // normal type
+}
+message MasterPanelMissionPanel {
+  optional string fileName = 1; // normal type
+  optional uint32 typeIndex = 2; // normal type
+  optional uint32 valueId = 3; // normal type
+  optional uint32 maxProgress = 4; // normal type
+  optional string title = 5; // normal type
+  optional string description = 6; // normal type
+  optional string hint = 7; // normal type
+  optional string transitionMethod = 8; // normal type
+  optional uint32 transitionId = 9; // normal type
+  optional MasterPanelMissionReward reward = 10; // sub class
+}
+message uint_MasterPanelMissionPanel {
+  optional uint32 uint_MasterPanelMissionPanel_key = 1; // normal type
+  optional MasterPanelMissionPanel uint_MasterPanelMissionPanel_value = 2; // sub class
+}
+message MasterPanelMissionBoard {
+  optional MasterPanelMissionReward completeReward = 1; // sub class
+  repeated uint_MasterPanelMissionPanel panelMissionPanelMap = 2; // dictionary
+  optional string panelFrameColor = 3; // normal type
+  optional string panelIconColor = 4; // normal type
+}
+message uint_MasterPanelMissionBoard {
+  optional uint32 uint_MasterPanelMissionBoard_key = 1; // normal type
+  optional MasterPanelMissionBoard uint_MasterPanelMissionBoard_value = 2; // sub class
+}
+message MasterPanelMission {
+  optional string type = 1; // normal type
+  optional string assetBundleName = 2; // normal type
+  optional uint32 maxBoardSeq = 3; // normal type
+  optional uint64 startAt = 4; // normal type
+  optional uint64 endAt = 5; // normal type
+  repeated uint_MasterPanelMissionBoard panelMissionBoardMap = 6; // dictionary
+  optional uint32 id = 7; // normal type
+}
+message uint_MasterPanelMission {
+  optional uint32 uint_MasterPanelMission_key = 1; // normal type
+  optional MasterPanelMission uint_MasterPanelMission_value = 2; // sub class
+}
+message MasterPanelMissionMap {
+  repeated uint_MasterPanelMission entries = 1; // dictionary
+}
+message MasterPanelMissionValueList {
+  repeated uint_MasterMissionUintValue valueUintMap = 1; // dictionary
+  repeated uint_MasterMissionStringValue valueStringMap = 2; // dictionary
+}
+message MasterBirthdayIntroduction {
+  optional uint32 id = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional uint64 startAt = 3; // normal type
+  optional uint64 endAt = 4; // normal type
+  optional uint32 situationId = 5; // normal type
+  optional string motion = 6; // normal type
+  optional string bundleName = 7; // normal type
+  optional string live2dPresetVoice = 8; // normal type
+}
+message MasterBirthdayIntroductionList {
+  repeated MasterBirthdayIntroduction entries = 1; // list
+}
+message MasterAprilFool2021Page {
+  optional uint32 aprilFool2021PageId = 1; // normal type
+  optional string assetBundleName = 2; // normal type
+  optional string bgmFileName = 3; // normal type
+  optional uint64 startAt = 4; // normal type
+  optional uint64 endAt = 5; // normal type
+}
+message MasterAprilFool2021PageList {
+  repeated MasterAprilFool2021Page entries = 1; // list
+}
+message MasterAprilFool2021Region {
+  optional uint32 aprilFool2021RegionId = 1; // normal type
+  optional string region = 2; // normal type
+  optional string storyType = 3; // normal type
+  optional uint32 seq = 4; // normal type
+  optional uint32 characterId = 5; // normal type
+  optional uint32 genericStoryId = 6; // normal type
+}
+message MasterAprilFool2021RegionList {
+  repeated MasterAprilFool2021Region entries = 1; // list
+}
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
   optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
@@ -3142,4 +3246,9 @@ message SuiteMasterGetResponse {
   optional MasterMultiBandRoomDifficultyList masterMultiBandRoomDifficultyList = 612; // sub class
   optional MasterWeeklyMultiBandRoomDifficultyList masterWeeklyMultiBandRoomDifficultyList = 613; // sub class
   optional MasterCountDownPageList masterCountDownPageList = 614; // sub class
+  optional MasterPanelMissionMap masterPanelMissionMap = 700; // sub class
+  optional MasterPanelMissionValueList masterPanelMissionValueList = 701; // sub class
+  optional MasterBirthdayIntroductionList masterBirthdayIntroductionList = 703; // sub class
+  optional MasterAprilFool2021PageList masterAprilFool2021PageList = 704; // sub class
+  optional MasterAprilFool2021RegionList masterAprilFool2021RegionList = 705; // sub class
 }
