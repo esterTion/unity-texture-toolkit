@@ -478,6 +478,7 @@ message MasterGacha {
   optional uint32 comebackDays = 36; // normal type
   optional uint32 relationGachaId = 37; // normal type
   optional bool isDailyReset = 38; // normal type
+  optional uint32 GachaSealExchangeId = 39; // normal type
 }
 message ulong_MasterGacha {
   optional uint64 ulong_MasterGacha_key = 1; // normal type
@@ -1673,6 +1674,17 @@ message uint_MasterSkinSoundEffect {
   optional uint32 uint_MasterSkinSoundEffect_key = 1; // normal type
   optional MasterSkinSoundEffect uint_MasterSkinSoundEffect_value = 2; // sub class
 }
+message MasterSkinDirectionalFlick {
+  optional uint32 skinDirectionalFlickId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string skinName = 3; // normal type
+  optional bool defaultFlg = 4; // normal type
+  optional string assetBundleName = 5; // normal type
+}
+message uint_MasterSkinDirectionalFlick {
+  optional uint32 uint_MasterSkinDirectionalFlick_key = 1; // normal type
+  optional MasterSkinDirectionalFlick uint_MasterSkinDirectionalFlick_value = 2; // sub class
+}
 message MasterSkin {
   repeated uint_MasterSkinNotes skinNotesMap = 1; // dictionary
   repeated uint_MasterSkinLane skinLaneMap = 2; // dictionary
@@ -1684,6 +1696,8 @@ message MasterSkin {
   optional uint32 defaultSkinEffectId = 8; // normal type
   optional uint32 defaultSkinBackgroundId = 9; // normal type
   optional uint32 defaultSkinSoundEffectId = 10; // normal type
+  repeated uint_MasterSkinDirectionalFlick skinDirectionalFlickMap = 11; // dictionary
+  optional uint32 defaultSkinDirectionalFlickId = 12; // normal type
 }
 message CharacterInGameVoice {
   optional uint32 characterId = 1; // normal type
@@ -1708,7 +1722,7 @@ message MasterPickupSituation {
   optional uint32 performance = 5; // normal type
   optional uint32 technique = 6; // normal type
   optional uint32 visual = 7; // normal type
-  optional uint32 hiddenFlg = 8; // normal type
+  optional bool hiddenFlg = 8; // normal type
 }
 message MasterPickupSituationList {
   repeated MasterPickupSituation entries = 1; // array
@@ -3214,6 +3228,14 @@ message MasterAprilFool2021Region {
 message MasterAprilFool2021RegionList {
   repeated MasterAprilFool2021Region entries = 1; // list
 }
+message MasterGachaSealExchange {
+  optional uint32 gachaSealExchangeId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional uint32 situationId = 3; // normal type
+}
+message MasterGachaSealExchangeList {
+  repeated MasterGachaSealExchange entries = 1; // list
+}
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
   optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
@@ -3385,4 +3407,5 @@ message SuiteMasterGetResponse {
   optional MasterBirthdayIntroductionList masterBirthdayIntroductionList = 703; // sub class
   optional MasterAprilFool2021PageList masterAprilFool2021PageList = 704; // sub class
   optional MasterAprilFool2021RegionList masterAprilFool2021RegionList = 705; // sub class
+  optional MasterGachaSealExchangeList masterGachaSealExchangeList = 900; // sub class
 }
