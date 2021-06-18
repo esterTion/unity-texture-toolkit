@@ -3236,6 +3236,46 @@ message MasterGachaSealExchange {
 message MasterGachaSealExchangeList {
   repeated MasterGachaSealExchange entries = 1; // list
 }
+message MasterDegreeSet {
+  optional uint32 degreeSetId = 1; // normal type
+  optional string degreeSetName = 2; // normal type
+  optional string assetBundleName = 3; // normal type
+  optional string description = 4; // normal type
+}
+message MasterDegreeSetList {
+  repeated MasterDegreeSet entries = 1; // array
+}
+message MasterDegreeSetDetail {
+  optional uint32 degreeSetId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional uint32 degreeId = 3; // normal type
+}
+message MasterDegreeSetDetailList {
+  repeated MasterDegreeSetDetail entries = 1; // array
+}
+message MasterChangedStamp {
+  optional uint32 changedStampId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional uint64 changeStartAt = 3; // normal type
+  optional uint64 changeEndAt = 4; // normal type
+  optional string changeSoundBundleName = 5; // normal type
+  optional string buttonBalloonLabel = 6; // normal type
+}
+message MasterChangedStampList {
+  repeated MasterChangedStamp entries = 1; // array
+}
+message MasterChangedStampDetail {
+  optional uint32 changedStampId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional uint32 stampId = 3; // normal type
+  optional string changeSoundName = 4; // normal type
+  optional uint32 changeProbability = 5; // normal type
+  optional string changeImageName = 6; // normal type
+  optional string balloonLabel = 7; // normal type
+}
+message MasterChangedStampDetailList {
+  repeated MasterChangedStampDetail entries = 1; // array
+}
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
   optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
@@ -3408,4 +3448,8 @@ message SuiteMasterGetResponse {
   optional MasterAprilFool2021PageList masterAprilFool2021PageList = 704; // sub class
   optional MasterAprilFool2021RegionList masterAprilFool2021RegionList = 705; // sub class
   optional MasterGachaSealExchangeList masterGachaSealExchangeList = 900; // sub class
+  optional MasterDegreeSetList masterDegreeSetList = 1000; // sub class
+  optional MasterDegreeSetDetailList masterDegreeSetDetailList = 1001; // sub class
+  optional MasterChangedStampList masterChangedStampList = 1002; // sub class
+  optional MasterChangedStampDetailList masterChangedStampDetailList = 1003; // sub class
 }
