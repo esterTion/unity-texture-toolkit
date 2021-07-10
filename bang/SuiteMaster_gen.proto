@@ -128,6 +128,69 @@ message string_MasterIngameV2SpecialTalking {
 message MasterIngameV2SpecialTalkingMap {
   repeated string_MasterIngameV2SpecialTalking entries = 1; // dictionary
 }
+message MasterMultiFestivalLiveMatchingLogic {
+  optional uint32 id = 1; // normal type
+  optional uint32 logicOrder = 2; // normal type
+  optional uint32 totalPowerFrom = 3; // normal type
+  optional uint32 totalPowerTo = 4; // normal type
+  optional int32 searchFrom = 5; // normal type
+  optional int32 searchTo = 6; // normal type
+}
+message MasterMultiFestivalLiveMatchingLogicList {
+  repeated MasterMultiFestivalLiveMatchingLogic entries = 1; // array
+}
+message MasterMultiFestivalLiveTeamMatchingLogic {
+  optional uint32 id = 1; // normal type
+  optional uint32 logicOrder = 2; // normal type
+  optional uint32 totalPowerFrom = 3; // normal type
+  optional uint32 totalPowerTo = 4; // normal type
+  optional int32 searchFrom = 5; // normal type
+  optional int32 searchTo = 6; // normal type
+}
+message MasterMultiFestivalLiveTeamMatchingLogicList {
+  repeated MasterMultiFestivalLiveTeamMatchingLogic entries = 1; // array
+}
+message FestivalJudgeRate {
+  optional string stageType = 1; // normal type
+  optional string judgement = 2; // normal type
+  optional float scoreRate = 3; // normal type
+  optional bool effectFlag = 4; // normal type
+}
+message MasterFestivalJudgeRateList {
+  repeated FestivalJudgeRate entries = 1; // array
+}
+message FestivalLifeRate {
+  optional string stageType = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional uint32 fromCondition = 3; // normal type
+  optional uint32 toCondition = 4; // normal type
+  optional float scoreRate = 5; // normal type
+  optional bool effectFlag = 6; // normal type
+}
+message MasterFestivalLifeRateList {
+  repeated FestivalLifeRate entries = 1; // array
+}
+message FestivalComboRate {
+  optional string stageType = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional uint32 fromCondition = 3; // normal type
+  optional uint32 toCondition = 4; // normal type
+  optional float scoreRate = 5; // normal type
+  optional bool effectFlag = 6; // normal type
+}
+message MasterFestivalComboRateList {
+  repeated FestivalComboRate entries = 1; // array
+}
+message MasterQualifyTournamentComboRate {
+  optional uint32 qualifyTournamentId = 1; // normal type
+  optional string qualifyTournamentType = 2; // normal type
+  optional uint32 fromCondition = 3; // normal type
+  optional uint32 toCondition = 4; // normal type
+  optional float scoreRate = 5; // normal type
+}
+message MasterQualifyTournamentComboRateList {
+  repeated MasterQualifyTournamentComboRate entries = 1; // list
+}
 message MasterMusicAchievement {
   optional uint32 musicId = 1; // normal type
   optional string achievementType = 2; // normal type
@@ -1410,6 +1473,7 @@ message MasterQualifyTournamentDeck {
   optional QualifyTournamentSituationParameter member3 = 6; // sub class
   optional QualifyTournamentSituationParameter member4 = 7; // sub class
   optional string qualifyTournamentType = 8; // normal type
+  optional uint32 musicId = 9; // normal type
 }
 message MasterQualifyTournamentDeckList {
   repeated MasterQualifyTournamentDeck entries = 1; // list
@@ -3228,6 +3292,104 @@ message MasterAprilFool2021Region {
 message MasterAprilFool2021RegionList {
   repeated MasterAprilFool2021Region entries = 1; // list
 }
+message MasterFestivalRotationMusic {
+  optional uint32 id = 1; // normal type
+  optional uint32 eventId = 2; // normal type
+  optional uint32 musicId = 3; // normal type
+  optional uint64 startAt = 4; // normal type
+  optional uint64 endAt = 5; // normal type
+}
+message MasterFestivalRotationMusicList {
+  repeated MasterFestivalRotationMusic entries = 1; // list
+}
+message MasterFestivalStage {
+  optional uint32 id = 1; // normal type
+  optional uint32 eventId = 2; // normal type
+  optional string type = 3; // normal type
+  optional uint64 startAt = 4; // normal type
+  optional uint64 endAt = 5; // normal type
+}
+message MasterFestivalStageList {
+  repeated MasterFestivalStage entries = 1; // list
+}
+message MasterFestivalStageDescription {
+  optional string stageType = 1; // normal type
+  optional string name = 2; // normal type
+  optional string description = 3; // normal type
+}
+message MasterFestivalStageDescriptionList {
+  repeated MasterFestivalStageDescription entries = 1; // list
+}
+message MasterFestivalTeam {
+  optional uint32 eventId = 1; // normal type
+  optional uint32 teamId = 2; // normal type
+  optional string teamName = 3; // normal type
+  optional string iconFileName = 4; // normal type
+  optional string themeTitle = 5; // normal type
+}
+message MasterFestivalTeamList {
+  repeated MasterFestivalTeam entries = 1; // array
+}
+message MasterFestivalTeamReward {
+  optional string festivalResultType = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string resourceType = 3; // normal type
+  optional uint32 resourceId = 4; // normal type
+  optional uint32 quantity = 5; // normal type
+}
+message MasterFestivalTeamRewardList {
+  repeated MasterFestivalTeamReward entries = 1; // list
+}
+message MasterFestivalEvent {
+  optional uint32 eventId = 1; // normal type
+  repeated MasterEventAttribute attributes = 2; // array
+  repeated MasterEventCharacter characters = 3; // array
+  repeated MasterEventStory stories = 4; // array
+  optional MasterEventAttributeAndCharacterBonus eventAttributeAndCharacterBonus = 5; // sub class
+  repeated MasterEventMusic musics = 6; // array
+  optional MasterFestivalTeamList teamList = 7; // sub class
+  optional MasterFestivalTeamRewardList teamRewards = 8; // sub class
+  optional string themeTitle = 9; // normal type
+  optional MasterEventCharacterParameterBonus eventCharacterParameterBonus = 10; // sub class
+}
+message uint_MasterFestivalEvent {
+  optional uint32 uint_MasterFestivalEvent_key = 1; // normal type
+  optional MasterFestivalEvent uint_MasterFestivalEvent_value = 2; // sub class
+}
+message MasterFestivalEventMap {
+  repeated uint_MasterFestivalEvent entries = 1; // dictionary
+}
+message MasterMultiFestivalLiveScore {
+  optional uint32 musicId = 1; // normal type
+  optional uint32 scoreSS = 2; // normal type
+  optional uint32 scoreS = 3; // normal type
+  optional uint32 scoreA = 4; // normal type
+  optional uint32 scoreB = 5; // normal type
+  optional uint32 scoreC = 6; // normal type
+}
+message uint_MasterMultiFestivalLiveScore {
+  optional uint32 uint_MasterMultiFestivalLiveScore_key = 1; // normal type
+  optional MasterMultiFestivalLiveScore uint_MasterMultiFestivalLiveScore_value = 2; // sub class
+}
+message MasterMultiFestivalLiveScoreMap {
+  repeated uint_MasterMultiFestivalLiveScore entries = 1; // dictionary
+}
+message uint_MasterFestivalTeamRewardList {
+  optional uint32 uint_MasterFestivalTeamRewardList_key = 1; // normal type
+  optional MasterFestivalTeamRewardList uint_MasterFestivalTeamRewardList_value = 2; // sub class
+}
+message MasterEventFestivalTeamRewardMap {
+  repeated uint_MasterFestivalTeamRewardList entries = 1; // dictionary
+}
+message FestivalDisplayPointRate {
+  optional uint32 seq = 1; // normal type
+  optional uint32 eventId = 2; // normal type
+  optional uint64 startAt = 3; // normal type
+  optional uint64 endAt = 4; // normal type
+}
+message MasterFestivalDisplayPointRateList {
+  repeated FestivalDisplayPointRate entries = 1; // array
+}
 message MasterGachaSealExchange {
   optional uint32 gachaSealExchangeId = 1; // normal type
   optional uint32 seq = 2; // normal type
@@ -3287,6 +3449,12 @@ message SuiteMasterGetResponse {
   optional MasterEventStoryIntroductionList masterEventStoryIntroductionList = 312; // sub class
   optional MasterIngameV2TalkingMap masterIngameV2TalkingMap = 316; // sub class
   optional MasterIngameV2SpecialTalkingMap masterIngameV2SpecialTalkingMap = 317; // sub class
+  optional MasterMultiFestivalLiveMatchingLogicList masterMultiFestivalLiveMatchingLogicList = 811; // sub class
+  optional MasterMultiFestivalLiveTeamMatchingLogicList masterMultiFestivalLiveTeamMatchingLogicList = 812; // sub class
+  optional MasterFestivalJudgeRateList masterFestiivalJudgeRateList = 817; // sub class
+  optional MasterFestivalLifeRateList masterFestivalLifeRateList = 818; // sub class
+  optional MasterFestivalComboRateList masterFestivalComboRateList = 819; // sub class
+  optional MasterQualifyTournamentComboRateList masterQualifyTournamentComboRateList = 821; // sub class
   optional MasterMusicListGetResponse masterMusicList = 1; // sub class
   optional MasterMusicDifficultyListGetResponse masterMusicDifficultyList = 2; // sub class
   optional MasterMultiLiveDifficultyMap masterMultiLiveDifficultyMap = 28; // sub class
@@ -3447,6 +3615,13 @@ message SuiteMasterGetResponse {
   optional MasterBirthdayIntroductionList masterBirthdayIntroductionList = 703; // sub class
   optional MasterAprilFool2021PageList masterAprilFool2021PageList = 704; // sub class
   optional MasterAprilFool2021RegionList masterAprilFool2021RegionList = 705; // sub class
+  optional MasterFestivalRotationMusicList masterFestivalRotationMusicList = 807; // sub class
+  optional MasterFestivalStageList masterFestivalStageList = 808; // sub class
+  optional MasterFestivalStageDescriptionList masterFestivalStageDescriptionList = 813; // sub class
+  optional MasterFestivalEventMap masterFestivalEventMap = 815; // sub class
+  optional MasterMultiFestivalLiveScoreMap masterMultiFestivalLiveScoreMap = 816; // sub class
+  optional MasterEventFestivalTeamRewardMap masterEventFestivalTeamRewardMap = 822; // sub class
+  optional MasterFestivalDisplayPointRateList masterFestivalDisplayPointRateList = 823; // sub class
   optional MasterGachaSealExchangeList masterGachaSealExchangeList = 900; // sub class
   optional MasterDegreeSetList masterDegreeSetList = 1000; // sub class
   optional MasterDegreeSetDetailList masterDegreeSetDetailList = 1001; // sub class
