@@ -1977,6 +1977,8 @@ message MasterCollaborationSkin {
   optional bool changeCutInSkinFlg = 17; // normal type
   optional bool changeJudgeSkinFlg = 18; // normal type
   optional float noteSyncEdgeMargin = 19; // normal type
+  optional string directionalFlickAssetBundleName = 20; // normal type
+  optional bool changeDirectionalFlickFlg = 21; // normal type
 }
 message uint_MasterCollaborationSkin {
   optional uint32 uint_MasterCollaborationSkin_key = 1; // normal type
@@ -3438,6 +3440,52 @@ message MasterChangedStampDetail {
 message MasterChangedStampDetailList {
   repeated MasterChangedStampDetail entries = 1; // array
 }
+message MasterLimitedItem {
+  optional uint32 limitedItemId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string limitedItemName = 3; // normal type
+  optional string description = 4; // normal type
+  optional string unitName = 5; // normal type
+  optional string resourceName = 6; // normal type
+}
+message MasterLimitedItemList {
+  repeated MasterLimitedItem entries = 1; // array
+}
+message MasterLimitedExchanges {
+  optional uint32 limitedExchangesId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string name = 3; // normal type
+  optional uint64 publishedAt = 4; // normal type
+  optional uint64 closedAt = 5; // nullable
+}
+message MasterLimitedExchangesList {
+  repeated MasterLimitedExchanges entries = 1; // array
+}
+message MasterLimitedExchangesDetail {
+  optional uint32 limitedExchangesId = 1; // normal type
+  optional uint32 limitedExchangesDetailId = 2; // normal type
+  optional uint32 seq = 3; // normal type
+  optional string exchangesName = 4; // normal type
+  optional uint64 publishedAt = 5; // normal type
+  optional uint64 closedAt = 6; // nullable
+  optional string resourceType = 7; // normal type
+  optional uint32 resourceId = 8; // normal type
+  optional uint32 quantity = 9; // normal type
+  optional uint32 exchangeLimit = 10; // nullable
+  optional uint32 amount = 11; // normal type
+  optional string reset = 12; // normal type
+  optional string badge = 13; // normal type
+  optional string caption = 14; // normal type
+  optional string consumeResourceType = 15; // normal type
+  optional uint32 consumeResourceId = 16; // normal type
+  optional uint32 consumeQuantity = 17; // normal type
+  optional string consumeCaption = 18; // normal type
+  optional bool isRecommend = 19; // normal type
+  optional bool isDuplicable = 20; // normal type
+}
+message MasterLimitedExchangesDetailList {
+  repeated MasterLimitedExchangesDetail entries = 1; // array
+}
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
   optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
@@ -3627,4 +3675,7 @@ message SuiteMasterGetResponse {
   optional MasterDegreeSetDetailList masterDegreeSetDetailList = 1001; // sub class
   optional MasterChangedStampList masterChangedStampList = 1002; // sub class
   optional MasterChangedStampDetailList masterChangedStampDetailList = 1003; // sub class
+  optional MasterLimitedItemList masterLimitedItemList = 1102; // sub class
+  optional MasterLimitedExchangesList masterLimitedExchangesList = 1103; // sub class
+  optional MasterLimitedExchangesDetailList masterLimitedExchangesDetailList = 1104; // sub class
 }
