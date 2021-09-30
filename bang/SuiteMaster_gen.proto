@@ -3486,6 +3486,48 @@ message MasterLimitedExchangesDetail {
 message MasterLimitedExchangesDetailList {
   repeated MasterLimitedExchangesDetail entries = 1; // array
 }
+message MasterMedleyMusicScore {
+  optional uint32 difficulty = 1; // normal type
+  optional uint32 scoreMax = 2; // normal type
+  optional uint32 scoreSSplus = 3; // normal type
+  optional uint32 scoreSS = 4; // normal type
+  optional uint32 scoreSplus = 5; // normal type
+  optional uint32 scoreS = 6; // normal type
+  optional uint32 scoreAplus = 7; // normal type
+  optional uint32 scoreA = 8; // normal type
+  optional uint32 scoreBplus = 9; // normal type
+  optional uint32 scoreB = 10; // normal type
+  optional uint32 scoreCplus = 11; // normal type
+  optional uint32 scoreC = 12; // normal type
+}
+message MasterMedleyMusicScoreList {
+  repeated MasterMedleyMusicScore entries = 1; // list
+}
+message MasterMedleyEvent {
+  optional uint32 eventId = 1; // normal type
+  repeated MasterEventAttribute attributes = 2; // array
+  repeated MasterEventCharacter characters = 3; // array
+  repeated MasterEventStory stories = 4; // array
+  repeated MasterEventMusic musics = 5; // array
+  optional MasterEventCharacterParameterBonus eventCharacterParameterBonus = 6; // sub class
+  optional MasterEventAttributeAndCharacterBonus eventAttributeAndCharacterBonus = 7; // sub class
+}
+message uint_MasterMedleyEvent {
+  optional uint32 uint_MasterMedleyEvent_key = 1; // normal type
+  optional MasterMedleyEvent uint_MasterMedleyEvent_value = 2; // sub class
+}
+message MasterMedleyEventMap {
+  repeated uint_MasterMedleyEvent entries = 1; // dictionary
+}
+message MedleyComboRate {
+  optional uint32 seq = 1; // normal type
+  optional uint32 fromCondition = 2; // normal type
+  optional uint32 toCondition = 3; // normal type
+  optional float scoreRate = 4; // normal type
+}
+message MasterMedleyComboRateList {
+  repeated MedleyComboRate entries = 1; // array
+}
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
   optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
@@ -3678,4 +3720,7 @@ message SuiteMasterGetResponse {
   optional MasterLimitedItemList masterLimitedItemList = 1102; // sub class
   optional MasterLimitedExchangesList masterLimitedExchangesList = 1103; // sub class
   optional MasterLimitedExchangesDetailList masterLimitedExchangesDetailList = 1104; // sub class
+  optional MasterMedleyMusicScoreList masterMedleyMusicScoreList = 1160; // sub class
+  optional MasterMedleyEventMap masterMedleyEventMap = 1161; // sub class
+  optional MasterMedleyComboRateList masterMedleyComboRateList = 1162; // sub class
 }
