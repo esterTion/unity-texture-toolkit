@@ -151,65 +151,15 @@ function processDict(&$arr) {
 }
 
 function prettifyJSON($in, Stream $out = NULL, $returnData = true) {
-  $in = new MemoryStream($in);
   if ($out == NULL) $out = new MemoryStream('');
 
-  $offset = 0;
-  $length = $in->size;
-  
-  $level = 0;
-  while($offset < $length) {
-    $char = $in->readData(1);
-    switch($char) {
-      case '"':
-        // write until unqoute
-        $out->write($char);
-        $skipNext = false;
-        while (1) {
-          $char = $in->readData(1);
-          $out->write($char);
-          $offset++;
-          if ($skipNext) $skipNext = false;
-          else {
-            if ($char == '\\') $skipNext = true;
-            else if ($char == '"') break;
-          }
-        }
-        break;
-      case '{':
-      case '[':
-        // increase level
-        $level++;
-        $out->write($char);
-        $out->write("\n".str_repeat('  ', $level));
-        break;
-      case '}':
-      case ']':
-        $level--;
-        $nextChar = $in->readData(1);
-        if ($nextChar == ',') {
-          $out->write("\n".str_repeat('  ', $level));
-          $out->write($char);
-          $out->write($nextChar);
-          $out->write("\n".str_repeat('  ', $level));
-          $offset++;
-        } else {
-          $out->write("\n".str_repeat('  ', $level));
-          $out->write($char);
-          if ($nextChar == '') $out->write("\n");
-          $in->seek($offset+1);
-        }
-        break;
-      case ',':
-        // add space after comma
-        $out->write($char);
-        $out->write(' ');
-        break;
-      default:
-        $out->write($char);
-    }
-    $offset++;
-  }
+  $a = json_decode($in);
+  $a = json_encode($a, JSON_UNESCAPED_UNICODE+JSON_UNESCAPED_SLASHES+JSON_PRETTY_PRINT);
+  $a = preg_replace("/([^\]\}]),\n +/", "$1, ", $a);
+  $a = preg_replace('/("[^"]+?":) /', '$1', $a);
+  $a = preg_replace_callback("/\n +/", function ($m) { return "\n".str_repeat(' ', (strlen($m[0])-1) / 2); }, $a);
+  $out->write($a);
+
   if (!$returnData) return;
   $out->seek(0);
   $output = $out->readData($out->size);
@@ -283,6 +233,7 @@ $VersionInfoProto = parseProto('AppGetResponse_gen.proto');
 $VersionInfo = parseProtoBuf('AppGetResponse', $VersionInfoData->size, $VersionInfoData, $VersionInfoProto);
 
 $commit = [];
+//$VersionInfo = ['dataVersion'=>'4.8.0.50','masterDataVersion'=>'4.8.0.50'];
 if (empty($VersionInfo['dataVersion']) || empty($VersionInfo['masterDataVersion'])) {
   _log('invalid response');
   exit;
