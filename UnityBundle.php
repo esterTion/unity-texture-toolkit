@@ -125,7 +125,7 @@ class FileStream extends Stream {
   function __construct($file) {
     $this->f = fopen($file, 'rb+');
     if ($this->f === false) {
-      throw 'Unable to open file';
+      throw new Exception('Unable to open file');
     }
     $this->size = filesize($file);
   }
@@ -137,7 +137,10 @@ class FileStream extends Stream {
   }
   public function write($newData) {
     fwrite($this->f, $newData);
-    $this->size += strlen($newData);
+    $pos = $this->position;
+    fseek($this->f, 0, SEEK_END);
+    $this->size = ftell($this->f);
+    $this->position = $pos;
   }
   public function seek($position) {
     fseek($this->f, $position);
@@ -269,8 +272,11 @@ function extractBundle($bundle) {
       $bundle->position = $nextFile;
     }
     return $fileList;
+  } else if ($format == 6) {
+  } else if ($format == 7) {
+  } else {
+    throw new Exception('unknown version: '.$format);
   }
-  if ($format != 6) throw new Exception('unknown version: '.$format);
 
   $bundle->longlong;
   $compressedSize = $bundle->long;
@@ -280,6 +286,9 @@ function extractBundle($bundle) {
   if (($flag & 128) != 0) {
     throw new Exception('block info at end');
   } else {
+    if ($format == 7) {
+      $bundle->alignStream(16);
+    }
     $blocksInfoBytes = $bundle->readData($compressedSize);
   }
 

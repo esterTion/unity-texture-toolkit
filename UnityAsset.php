@@ -48,6 +48,7 @@ class AssetFile {
         $tableSize = $stream->ulong;
         $dataEnd = $stream->longlong;
         $dataOffset = $stream->longlong;
+        $stream->longlong;
       }
       if ($endian === "\0") {
         $stream->littleEndian = true;
@@ -101,7 +102,7 @@ class AssetFile {
         }
         $asset = new AssetPreloadData;
         $asset->m_PathID = $this->fileGen<14 ? $stream->long : $stream->longlong;
-        $asset->offset = $stream->ulong;
+        $asset->offset = $this->fileGen<22 ? $stream->ulong : $stream->longlong;
         $asset->offset += $dataOffset;
         $asset->size = $stream->long;
         if ($this->fileGen > 15) {
