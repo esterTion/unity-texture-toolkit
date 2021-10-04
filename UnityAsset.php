@@ -678,62 +678,22 @@ class Texture2D {
       throw new Exception('no support');
     }
 
-    $this->name = $stream->readAlignedString($stream->long);
-    if ($sourceFile->version[0] > 2017 || ($sourceFile->version[0] == 2017 && $sourceFile->version[1] >= 3)) {
-      $stream->ulong;
-      $stream->byte;
-      $stream->alignStream(4);
-    }
-    $this->width = $stream->long;
-    $this->height = $stream->long;
-    $this->completeImageSize = $stream->long;
-    $this->textureFormat = $stream->long;
-
-    if ($sourceFile->version[0] <5 || ($sourceFile->version[0] == 5 && $sourceFile->version[1] < 2)) {
-      $this->mipMap = $stream->bool;
-    } else {
-      $this->dwFlags += 0x20000;
-      $this->dwMipMapCount = $stream->long;
-      $this->dwCaps += 0x400008;
-    }
-    $this->isReadable = $stream->bool;
-    $this->readAllowed = $stream->bool;
-    $stream->alignStream(4);
-    if ($sourceFile->version[0] > 2018 || ($sourceFile->version[0] == 2018 && $sourceFile->version[1] >= 2)) {
-      $this->streamingMipmapsPriority = $stream->long;
-    }
-    $this->imageCount = $stream->long;
-    $this->textureDimension = $stream->long;
-    $this->filterMode = $stream->long;
-    $this->aniso = $stream->long;
-    $this->MipBias = $stream->float;
-    $this->wrapMode = $stream->long;
-
-    if ($sourceFile->version[0] >= 2017) {
-      $stream->ulong;
-      $stream->ulong;
-    }
-    if ($sourceFile->version[0] >= 3) {
-      $this->lightmapFormat = $stream->long;
-      if ($sourceFile->version[0] >=4 || $sourceFile->version[1] >= 5) {
-        $this->colorSpace = $stream->long;
-      }
-    }
-    $this->imageDataSize = $stream->long;
-    if ($this->mipMap) {
-      $this->dwFlags += 0x20000;
-      //$this->dwMipMapCount = Convert.ToInt32(Math.Log((double)Math.Max(this.m_Width, this.m_Height)) / Math.Log(2.0));
-      $this->dwMipMapCount = log(max($this->width, $this->height)) / log(2.0);
-      $this->dwCaps += 0x400008;
-    }
-
-    if ($this->imageDataSize == 0 && (($sourceFile->version[0] == 5 && $sourceFile->version[1] >= 3) || $sourceFile->version[0] > 5)) {
-      $this->offset = $stream->ulong;
-      $this->size = $stream->ulong;
+    $struct = ClassStructHelper::OrganizeStruct(ClassStructHelper::DeserializeStruct($stream, $preloadData->sourceFile->ClassStructures[28]['members']));
+    $this->name = $struct['m_Name'];
+    $this->width = $struct['m_Width'];
+    $this->height = $struct['m_Height'];
+    $this->completeImageSize = $struct['m_CompleteImageSize'];
+    $this->textureFormat = $struct['m_TextureFormat'];
+    $this->imageCount = $struct['m_ImageCount'];
+    $this->textureDimension = $struct['m_TextureDimension'];
+    $this->imageData = $struct['image data'];
+    $this->imageDataSize = strlen($this->imageData);
+    if (isset($struct['m_StreamData'])) {
+      $this->offset = $struct['m_StreamData']['offset'];
+      $this->size = $struct['m_StreamData']['size'];
       $this->imageDataSize = $this->size;
-      $this->path = $stream->readAlignedString($stream->long);
+      $this->path = $struct['m_StreamData']['path'];
     }
-
     $this->textureFormatStr = TextureFormat::map[$this->textureFormat];
 
     if ($readSwitch) {
