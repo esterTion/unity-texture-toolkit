@@ -387,6 +387,7 @@ message MasterCharacterSituation {
   optional uint64 releasedAt = 17; // normal type
   optional uint32 seq = 18; // normal type
   optional bool isLimitedBirthdaySituation = 19; // normal type
+  optional string situationType = 20; // normal type
 }
 message uint_MasterCharacterSituation {
   optional uint32 uint_MasterCharacterSituation_key = 1; // normal type
@@ -1295,6 +1296,8 @@ message MasterSkillActivateEffect {
   optional uint32 unificationActivateEffectValue = 10; // normal type
   optional string unificationActivateConditionType = 11; // normal type
   optional uint32 unificationActivateConditionBandId = 12; // normal type
+  optional uint32 activateEffectMaxValue = 13; // normal type
+  optional float activateEffectStackValue = 14; // normal type
 }
 message MasterSkillActivateEffectList {
   repeated MasterSkillActivateEffect entries = 1; // array
@@ -2751,6 +2754,12 @@ message MasterNewSituationIntroductionDetail {
   optional string live2dPresetVoice = 8; // normal type
   optional bool isExistLive2dSpecialVoice = 9; // normal type
 }
+message MasterNewSituationAnimationIntroductionDetail {
+  optional uint32 newSituationIntroductionId = 1; // normal type
+  optional uint32 situationId = 2; // normal type
+  optional uint32 seq = 3; // normal type
+  optional float situationPositionX = 4; // normal type
+}
 message MasterNewSituationIntroduction {
   optional uint32 newSituationIntroductionId = 1; // normal type
   optional uint32 gachaId = 2; // normal type
@@ -2760,6 +2769,8 @@ message MasterNewSituationIntroduction {
   repeated MasterNewSituationIntroductionDetail details = 6; // array
   optional string textureImageName = 7; // normal type
   optional bool newIconFlag = 8; // normal type
+  optional string introductionType = 9; // normal type
+  repeated MasterNewSituationAnimationIntroductionDetail animationDetails = 10; // list
 }
 message MasterNewSituationIntroductionList {
   repeated MasterNewSituationIntroduction entries = 1; // list
@@ -2890,6 +2901,12 @@ message MasterCollaboOriginalMusicPage {
   repeated uint32 musicIdList = 5; // array
   optional uint64 publishedAt = 6; // normal type
   optional uint64 closedAt = 7; // normal type
+  optional string description = 8; // normal type
+  optional string shortDescription = 9; // normal type
+  optional string label = 10; // normal type
+  optional string labelColor = 11; // normal type
+  optional string backgroundName = 12; // normal type
+  optional string animationName = 13; // normal type
 }
 message MasterCollaboOriginalMusicPageList {
   repeated MasterCollaboOriginalMusicPage entries = 1; // array
@@ -3486,6 +3503,59 @@ message MasterLimitedExchangesDetail {
 message MasterLimitedExchangesDetailList {
   repeated MasterLimitedExchangesDetail entries = 1; // array
 }
+message MasterLive2dTalkSet {
+  optional uint32 talkSetId = 1; // normal type
+  optional uint32 situationId = 2; // normal type
+  optional uint32 costumeId = 3; // normal type
+  optional float probability = 4; // normal type
+}
+message MasterLive2dTalkSetList {
+  repeated MasterLive2dTalkSet entries = 1; // list
+}
+message MasterLive2dTalk {
+  optional uint32 talkId = 1; // normal type
+  optional uint32 opponentCharacterId = 2; // normal type
+  optional string seasonCostumeType = 3; // normal type
+}
+message MasterLive2dTalkList {
+  repeated MasterLive2dTalk entries = 1; // list
+}
+message uint_MasterLive2dTalkList {
+  optional uint32 uint_MasterLive2dTalkList_key = 1; // normal type
+  optional MasterLive2dTalkList uint_MasterLive2dTalkList_value = 2; // sub class
+}
+message MasterLive2dTalkMap {
+  repeated uint_MasterLive2dTalkList entries = 1; // dictionary
+}
+message MasterLive2dSerif {
+  optional uint32 serifId = 1; // normal type
+  optional uint32 characterId = 2; // normal type
+  optional string serif = 3; // normal type
+  optional string motion = 4; // normal type
+  optional string expression = 5; // normal type
+  optional string opponentMotion = 6; // normal type
+  optional string opponentExpression = 7; // normal type
+  optional float talkWindowChangeTime = 8; // normal type
+  optional string frontCharacter = 9; // normal type
+  optional string cueName = 10; // normal type
+}
+message MasterLive2dSerifList {
+  repeated MasterLive2dSerif entries = 1; // list
+}
+message uint_MasterLive2dSerifList {
+  optional uint32 uint_MasterLive2dSerifList_key = 1; // normal type
+  optional MasterLive2dSerifList uint_MasterLive2dSerifList_value = 2; // sub class
+}
+message MasterLive2dSerifMap {
+  repeated uint_MasterLive2dSerifList entries = 1; // dictionary
+}
+message MasterAnimationSituation {
+  optional uint32 situationId = 1; // normal type
+  optional string assetBundleName = 2; // normal type
+}
+message MasterAnimationSituationList {
+  repeated MasterAnimationSituation entries = 1; // list
+}
 message MasterMedleyMusicScore {
   optional uint32 difficulty = 1; // normal type
   optional uint32 scoreMax = 2; // normal type
@@ -3720,6 +3790,10 @@ message SuiteMasterGetResponse {
   optional MasterLimitedItemList masterLimitedItemList = 1102; // sub class
   optional MasterLimitedExchangesList masterLimitedExchangesList = 1103; // sub class
   optional MasterLimitedExchangesDetailList masterLimitedExchangesDetailList = 1104; // sub class
+  optional MasterLive2dTalkSetList masterLive2dTalkSetList = 1150; // sub class
+  optional MasterLive2dTalkMap masterLive2dTalkMap = 1151; // sub class
+  optional MasterLive2dSerifMap masterLive2dSerifMap = 1152; // sub class
+  optional MasterAnimationSituationList masterAnimationSituationList = 1153; // sub class
   optional MasterMedleyMusicScoreList masterMedleyMusicScoreList = 1160; // sub class
   optional MasterMedleyEventMap masterMedleyEventMap = 1161; // sub class
   optional MasterMedleyComboRateList masterMedleyComboRateList = 1162; // sub class
