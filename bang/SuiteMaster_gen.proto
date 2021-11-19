@@ -155,6 +155,7 @@ message FestivalJudgeRate {
   optional string judgement = 2; // normal type
   optional float scoreRate = 3; // normal type
   optional bool effectFlag = 4; // normal type
+  optional uint32 effectLevel = 5; // normal type
 }
 message MasterFestivalJudgeRateList {
   repeated FestivalJudgeRate entries = 1; // array
@@ -166,6 +167,7 @@ message FestivalLifeRate {
   optional uint32 toCondition = 4; // normal type
   optional float scoreRate = 5; // normal type
   optional bool effectFlag = 6; // normal type
+  optional uint32 effectLevel = 7; // normal type
 }
 message MasterFestivalLifeRateList {
   repeated FestivalLifeRate entries = 1; // array
@@ -177,6 +179,7 @@ message FestivalComboRate {
   optional uint32 toCondition = 4; // normal type
   optional float scoreRate = 5; // normal type
   optional bool effectFlag = 6; // normal type
+  optional uint32 effectLevel = 7; // normal type
 }
 message MasterFestivalComboRateList {
   repeated FestivalComboRate entries = 1; // array
@@ -1125,6 +1128,7 @@ message MasterStamp {
   optional string stampType = 4; // normal type
   optional uint64 startAt = 5; // normal type
   optional uint64 endAt = 6; // normal type
+  optional uint64 publishedAt = 7; // normal type
 }
 message uint_MasterStamp {
   optional uint32 uint_MasterStamp_key = 1; // normal type
