@@ -692,6 +692,7 @@ message MasterActionSet {
   optional uint32 eventId = 8; // normal type
   optional uint32 eventStorySeq = 9; // normal type
   optional uint32 lotteryConditionActionSetId = 10; // normal type
+  optional string balloonText = 11; // normal type
   optional string areaName = 6; // manual add
 }
 message uint_MasterActionSet {
@@ -2025,6 +2026,7 @@ message MasterNewYearCard {
   optional uint64 receiveStartAt = 4; // normal type
   optional uint64 receiveEndAt = 5; // normal type
   optional string assetBundleName = 6; // normal type
+  optional uint32 limitedExchangesId = 7; // normal type
 }
 message uint_MasterNewYearCard {
   optional uint32 uint_MasterNewYearCard_key = 1; // normal type
@@ -3602,6 +3604,25 @@ message MedleyComboRate {
 message MasterMedleyComboRateList {
   repeated MedleyComboRate entries = 1; // array
 }
+message MasterSpecialLotteryCharacter {
+  optional uint32 specialLotteryId = 1; // normal type
+  optional uint32 characterId = 2; // normal type
+  optional string serif = 3; // normal type
+  optional string specialLotteryResultType = 6; // normal type
+  optional uint32 pairCharacterId = 7; // normal type
+  optional string specialLotteryResultTypeName = 8; // normal type
+  optional string couplingVoiceCueName = 9; // normal type
+}
+message MasterSpecialLotteryCharacterList {
+  repeated MasterSpecialLotteryCharacter entries = 1; // array
+}
+message uint_MasterSpecialLotteryCharacterList {
+  optional uint32 uint_MasterSpecialLotteryCharacterList_key = 1; // normal type
+  optional MasterSpecialLotteryCharacterList uint_MasterSpecialLotteryCharacterList_value = 2; // sub class
+}
+message MasterSpecialLotteryCharacterMap {
+  repeated uint_MasterSpecialLotteryCharacterList entries = 1; // dictionary
+}
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
   optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
@@ -3801,4 +3822,5 @@ message SuiteMasterGetResponse {
   optional MasterMedleyMusicScoreList masterMedleyMusicScoreList = 1160; // sub class
   optional MasterMedleyEventMap masterMedleyEventMap = 1161; // sub class
   optional MasterMedleyComboRateList masterMedleyComboRateList = 1162; // sub class
+  optional MasterSpecialLotteryCharacterMap masterSpecialLotteryCharacterMap = 1170; // sub class
 }
