@@ -61,7 +61,7 @@ function setValue(&$arr, $key, &$val, $isArr) {
   }
 }
 
-function parseProtoBuf($messageName, $end, &$pb, &$proto) {
+function parseProtoBuf($messageName, $end, &$pb, &$proto, $messageCallback = null, $level = 1) {
   $message = [];
   while ($pb->position() < $end){
     $id = readVarInt32($pb);
@@ -92,8 +92,10 @@ function parseProtoBuf($messageName, $end, &$pb, &$proto) {
       case 2:
         $length = readVarInt32($pb);
         if (isset($proto[$typeName])) {
-          $sub = parseProtoBuf($typeName, $pb->position()+$length, $pb, $proto);
-          setValue($message, $name, $sub, $isRepeated);
+          $sub = parseProtoBuf($typeName, $pb->position()+$length, $pb, $proto, $messageCallback, $level + 1);
+          if ($messageCallback === null || call_user_func($messageCallback, $name, $sub, $level)) {
+            setValue($message, $name, $sub, $isRepeated);
+          }
         } else if ($length > 0) {
           $data = $pb->readData($length);
           if ($typeName == 'string') {
@@ -153,7 +155,8 @@ function processDict(&$arr) {
 function prettifyJSON($in, Stream $out = NULL, $returnData = true) {
   if ($out == NULL) $out = new MemoryStream('');
 
-  $a = json_decode($in);
+  $a = $in;
+  if (gettype($a) == 'string') $a = json_decode($a);
   $a = json_encode($a, JSON_UNESCAPED_UNICODE+JSON_UNESCAPED_SLASHES+JSON_PRETTY_PRINT);
   $a = preg_replace("/([^\]\}]),\n +/", "$1, ", $a);
   $a = preg_replace('/("[^"]+?":) /', '$1', $a);
@@ -255,31 +258,30 @@ file_put_contents('master.dat', bzdecompress(decrypt(curl_exec($curl), 'mikumiku
 $masterData = new FileStream('master.dat');
 //$masterData = new FileStream('master');
 
-ini_set("memory_limit",256 *1024*1024);
-$MasterProto = parseProto('SuiteMaster_gen.proto');
-$master = parseProtoBuf('SuiteMasterGetResponse', $masterData->size, $masterData, $MasterProto);
-processDict($master);
-unset($masterData, $MasterProto);
-
-$count = count(array_keys($master));
-_log("dumping master ${count} entries");
-
 chdir('data');
 exec('git rm *.json --cached');
 chdir(__DIR__);
 foreach (glob('data/*.json') as $file) {$file!='data/AssetBundleInfo.json'&&unlink($file);}
 
-$i = 0;
-foreach ($master as $part=>&$data) {
-  //echo (++$i)."/$count $part\n";
-  $json = json_encode($data, JSON_UNESCAPED_SLASHES+JSON_UNESCAPED_UNICODE);
-  fclose(fopen("data/${part}.json", 'w'));
-  prettifyJSON($json, new FileStream("data/${part}.json"), false);
-  unset($json);
-}
+$MasterProto = parseProto('SuiteMaster_gen.proto');
+_log("dumping master");
+parseProtoBuf('SuiteMasterGetResponse', $masterData->size, $masterData, $MasterProto, function ($name, $sub, $level) {
+  if ($level > 1) return true;
+  $sub = ['a'=>$sub];
+  processDict($sub);
+  $sub = $sub['a'];
+  if ($name === 'masterCharacterSituationMap') {
+    global $situationMap;
+    $situationMap = $sub;
+  } else if ($name === 'masterCharacterInfoMap') {
+    global $charaInfo;
+    $charaInfo = $sub;
+  }
+  file_put_contents("data/${name}.json", prettifyJSON($sub));
+  return false;
+});
+unset($masterData, $MasterProto);
 
-$situationMap = &$master['masterCharacterSituationMap'];
-$charaInfo = &$master['masterCharacterInfoMap'];
 foreach ($situationMap as &$entry) {
   $id = substr($entry['resourceSetName'], 3);
   $names[$id] = str_repeat('★',$entry['rarity']).'['.$entry['prefix'].']'.$charaInfo[$entry['characterId']]['characterName'];
@@ -318,7 +320,7 @@ processDict($bundleInfo);
 foreach ($bundleInfo['bundles'] as &$item) {
   unset($item['version']);
 }
-file_put_contents('data/AssetBundleInfo.json', prettifyJSON(json_encode($bundleInfo, JSON_UNESCAPED_SLASHES+JSON_UNESCAPED_UNICODE)));
+file_put_contents('data/AssetBundleInfo.json', prettifyJSON($bundleInfo));
 unset($bundleInfoData, $bundleInfoProto, $bundleInfo);
 file_put_contents('data/!dataVersion.txt', $dataVer."\n");
 $commit[] = 'data: '.$dataVer;
