@@ -427,6 +427,7 @@ message MasterGachaExtra {
   optional uint32 expiredDays = 6; // nullable
   optional string gachaExtraType = 7; // normal type
   optional string gachaExtraName = 8; // normal type
+  optional uint32 paymentMethodId = 9; // normal type
 }
 message MasterGachaViewLive2d {
   optional uint32 gachaId = 1; // normal type
@@ -3475,6 +3476,15 @@ message uint_MasterSpecialLotteryCharacterList {
 message MasterSpecialLotteryCharacterMap {
   repeated uint_MasterSpecialLotteryCharacterList entries = 1; // dictionary
 }
+message MasterDeckRank {
+  optional string rank = 1; // normal type
+  optional uint32 level = 2; // normal type
+  optional uint32 score = 3; // normal type
+}
+message MasterDeckRankInfo {
+  repeated MasterDeckRank totalDeckRank = 1; // array
+  repeated MasterDeckRank singleDeckRank = 2; // array
+}
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
   optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
@@ -3666,4 +3676,5 @@ message SuiteMasterGetResponse {
   optional MasterMedleyEventMap masterMedleyEventMap = 1161; // sub class
   optional MasterMedleyComboRateList masterMedleyComboRateList = 1162; // sub class
   optional MasterSpecialLotteryCharacterMap masterSpecialLotteryCharacterMap = 1170; // sub class
+  optional MasterDeckRankInfo masterDeckRankInfo = 1181; // sub class
 }
