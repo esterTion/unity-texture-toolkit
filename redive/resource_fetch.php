@@ -26,7 +26,7 @@ $resourceToExport = [
     [ 'bundleNameMatch'=>'/^a\/comic_comic_l_\d+_\d+.unity3d$/',      'nameMatch'=>'/^comic_l_(\d+_\d+)$/i',      'exportTo'=>'comic/$1', 'extraParam'=>'-s 682x512' ],
   ],
   'storydata'=>[
-    [ 'bundleNameMatch'=>'/^a\/storydata_still_\d+.unity3d$/',      'nameMatch'=>'/^still_(\d+)$/i',      'exportTo'=>'card/story/$1', 'extraParamCb'=>function(&$item){return ($item->width!=$item->height)?'-s '.$item->width.'x'.($item->width/16*9):'';} ],
+    [ 'bundleNameMatch'=>'/^a\/storydata_still_\d+.unity3d$/',      'nameMatch'=>'/^still_(\d+)$/i',      'exportTo'=>'card/story/$1', 'extraParamCb'=>function($item){return ($item->width!=$item->height)?'-s '.$item->width.'x'.($item->width/16*9):'';} ],
     [ 'bundleNameMatch'=>'/^a\/storydata_\d+.unity3d$/',      'customAssetProcessor'=> 'exportStory' ],
     [ 'bundleNameMatch'=>'/^a\/storydata_spine_full_\d+.unity3d$/',      'customAssetProcessor'=> 'exportStoryStill' ],
     [ 'bundleNameMatch'=>'/^a\/storydata_movie_\d+.unity3d$/',      'customAssetProcessor'=> 'exportSubtitle' ],
@@ -46,8 +46,8 @@ $resourceToExport = [
     [ 'bundleNameMatch'=>'/^v\/vo_(ci|speciallogin|btg)_(\d+)\.acb$/', 'exportTo'=> 'sound/vo_$1/$2' ],
   ],
   'movie'=>[
-    [ 'bundleNameMatch'=>'/^m\/(t\/)?(.+?)_(\d[\d_]*)\.usm$/', 'exportTo'=> 'movie/$2/$3' ],
-    [ 'bundleNameMatch'=>'/^m\/(t\/)?(.+)\.usm$/', 'exportTo'=> 'movie/$2' ],
+//    [ 'bundleNameMatch'=>'/^m\/(t\/)?(.+?)_(\d[\d_]*)\.usm$/', 'exportTo'=> 'movie/$2/$3' ],
+//    [ 'bundleNameMatch'=>'/^m\/(t\/)?(.+)\.usm$/', 'exportTo'=> 'movie/$2' ],
   ]
 ];
 
@@ -489,7 +489,7 @@ function checkAndUpdateResource($TruthVersion) {
 
   $manifest = parseManifest($manifest);
   foreach ($resourceToExport as $name=>$rules) {
-    $name = "manifest/${name}_assetmanifest";
+    $name = "manifest/${name}2_assetmanifest";
     if (isset($manifest[$name]) && shouldUpdate($name, $manifest[$name]['hash'])) {
       curl_setopt_array($curl, array(
         CURLOPT_URL=>'http://prd-priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/AssetBundles/iOS/'.$name,

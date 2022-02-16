@@ -539,7 +539,7 @@ foreach (execQuery($db, 'SELECT unit_id,motion_type,unit_name FROM unit_data WHE
 foreach (execQuery($db, 'SELECT unit_id FROM unit_rarity WHERE rarity=6') as $row) {
   $info[$row['unit_id']]['hasRarity6'] = true;
 }
-$spineManifest = file_get_contents('data/+manifest_spine.txt');
+$spineManifest = file_get_contents('data/+manifest_spine2.txt');
 foreach ($info as $id => &$item) {
   if (strpos($spineManifest, "a/spine_${id}_chara_base.cysp.unity3d") !== false) {
     $item['hasSpecialBase'] = true;
