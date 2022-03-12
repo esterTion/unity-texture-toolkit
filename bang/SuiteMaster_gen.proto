@@ -297,10 +297,21 @@ message MasterEpisode {
 message MasterEpisodeList {
   repeated MasterEpisode entries = 1; // array
 }
+message MasterCharacterSeasonSpecialCostume {
+  optional uint32 characterId = 1; // normal type
+  optional uint32 areaId = 2; // normal type
+  optional uint32 seasonSpecialId = 3; // normal type
+  optional string sdAssetBundleName = 4; // normal type
+  optional string live2dAssetBundleName = 5; // normal type
+}
+message MasterCharacterSeasonSpecialCostumeList {
+  repeated MasterCharacterSeasonSpecialCostume entries = 1; // array
+}
 message MasterCharacterInfo {
   optional MasterCharacterProfile profile = 12; // sub class
   optional MasterCharacterSeasonCostumeList seasonCostumeList = 13; // sub class
   optional MasterEpisodeList selfIntroductionEpisodeList = 14; // sub class
+  optional MasterCharacterSeasonSpecialCostumeList seasonSpecialCostumeList = 17; // sub class
   optional uint32 characterId = 1; // normal type
   optional string characterType = 2; // normal type
   optional string characterName = 3; // normal type
@@ -417,6 +428,8 @@ message MasterGachaPaymentMethod {
   optional uint32 maxSpinLimit = 8; // nullable
   optional uint32 costItemQuantity = 9; // normal type
   optional uint32 stepNumber = 10; // normal type
+  optional string appealImageFileName = 11; // normal type
+  optional int32 discountType = 12; // normal type
 }
 message MasterGachaExtra {
   optional uint32 limit = 1; // normal type
@@ -476,6 +489,11 @@ message MasterGachaLapAchievement {
   optional uint32 expiredDays = 7; // normal type
   optional string grantType = 8; // normal type
 }
+message MasterStarSealExchangeGachaSeal {
+  optional uint32 gachaId = 1; // normal type
+  optional uint32 exchangeLimit = 2; // normal type
+  optional uint32 amountForOneCount = 3; // normal type
+}
 message MasterGacha {
   optional uint32 gachaId = 1; // normal type
   optional string gachaName = 2; // normal type
@@ -516,6 +534,8 @@ message MasterGacha {
   optional uint32 relationGachaId = 37; // normal type
   optional bool isDailyReset = 38; // normal type
   optional uint32 GachaSealExchangeId = 39; // normal type
+  optional bool hasStarSeal = 40; // normal type
+  optional MasterStarSealExchangeGachaSeal masterStarSealExchangeGachaSeal = 41; // sub class
 }
 message ulong_MasterGacha {
   optional uint64 ulong_MasterGacha_key = 1; // normal type
@@ -910,6 +930,7 @@ message MasterCharacterRarity {
   optional uint32 seal = 2; // normal type
   optional uint32 defaultSkillExp = 3; // normal type
   optional uint32 sameSituationSkillExp = 4; // normal type
+  optional uint32 duplicateStarSeal = 5; // normal type
 }
 message uint_MasterCharacterRarity {
   optional uint32 uint_MasterCharacterRarity_key = 1; // normal type
@@ -2042,6 +2063,7 @@ message MasterEvent {
   optional uint64 aggregateEndAt = 14; // normal type
   optional uint64 eventExchangesEndAt = 15; // nullable
   optional uint64 receptionEndAt = 16; // normal type
+  optional uint32 previousEventId = 18; // normal type
   repeated MasterEventPointReward pointRewards = 101; // array
   repeated MasterEventRankingReward rankingRewards = 102; // array
 }
@@ -2663,6 +2685,7 @@ message MasterGachaInformation {
   optional string stepInfo = 5; // normal type
   optional string setInfo = 6; // normal type
   optional string notice = 7; // normal type
+  optional string annotation = 8; // normal type
 }
 message uint_MasterGachaInformation {
   optional uint32 uint_MasterGachaInformation_key = 1; // normal type
@@ -3485,6 +3508,105 @@ message MasterDeckRankInfo {
   repeated MasterDeckRank totalDeckRank = 1; // array
   repeated MasterDeckRank singleDeckRank = 2; // array
 }
+message MasterStageChallenge {
+  optional uint32 id = 1; // normal type
+  optional string stageChallengeType = 2; // normal type
+  optional uint32 bandId = 3; // normal type
+  optional string assetBundleName = 4; // normal type
+  optional uint64 startAt = 5; // normal type
+  optional uint64 endAt = 6; // normal type
+  optional string description = 7; // normal type
+}
+message MasterStageChallengeList {
+  repeated MasterStageChallenge entries = 1; // array
+}
+message MasterStageChallengeStageNo {
+  optional uint32 stageChallengeId = 1; // normal type
+  optional uint32 stageChallengeStageNo = 2; // normal type
+  optional uint32 stageNoAchievementScore1 = 3; // normal type
+  optional uint32 stageNoAchievementScore2 = 4; // normal type
+  optional uint32 stageNoAchievementScore3 = 5; // normal type
+  optional uint32 stageNoCharacterId = 6; // normal type
+  optional string stageNoAttribute = 7; // normal type
+  optional uint32 musicId = 8; // normal type
+  optional string releaseConditions = 9; // normal type
+}
+message MasterStageChallengeStageNoList {
+  repeated MasterStageChallengeStageNo entries = 1; // array
+}
+message uint_MasterStageChallengeStageNoList {
+  optional uint32 uint_MasterStageChallengeStageNoList_key = 1; // normal type
+  optional MasterStageChallengeStageNoList uint_MasterStageChallengeStageNoList_value = 2; // sub class
+}
+message MasterStageChallengeStageNoMap {
+  repeated uint_MasterStageChallengeStageNoList entries = 1; // dictionary
+}
+message MasterStageChallengeStageNoCharacter {
+  optional uint32 stageNoCharacterId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional uint32 characterId = 3; // normal type
+}
+message MasterStageChallengeStageNoCharacterList {
+  repeated MasterStageChallengeStageNoCharacter entries = 1; // array
+}
+message uint_MasterStageChallengeStageNoCharacterList {
+  optional uint32 uint_MasterStageChallengeStageNoCharacterList_key = 1; // normal type
+  optional MasterStageChallengeStageNoCharacterList uint_MasterStageChallengeStageNoCharacterList_value = 2; // sub class
+}
+message MasterStageChallengeStageNoCharacterMap {
+  repeated uint_MasterStageChallengeStageNoCharacterList entries = 1; // dictionary
+}
+message MasterStageChallengeAchievement {
+  optional uint32 stageChallengeId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional uint32 progress = 3; // normal type
+  optional uint32 rewardId = 4; // normal type
+}
+message MasterStageChallengeAchievementList {
+  repeated MasterStageChallengeAchievement entries = 1; // array
+}
+message uint_MasterStageChallengeAchievementList {
+  optional uint32 uint_MasterStageChallengeAchievementList_key = 1; // normal type
+  optional MasterStageChallengeAchievementList uint_MasterStageChallengeAchievementList_value = 2; // sub class
+}
+message MasterStageChallengeAchievementMap {
+  repeated uint_MasterStageChallengeAchievementList entries = 1; // dictionary
+}
+message MasterStageChallengeReward {
+  optional uint32 rewardId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string resourceType = 3; // normal type
+  optional uint32 resourceId = 4; // normal type
+  optional uint32 quantity = 5; // normal type
+}
+message MasterStageChallengeRewardList {
+  repeated MasterStageChallengeReward entries = 1; // array
+}
+message uint_MasterStageChallengeRewardList {
+  optional uint32 uint_MasterStageChallengeRewardList_key = 1; // normal type
+  optional MasterStageChallengeRewardList uint_MasterStageChallengeRewardList_value = 2; // sub class
+}
+message MasterStageChallengeRewardMap {
+  repeated uint_MasterStageChallengeRewardList entries = 1; // dictionary
+}
+message MasterStarSealExchangesDetail {
+  optional uint32 starSealExchangeDetailId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string caption = 3; // normal type
+  optional string resourceType = 4; // normal type
+  optional uint32 resourceId = 5; // normal type
+  optional uint32 quantity = 6; // normal type
+  optional uint32 amount = 7; // normal type
+  optional uint64 publishedAt = 8; // nullable
+  optional uint64 closedAt = 9; // nullable
+}
+message uint_MasterStarSealExchangesDetail {
+  optional uint32 uint_MasterStarSealExchangesDetail_key = 1; // normal type
+  optional MasterStarSealExchangesDetail uint_MasterStarSealExchangesDetail_value = 2; // sub class
+}
+message MasterStarSealExchangeDetailMap {
+  repeated uint_MasterStarSealExchangesDetail entries = 1; // dictionary
+}
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
   optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
@@ -3677,4 +3799,10 @@ message SuiteMasterGetResponse {
   optional MasterMedleyComboRateList masterMedleyComboRateList = 1162; // sub class
   optional MasterSpecialLotteryCharacterMap masterSpecialLotteryCharacterMap = 1170; // sub class
   optional MasterDeckRankInfo masterDeckRankInfo = 1181; // sub class
+  optional MasterStageChallengeList masterStageChallengeList = 1190; // sub class
+  optional MasterStageChallengeStageNoMap masterStageChallengeStageNoMap = 1191; // sub class
+  optional MasterStageChallengeStageNoCharacterMap masterStageChallengeStageNoCharacterMap = 1192; // sub class
+  optional MasterStageChallengeAchievementMap masterStageChallengeAchievementMap = 1195; // sub class
+  optional MasterStageChallengeRewardMap masterStageChallengeRewardMap = 1196; // sub class
+  optional MasterStarSealExchangeDetailMap masterStarSealExchangeDetailMap = 1200; // sub class
 }
