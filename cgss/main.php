@@ -123,6 +123,9 @@ function do_commit($TruthVersion, $db = NULL) {
           case 37:                            { return 'Motif Visual'; }
           case 38:                            { return 'Trico Symphony'; }
           case 39:                            { return 'Alternate'; }
+          case 40:                            { return 'Refrain'; }
+          case 41:                            { return 'Magic'; }
+          case 42:                            { return 'Combo Alter'; }
           default:                            { return 'Skill '.$a; }
         }
       })($a['skill_type']).
@@ -181,9 +184,10 @@ function do_commit($TruthVersion, $db = NULL) {
   ));
   curl_exec($curl);
   curl_close($curl);
+  return;
 
   // rechk event date
-  if ($db != NULL) {
+  if (false && $db != NULL) {
     $select = $mysqli->query('SELECT data FROM cgss WHERE should_rechk_date=1');
     $rechk_date = 0;
     while (($row = $select->fetch_assoc()) != NULL) {
