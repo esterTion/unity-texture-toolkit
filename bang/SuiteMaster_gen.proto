@@ -3607,6 +3607,22 @@ message uint_MasterStarSealExchangesDetail {
 message MasterStarSealExchangeDetailMap {
   repeated uint_MasterStarSealExchangesDetail entries = 1; // dictionary
 }
+message MasterLiveBoostBonusRate {
+  optional uint32 liveBoostCount = 1; // normal type
+  optional uint32 defaultLiveBoostBonus = 2; // normal type
+  optional uint32 garupaPassLiveBoostBonus = 3; // normal type
+  optional uint32 comebackLiveBoostBonus = 4; // normal type
+  optional uint32 garupaPassAndComebackLiveBoostBonus = 5; // normal type
+  optional uint32 eventPointLiveBoostBonus = 6; // normal type
+  optional bool fullUseCountUp = 7; // normal type
+}
+message uint_MasterLiveBoostBonusRate {
+  optional uint32 uint_MasterLiveBoostBonusRate_key = 1; // normal type
+  optional MasterLiveBoostBonusRate uint_MasterLiveBoostBonusRate_value = 2; // sub class
+}
+message MasterLiveBoostBonusRateMap {
+  repeated uint_MasterLiveBoostBonusRate entries = 1; // dictionary
+}
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
   optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
@@ -3805,4 +3821,5 @@ message SuiteMasterGetResponse {
   optional MasterStageChallengeAchievementMap masterStageChallengeAchievementMap = 1195; // sub class
   optional MasterStageChallengeRewardMap masterStageChallengeRewardMap = 1196; // sub class
   optional MasterStarSealExchangeDetailMap masterStarSealExchangeDetailMap = 1200; // sub class
+  optional MasterLiveBoostBonusRateMap masterLiveBoostBonusRateMap = 1203; // sub class
 }
