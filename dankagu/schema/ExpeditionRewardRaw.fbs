@@ -1,0 +1,42 @@
+namespace D4L.TakashoFes.Master;
+
+table ExpeditionRewardRawEntry {
+  ID:int32;
+  CoinMin:int32;
+  CoinMax:int32;
+  RewardItem1ID:int32;
+  Item1Display:int32;
+  FlItem1Weight:int32;
+  RewardItem2ID:int32;
+  Item2Display:int32;
+  FlItem2Weight:int32;
+  RewardItem3ID:int32;
+  Item3Display:int32;
+  FlItem3Weight:int32;
+  RewardItem4ID:int32;
+  Item4Display:int32;
+  FlItem4Weight:int32;
+  RewardItem5ID:int32;
+  Item5Display:int32;
+  FlItem5Weight:int32;
+  RewardItem6ID:int32;
+  Item6Display:int32;
+  FlItem6Weight:int32;
+  RewardItem7ID:int32;
+  Item7Display:int32;
+  FlItem7Weight:int32;
+  RewardItem8ID:int32;
+  Item8Display:int32;
+  FlItem8Weight:int32;
+  RewardItem9ID:int32;
+  Item9Display:int32;
+  FlItem9Weight:int32;
+}
+
+table ExpeditionRewardRaw {
+  Entries:[ExpeditionRewardRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ExpeditionRewardRaw;
+

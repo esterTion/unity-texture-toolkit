@@ -1,0 +1,19 @@
+namespace D4L.TakashoFes.Master;
+
+table GenericItemRawEntry {
+  ID:int64;
+  DataVersion:int32;
+  Enable:int32;
+  Value:int32;
+  SortOrder:int32;
+  Rarity:int32;
+  HaveMax:int32;
+}
+
+table GenericItemRaw {
+  Entries:[GenericItemRawEntry];
+}
+
+file_identifier "D4AO";
+root_type GenericItemRaw;
+

@@ -1,0 +1,15 @@
+namespace D4L.TakashoFes.Master;
+
+table CoopEventExpeditionPointRawEntry {
+  ID:int32;
+  ThresholdMinute:int32;
+  Amount:int32;
+}
+
+table CoopEventExpeditionPointRaw {
+  Entries:[CoopEventExpeditionPointRawEntry];
+}
+
+file_identifier "D4AO";
+root_type CoopEventExpeditionPointRaw;
+

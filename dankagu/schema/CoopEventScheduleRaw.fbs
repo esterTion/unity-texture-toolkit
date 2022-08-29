@@ -1,0 +1,21 @@
+namespace D4L.TakashoFes.Master;
+
+table CoopEventScheduleRawEntry {
+  ID:int32;
+  DataVersion:int32;
+  Enable:int32;
+  OpenAt:int64;
+  EntryStartAt:int64;
+  EntryEndAt:int64;
+  CloseAt:int64;
+  CoopEventInfoVarientID:int32;
+  EventName:string;
+}
+
+table CoopEventScheduleRaw {
+  Entries:[CoopEventScheduleRawEntry];
+}
+
+file_identifier "D4AO";
+root_type CoopEventScheduleRaw;
+

@@ -1,0 +1,14 @@
+namespace D4L.TakashoFes.Master;
+
+table MusicLevelScoreRawEntry {
+  ID:int32;
+  BaseValue:int32;
+}
+
+table MusicLevelScoreRaw {
+  Entries:[MusicLevelScoreRawEntry];
+}
+
+file_identifier "D4AO";
+root_type MusicLevelScoreRaw;
+

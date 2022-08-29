@@ -1,0 +1,22 @@
+namespace D4L.TakashoFes.Master;
+
+table NoteTapSeRawEntry {
+  ID:int32;
+  Enable:int32;
+  TapNBrillantSeNo:int32;
+  TapNGreatSeNo:int32;
+  TapNBadSeNo:int32;
+  TapFBrillantSeNo:int32;
+  TapFBadSeNo:int32;
+  TapAtkNoteSeNo:int32;
+  TapDefSeNo:int32;
+  TapLoopSeNo:int32;
+}
+
+table NoteTapSeRaw {
+  Entries:[NoteTapSeRawEntry];
+}
+
+file_identifier "D4AO";
+root_type NoteTapSeRaw;
+

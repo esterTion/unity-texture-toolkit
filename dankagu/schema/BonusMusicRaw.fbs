@@ -1,0 +1,16 @@
+namespace D4L.TakashoFes.Master;
+
+table BonusMusicRawEntry {
+  ID:int32;
+  OpenAt:int64;
+  CloseAt:int64;
+  PlayMusicIDs:[int32];
+}
+
+table BonusMusicRaw {
+  Entries:[BonusMusicRawEntry];
+}
+
+file_identifier "D4AO";
+root_type BonusMusicRaw;
+

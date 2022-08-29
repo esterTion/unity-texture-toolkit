@@ -1,0 +1,21 @@
+namespace D4L.TakashoFes.Master;
+
+table SpotUnlockRawEntry {
+  ID:int32;
+  Spot1ID:int32;
+  Spot2ID:int32;
+  Spot3ID:int32;
+  Spot4ID:int32;
+  Repair1ID:int32;
+  Repair2ID:int32;
+  Repair3ID:int32;
+  Repair4ID:int32;
+}
+
+table SpotUnlockRaw {
+  Entries:[SpotUnlockRawEntry];
+}
+
+file_identifier "D4AO";
+root_type SpotUnlockRaw;
+

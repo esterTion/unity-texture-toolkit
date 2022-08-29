@@ -1,0 +1,36 @@
+namespace D4L.TakashoFes.Master;
+
+table ShopProductRawEntry {
+  ID:int64;
+  DataVersion:int32;
+  Enable:int32;
+  ProductName:string;
+  Price:int32;
+  ConsumeItemPrefix:int32;
+  ConsumeItemValue:int32;
+  SubConsumeItemPrefix:int32;
+  SubConsumeItemValue:int32;
+  ItemPrefix:int32;
+  ItemValue:int32;
+  ItemCount:int32;
+  MaxPurchaseCount:int64;
+  PurchaseButtonID:int32;
+  OpenAt:int64;
+  CloseAt:int64;
+  GameProductID:string;
+  ViewOrder:int32;
+  IsShowCloseAt:int32;
+  IsShowMaxPurchaseCount:int32;
+  IsShowCount:int32;
+  ResetType:int32;
+  ImageID:int32;
+  IsLimited:int32;
+}
+
+table ShopProductRaw {
+  Entries:[ShopProductRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ShopProductRaw;
+

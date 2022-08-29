@@ -1,0 +1,19 @@
+namespace D4L.TakashoFes.Master;
+
+table MapUnlockRawEntry {
+  ID:int32;
+  SpotCount:int32;
+  UnlockEpisodeID:int32;
+  UnlockGridID:int32;
+  BeforeSpotObjectItemID:int32;
+  AfterToSpotObjectItemID:int32;
+  SpotRepairCount:int32;
+}
+
+table MapUnlockRaw {
+  Entries:[MapUnlockRawEntry];
+}
+
+file_identifier "D4AO";
+root_type MapUnlockRaw;
+

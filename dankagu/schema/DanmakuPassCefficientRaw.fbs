@@ -1,0 +1,16 @@
+namespace D4L.TakashoFes.Master;
+
+table DanmakuPassCefficientRawEntry {
+  ID:int32;
+  Exp2Tier:int32;
+  TierLimit:int32;
+  TierSkipCost:int32;
+}
+
+table DanmakuPassCefficientRaw {
+  Entries:[DanmakuPassCefficientRawEntry];
+}
+
+file_identifier "D4AO";
+root_type DanmakuPassCefficientRaw;
+

@@ -1,0 +1,20 @@
+namespace D4L.TakashoFes.Master;
+
+table DanmakuPassRawEntry {
+  ID:int32;
+  DataVersion:int32;
+  Enable:int32;
+  VarientIDs:[int32];
+  OpenAt:int64;
+  CloseAt:int64;
+  SkipEnableAt:int64;
+  RewardCloseAt:int64;
+}
+
+table DanmakuPassRaw {
+  Entries:[DanmakuPassRawEntry];
+}
+
+file_identifier "D4AO";
+root_type DanmakuPassRaw;
+

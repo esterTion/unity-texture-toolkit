@@ -1,0 +1,21 @@
+namespace D4L.TakashoFes.Master;
+
+table EventRaidBossRawEntry {
+  ID:int32;
+  HeroineID:int32;
+  Lv:int32;
+  MaxHp:int32;
+  RaidBossType:int32;
+  OffsetIconPosX:float;
+  OffsetIconPosY:float;
+  OffsetIconScaleX:float;
+  OffsetIconScaleY:float;
+}
+
+table EventRaidBossRaw {
+  Entries:[EventRaidBossRawEntry];
+}
+
+file_identifier "D4AO";
+root_type EventRaidBossRaw;
+

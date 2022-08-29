@@ -1,0 +1,39 @@
+namespace D4L.TakashoFes.Master;
+
+table EpisodeRawEntry {
+  ID:int32;
+  Enable:int32;
+  DataVersion:int32;
+  Category:int32;
+  SortNo:int32;
+  MainIndex:int32;
+  SubIndex:int32;
+  SubSubIndex:int32;
+  ListDisplay:bool;
+  EpisodeRewardID:int32;
+  Title:string;
+  AssetName:string;
+  Character1ID:int32;
+  Character2ID:int32;
+  BackgroundID:int32;
+  ThumbnailBackgroundID:int32;
+  Character1Thumbnail:int32;
+  Character2Thumbnail:int32;
+  Character3Thumbnail:int32;
+  ThumbnailDispOrder:int32;
+  ReadUnlockEpisodeID:int32;
+  AfterEpisodeID:int32;
+  UnlockConditionMessage:string;
+  IsVoice:bool;
+  UnlockMusicIDs:[int32];
+  UnlocMenuHeroineIDs:[int32];
+  EventEpisodeType:int8;
+}
+
+table EpisodeRaw {
+  Entries:[EpisodeRawEntry];
+}
+
+file_identifier "D4AO";
+root_type EpisodeRaw;
+

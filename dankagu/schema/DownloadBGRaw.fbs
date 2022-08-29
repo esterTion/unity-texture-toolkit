@@ -1,0 +1,17 @@
+namespace D4L.TakashoFes.Master;
+
+table DownloadBGRawEntry {
+  ID:int32;
+  DataVersion:int32;
+  Enable:int32;
+  Condition:int32;
+  ImageID:int32;
+}
+
+table DownloadBGRaw {
+  Entries:[DownloadBGRawEntry];
+}
+
+file_identifier "D4AO";
+root_type DownloadBGRaw;
+

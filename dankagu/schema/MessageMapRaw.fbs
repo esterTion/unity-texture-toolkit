@@ -1,0 +1,15 @@
+namespace D4L.TakashoFes.Master;
+
+table MessageMapRawEntry {
+  ID:int64;
+  Label:string;
+  Value:string;
+}
+
+table MessageMapRaw {
+  Entries:[MessageMapRawEntry];
+}
+
+file_identifier "D4AO";
+root_type MessageMapRaw;
+

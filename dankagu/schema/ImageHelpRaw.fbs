@@ -1,0 +1,18 @@
+namespace D4L.TakashoFes.Master;
+
+table ImageHelpRawEntry {
+  ID:int64;
+  DataVersion:int32;
+  Enable:int32;
+  GroupID:int32;
+  ImageID:int32;
+  AppearanceID:int32;
+}
+
+table ImageHelpRaw {
+  Entries:[ImageHelpRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ImageHelpRaw;
+

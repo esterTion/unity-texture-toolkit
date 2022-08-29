@@ -1,0 +1,24 @@
+namespace D4L.TakashoFes.Master;
+
+table RythmGameRawEntry {
+  ID:int32;
+  BeginnerID:int32;
+  EasyID:int32;
+  NormalID:int32;
+  HardID:int32;
+  LunaticID:int32;
+  FlPlanXBossDamageCefficient:int32;
+  FlPlanXBossDamageJudgeCefficient:[int32];
+  FlPlanABossDamageCefficient:int32;
+  FlPlanABossDamagePawerCefficient:int32;
+  FlActiveSkillCoolTime:int32;
+  LunaticReleaseConditionsNum:int32;
+}
+
+table RythmGameRaw {
+  Entries:[RythmGameRawEntry];
+}
+
+file_identifier "D4AO";
+root_type RythmGameRaw;
+

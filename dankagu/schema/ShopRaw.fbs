@@ -1,0 +1,24 @@
+namespace D4L.TakashoFes.Master;
+
+table ShopRawEntry {
+  ID:int64;
+  DataVersion:int32;
+  Enable:int32;
+  ShopName:string;
+  ShopCategoryID:int32;
+  LineupID:int32;
+  BannerID:int32;
+  ConsumeItemPrefix:int32;
+  ConsumeItemValue:int32;
+  OpenAt:int64;
+  CloseAt:int64;
+  ViewOrder:int32;
+}
+
+table ShopRaw {
+  Entries:[ShopRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ShopRaw;
+

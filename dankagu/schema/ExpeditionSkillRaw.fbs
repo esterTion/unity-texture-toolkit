@@ -1,0 +1,20 @@
+namespace D4L.TakashoFes.Master;
+
+table ExpeditionSkillRawEntry {
+  ID:int32;
+  Class:int32;
+  Rarety:int32;
+  Condition:int32;
+  Name:string;
+  Description:string;
+  Type:int32;
+  FlParamArray:[int32];
+}
+
+table ExpeditionSkillRaw {
+  Entries:[ExpeditionSkillRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ExpeditionSkillRaw;
+

@@ -1,0 +1,15 @@
+namespace D4L.TakashoFes.Master;
+
+table NotesAdjustmentRawEntry {
+  ID:int32;
+  Name:string;
+  Value:[int32];
+}
+
+table NotesAdjustmentRaw {
+  Entries:[NotesAdjustmentRawEntry];
+}
+
+file_identifier "D4AO";
+root_type NotesAdjustmentRaw;
+

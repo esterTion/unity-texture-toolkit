@@ -1,0 +1,22 @@
+namespace D4L.TakashoFes.Master;
+
+table GrowthItemRawEntry {
+  ID:int32;
+  Enable:int32;
+  DataVersion:int32;
+  Category:int32;
+  Rarity:int32;
+  Name:string;
+  Description:string;
+  Type:int32;
+  Value:int32;
+  HaveMax:int32;
+}
+
+table GrowthItemRaw {
+  Entries:[GrowthItemRawEntry];
+}
+
+file_identifier "D4AO";
+root_type GrowthItemRaw;
+

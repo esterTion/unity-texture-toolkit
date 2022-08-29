@@ -1,0 +1,14 @@
+namespace D4L.TakashoFes.Master;
+
+table BlackBallCharacterRawEntry {
+  ID:int32;
+  Name:string;
+}
+
+table BlackBallCharacterRaw {
+  Entries:[BlackBallCharacterRawEntry];
+}
+
+file_identifier "D4AO";
+root_type BlackBallCharacterRaw;
+

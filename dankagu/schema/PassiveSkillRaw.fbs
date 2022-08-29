@@ -1,0 +1,30 @@
+namespace D4L.TakashoFes.Master;
+
+table PassiveSkillRawEntry {
+  ID:int32;
+  Rarity:int32;
+  Strength:int32;
+  Name:string;
+  Description:string;
+  EffectType:int32;
+  Class:int32;
+  Type:int32;
+  Param1:int32;
+  Param2:int32;
+  Param3:int32;
+  Param4:int32;
+  FlParam1Array:[int32];
+  FlParam2Array:[int32];
+  FlParam3Array:[int32];
+  FlParam4Array:[int32];
+  TestParamArray:[int32];
+  Condition:int32;
+}
+
+table PassiveSkillRaw {
+  Entries:[PassiveSkillRawEntry];
+}
+
+file_identifier "D4AO";
+root_type PassiveSkillRaw;
+

@@ -1,0 +1,37 @@
+namespace D4L.TakashoFes.Master;
+
+table SpotRawEntry {
+  ID:int32;
+  SortNo:int32;
+  Enable:int32;
+  DataVersion:int32;
+  Name:string;
+  NameYomi:string;
+  Width:int32;
+  Height:int32;
+  IsEventSpot:bool;
+  IsArea:bool;
+  ParentSpotID:int32;
+  RequiredTime:int64;
+  UnlockID:int32;
+  MapFlavorText:string;
+  FirstFlavorText:string;
+  SpotCharacterID:int32;
+  SpotCharacterID1:int32;
+  SpotCharacterID2:int32;
+  FirstTweetText:string;
+  FirstTweetID:int32;
+  FirstTweetAssetNo:int32;
+  ReconstructionMax:int32;
+  Situation:int32;
+  Thumbnail:string;
+  BgmNo:int32;
+}
+
+table SpotRaw {
+  Entries:[SpotRawEntry];
+}
+
+file_identifier "D4AO";
+root_type SpotRaw;
+

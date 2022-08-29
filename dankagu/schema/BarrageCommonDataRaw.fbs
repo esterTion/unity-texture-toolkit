@@ -1,0 +1,29 @@
+namespace D4L.TakashoFes.Master;
+
+table BarrageCommonDataRawEntry {
+  ID:int32;
+  PointPosZ:float;
+  TouchPointChangeSpeedBase:float;
+  TouchPointChangeSpeed:float;
+  TouchPointFallFrame:float;
+  BreakPointMoveSpeed:float;
+  BreakPointWaitFrame:float;
+  PowerValuePlanA:int32;
+  PointGenerateRange:float;
+  ShotDelayTimePlanA:float;
+  LineEffectTime:float;
+  DeleteRangePlanA:float;
+  RippleInitSize:float;
+  RippleSize:float;
+  RippleSpeed:float;
+  RippleOffset:float;
+  BBMainCharacter:int32;
+}
+
+table BarrageCommonDataRaw {
+  Entries:[BarrageCommonDataRawEntry];
+}
+
+file_identifier "D4AO";
+root_type BarrageCommonDataRaw;
+

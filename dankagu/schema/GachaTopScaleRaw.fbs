@@ -1,0 +1,17 @@
+namespace D4L.TakashoFes.Master;
+
+table GachaTopScaleRawEntry {
+  ID:int32;
+  IllustScaleX:float;
+  IllustScaleY:float;
+  IllustOffsetX:float;
+  IllustOffsetY:float;
+}
+
+table GachaTopScaleRaw {
+  Entries:[GachaTopScaleRawEntry];
+}
+
+file_identifier "D4AO";
+root_type GachaTopScaleRaw;
+

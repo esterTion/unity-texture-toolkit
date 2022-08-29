@@ -1,0 +1,16 @@
+namespace D4L.TakashoFes.Master;
+
+table DanmakuRawEntry {
+  ID:int32;
+  Name:string;
+  AssetName:string;
+  Damage:int32;
+}
+
+table DanmakuRaw {
+  Entries:[DanmakuRawEntry];
+}
+
+file_identifier "D4AO";
+root_type DanmakuRaw;
+

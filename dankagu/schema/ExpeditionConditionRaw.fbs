@@ -1,0 +1,24 @@
+namespace D4L.TakashoFes.Master;
+
+table ExpeditionConditionRawEntry {
+  ID:int32;
+  Total:int32;
+  Type:int32;
+  FlSuccessThreshold1:int32;
+  FlSuccessThreshold2:int32;
+  Character1ID:int32;
+  Character2ID:int32;
+  Card1Element:int32;
+  Card2Element:int32;
+  Card3Element:int32;
+  Card4Element:int32;
+  Card5Element:int32;
+}
+
+table ExpeditionConditionRaw {
+  Entries:[ExpeditionConditionRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ExpeditionConditionRaw;
+

@@ -1,0 +1,23 @@
+namespace D4L.TakashoFes.Master;
+
+table IndividualDiffRawEntry {
+  ID:int32;
+  LifeBase:int32;
+  FlLifeAdd:int32;
+  FlParamABase:int32;
+  FlParamAAdd:int32;
+  FlParamBBase:int32;
+  FlParamBAdd:int32;
+  FlParamCBase:int32;
+  FlParamCAdd:int32;
+  ShotBase:int32;
+  FlShotAdd:int32;
+}
+
+table IndividualDiffRaw {
+  Entries:[IndividualDiffRawEntry];
+}
+
+file_identifier "D4AO";
+root_type IndividualDiffRaw;
+

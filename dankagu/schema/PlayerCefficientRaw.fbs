@@ -1,0 +1,27 @@
+namespace D4L.TakashoFes.Master;
+
+table PlayerCefficientRawEntry {
+  ID:int32;
+  CardInitMax:int32;
+  CardMax:int32;
+  HeroineInitMax:int32;
+  HeroineMax:int32;
+  AddCount:int32;
+  Cost:int32;
+  DailyBonusMax:int32;
+  FriendMax:int32;
+  ClubInitMax:int32;
+  ClubMax:int32;
+  ClubCreateCost:int32;
+  ClubUnlockCost:int32;
+  PlaySkipMax:int32;
+  ClubUnlockCost2:int32;
+}
+
+table PlayerCefficientRaw {
+  Entries:[PlayerCefficientRawEntry];
+}
+
+file_identifier "D4AO";
+root_type PlayerCefficientRaw;
+

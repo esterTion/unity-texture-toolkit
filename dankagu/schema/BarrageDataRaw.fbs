@@ -1,0 +1,19 @@
+namespace D4L.TakashoFes.Master;
+
+table BarrageDataRawEntry {
+  ID:int32;
+  DataVersion:int32;
+  Enable:int32;
+  IdName:string;
+  BarrageName:string;
+  PrefabName:string;
+  UseCommonTexture:bool;
+}
+
+table BarrageDataRaw {
+  Entries:[BarrageDataRawEntry];
+}
+
+file_identifier "D4AO";
+root_type BarrageDataRaw;
+

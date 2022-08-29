@@ -1,0 +1,15 @@
+namespace D4L.TakashoFes.Master;
+
+table DataVersionRawEntry {
+  ID:int64;
+  DataVersion:int32;
+  OpenAt:int64;
+}
+
+table DataVersionRaw {
+  Entries:[DataVersionRawEntry];
+}
+
+file_identifier "D4AO";
+root_type DataVersionRaw;
+

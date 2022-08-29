@@ -1,0 +1,22 @@
+namespace D4L.TakashoFes.Master;
+
+table AdMobGachaSettingRawEntry {
+  ID:int64;
+  DataVersion:int32;
+  Enable:int32;
+  GachaID:int32;
+  GachaProductID:string;
+  OpenAt:int64;
+  CloseAt:int64;
+  Price:int32;
+  ImageID:int32;
+  PickupIdAndCount:[int32];
+}
+
+table AdMobGachaSettingRaw {
+  Entries:[AdMobGachaSettingRawEntry];
+}
+
+file_identifier "D4AO";
+root_type AdMobGachaSettingRaw;
+

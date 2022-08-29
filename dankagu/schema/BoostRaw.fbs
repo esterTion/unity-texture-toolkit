@@ -1,0 +1,17 @@
+namespace D4L.TakashoFes.Master;
+
+table BoostRawEntry {
+  ID:int32;
+  Type:int32;
+  UseBoost:int32;
+  FlExpBoostValue:int32;
+  FlItemBoostValue:int32;
+}
+
+table BoostRaw {
+  Entries:[BoostRawEntry];
+}
+
+file_identifier "D4AO";
+root_type BoostRaw;
+

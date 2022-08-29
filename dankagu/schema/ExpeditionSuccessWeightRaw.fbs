@@ -1,0 +1,17 @@
+namespace D4L.TakashoFes.Master;
+
+table ExpeditionSuccessWeightRawEntry {
+  ID:int32;
+  TotalPerThreshold:int32;
+  SuccessWeight:int32;
+  GreatSuccessWeight:int32;
+  SuperSuccessWeight:int32;
+}
+
+table ExpeditionSuccessWeightRaw {
+  Entries:[ExpeditionSuccessWeightRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ExpeditionSuccessWeightRaw;
+

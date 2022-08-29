@@ -1,0 +1,30 @@
+namespace D4L.TakashoFes.Master;
+
+table ClubPositionRawEntry {
+  ID:int32;
+  Name:string;
+  IsClubSettingEdit:bool;
+  IsClubInfoEdit:bool;
+  IsSolicit:bool;
+  IsSolicitCancel:bool;
+  IsJoinPermission:bool;
+  IsPositionChange:bool;
+  IsLeaderChange:bool;
+  IsWithdrawal:bool;
+  IsWithdrawalForce:bool;
+  IsSpaceEdit:bool;
+  IsPurchaseItem:bool;
+  IsPlayMission:bool;
+  IsPostMessage:bool;
+  IsAnnouncSetting:bool;
+  IsPostQuestionnaire:bool;
+  IsVotingQuestionnaire:bool;
+}
+
+table ClubPositionRaw {
+  Entries:[ClubPositionRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ClubPositionRaw;
+

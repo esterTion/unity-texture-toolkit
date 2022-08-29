@@ -1,0 +1,16 @@
+namespace D4L.TakashoFes.Master;
+
+table GpxRankingGroupRawEntry {
+  ID:int32;
+  Group:string;
+  RankFrom:int64;
+  RankTo:int64;
+}
+
+table GpxRankingGroupRaw {
+  Entries:[GpxRankingGroupRawEntry];
+}
+
+file_identifier "D4AO";
+root_type GpxRankingGroupRaw;
+

@@ -1,0 +1,20 @@
+namespace D4L.TakashoFes.Master;
+
+table PKVSRawEntry {
+  ID:int32;
+  DataVersion:int32;
+  Enable:int32;
+  Label:string;
+  ImageId:int32;
+  OpenAt:int64;
+  CloseAt:int64;
+  PKVSType:int32;
+}
+
+table PKVSRaw {
+  Entries:[PKVSRawEntry];
+}
+
+file_identifier "D4AO";
+root_type PKVSRaw;
+

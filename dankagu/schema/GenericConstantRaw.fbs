@@ -1,0 +1,17 @@
+namespace D4L.TakashoFes.Master;
+
+table GenericConstantRawEntry {
+  ID:int32;
+  Key:string;
+  Value:string;
+  OpenAt:int64;
+  CloseAt:int64;
+}
+
+table GenericConstantRaw {
+  Entries:[GenericConstantRawEntry];
+}
+
+file_identifier "D4AO";
+root_type GenericConstantRaw;
+

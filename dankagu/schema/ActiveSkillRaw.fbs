@@ -1,0 +1,42 @@
+namespace D4L.TakashoFes.Master;
+
+table ActiveSkillRawEntry {
+  ID:int32;
+  Rarity:int32;
+  Strength:int32;
+  EffectType:int32;
+  Name:string;
+  Description:string;
+  Class1:int32;
+  Type1:int32;
+  Param11:int32;
+  Param12:int32;
+  Param13:int32;
+  Param14:int32;
+  FlParam11Array:[int32];
+  FlParam12Array:[int32];
+  FlParam13Array:[int32];
+  FlParam14Array:[int32];
+  TestParam1Array:[int32];
+  Condition1:int32;
+  Class2:int32;
+  Type2:int32;
+  Param21:int32;
+  Param22:int32;
+  Param23:int32;
+  Param24:int32;
+  FlParam21Array:[int32];
+  FlParam22Array:[int32];
+  FlParam23Array:[int32];
+  FlParam24Array:[int32];
+  TestParam2Array:[int32];
+  Condition2:int32;
+}
+
+table ActiveSkillRaw {
+  Entries:[ActiveSkillRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ActiveSkillRaw;
+

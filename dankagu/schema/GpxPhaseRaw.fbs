@@ -1,0 +1,20 @@
+namespace D4L.TakashoFes.Master;
+
+table GpxPhaseRawEntry {
+  ID:int64;
+  OpenAt:int64;
+  RankingEndAt:int64;
+  RewardStartAt:int64;
+  CloseAt:int64;
+  MusicIDs:[int32];
+  TopMusicID:int32;
+  TopBgID:int32;
+}
+
+table GpxPhaseRaw {
+  Entries:[GpxPhaseRawEntry];
+}
+
+file_identifier "D4AO";
+root_type GpxPhaseRaw;
+

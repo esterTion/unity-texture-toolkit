@@ -1,0 +1,14 @@
+namespace D4L.TakashoFes.Master;
+
+table Exp2LvRawEntry {
+  ID:int32;
+  ExpArray:[int32];
+}
+
+table Exp2LvRaw {
+  Entries:[Exp2LvRawEntry];
+}
+
+file_identifier "D4AO";
+root_type Exp2LvRaw;
+

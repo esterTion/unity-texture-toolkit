@@ -1,0 +1,20 @@
+namespace D4L.TakashoFes.Master;
+
+table EpisodeLivePresetRawEntry {
+  ID:int32;
+  MusicID:int32;
+  Difficulty:int32;
+  HeroineIDs:[int32];
+  CharacterLvs:[int32];
+  CardIDs:[int32];
+  CardLvs:[int32];
+  ReturnEpisodeID:int32;
+}
+
+table EpisodeLivePresetRaw {
+  Entries:[EpisodeLivePresetRawEntry];
+}
+
+file_identifier "D4AO";
+root_type EpisodeLivePresetRaw;
+

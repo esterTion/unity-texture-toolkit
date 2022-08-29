@@ -1,0 +1,17 @@
+namespace D4L.TakashoFes.Master;
+
+table CoopEventProgressItemRawEntry {
+  ID:int32;
+  DataVersion:int32;
+  Enable:int32;
+  Value:int32;
+  CoopEventID:int32;
+}
+
+table CoopEventProgressItemRaw {
+  Entries:[CoopEventProgressItemRawEntry];
+}
+
+file_identifier "D4AO";
+root_type CoopEventProgressItemRaw;
+

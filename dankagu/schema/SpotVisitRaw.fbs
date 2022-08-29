@@ -1,0 +1,25 @@
+namespace D4L.TakashoFes.Master;
+
+table SpotVisitRawEntry {
+  ID:int32;
+  SpotID:int32;
+  CharacterID:int32;
+  FlVistWeightMin:int32;
+  FlVistWeightMax:int32;
+  NakayosiPt:int32;
+  NakayosiCharacterID:int32;
+  FirstTweetText:string;
+  FirstTweetID:int32;
+  FirstTweetAssetNo:int32;
+  VisitType:int32;
+  NGCharacterID:[int32];
+  NGSpotID:[int32];
+}
+
+table SpotVisitRaw {
+  Entries:[SpotVisitRawEntry];
+}
+
+file_identifier "D4AO";
+root_type SpotVisitRaw;
+

@@ -1,0 +1,19 @@
+namespace D4L.TakashoFes.Master;
+
+table EventCefficientRawEntry {
+  ID:int32;
+  ExpeditionUnlockSpotCount:int32;
+  RaidDamageRate:int32;
+  RaidCoopBonus:int32;
+  RaidCoinRate:int32;
+  RaidEncountBoostPoint:[int32];
+  RaidRareBonus:int32;
+}
+
+table EventCefficientRaw {
+  Entries:[EventCefficientRawEntry];
+}
+
+file_identifier "D4AO";
+root_type EventCefficientRaw;
+

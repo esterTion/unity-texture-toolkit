@@ -1,0 +1,16 @@
+namespace D4L.TakashoFes.Master;
+
+table MapGridRawEntry {
+  ID:int32;
+  Width:int32;
+  Height:int32;
+  GridArray:[int32];
+}
+
+table MapGridRaw {
+  Entries:[MapGridRawEntry];
+}
+
+file_identifier "D4AO";
+root_type MapGridRaw;
+

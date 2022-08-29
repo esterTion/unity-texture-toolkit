@@ -1,0 +1,16 @@
+namespace D4L.TakashoFes.Master;
+
+table MonthlyPassRewardRawEntry {
+  ID:int32;
+  ItemPrefix:int32;
+  ItemValue:int32;
+  ItemCount:int32;
+}
+
+table MonthlyPassRewardRaw {
+  Entries:[MonthlyPassRewardRawEntry];
+}
+
+file_identifier "D4AO";
+root_type MonthlyPassRewardRaw;
+

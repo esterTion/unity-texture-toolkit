@@ -1,0 +1,20 @@
+namespace D4L.TakashoFes.Master;
+
+table AdMobExpeditionRawEntry {
+  ID:int32;
+  DataVersion:int32;
+  Enable:int32;
+  OpenAt:int64;
+  CloseAt:int64;
+  MaxShowCountExpedition:int32;
+  ExpeditionShortCutVCPrice:int32;
+  ExpeditionShortCutTime:int32;
+}
+
+table AdMobExpeditionRaw {
+  Entries:[AdMobExpeditionRawEntry];
+}
+
+file_identifier "D4AO";
+root_type AdMobExpeditionRaw;
+

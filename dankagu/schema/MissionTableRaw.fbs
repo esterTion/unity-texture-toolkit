@@ -1,0 +1,19 @@
+namespace D4L.TakashoFes.Master;
+
+table MissionTableRawEntry {
+  ID:int32;
+  DataVersion:int32;
+  Enable:int32;
+  VarientID:int32;
+  MissionType:int32;
+  OpenAt:int64;
+  CloseAt:int64;
+}
+
+table MissionTableRaw {
+  Entries:[MissionTableRawEntry];
+}
+
+file_identifier "D4AO";
+root_type MissionTableRaw;
+

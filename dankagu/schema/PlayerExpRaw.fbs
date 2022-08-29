@@ -1,0 +1,14 @@
+namespace D4L.TakashoFes.Master;
+
+table PlayerExpRawEntry {
+  ID:int32;
+  Exp:int32;
+}
+
+table PlayerExpRaw {
+  Entries:[PlayerExpRawEntry];
+}
+
+file_identifier "D4AO";
+root_type PlayerExpRaw;
+

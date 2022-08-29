@@ -1,0 +1,22 @@
+namespace D4L.TakashoFes.Master;
+
+table HakoniwaCefficientRawEntry {
+  ID:int32;
+  FlElementSameCefficient:int32;
+  FlElementAllSameCefficient:int32;
+  FlHeroineSameCefficient:int32;
+  MySpotMaxCost:int32;
+  SpotCharacterMax:int32;
+  ContactMax:int32;
+  ContactUpdateInterval:int32;
+  BossExpeditionSpawn:int32;
+  BossExpedtionInitPer:int32;
+}
+
+table HakoniwaCefficientRaw {
+  Entries:[HakoniwaCefficientRawEntry];
+}
+
+file_identifier "D4AO";
+root_type HakoniwaCefficientRaw;
+

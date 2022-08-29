@@ -1,0 +1,19 @@
+namespace D4L.TakashoFes.Master;
+
+table GpxRankingRewardRawEntry {
+  ID:int64;
+  ClassID:int32;
+  RankFrom:int64;
+  RankTo:int64;
+  ItemPrefix:[int32];
+  ItemValue:[int32];
+  ItemCount:[int32];
+}
+
+table GpxRankingRewardRaw {
+  Entries:[GpxRankingRewardRawEntry];
+}
+
+file_identifier "D4AO";
+root_type GpxRankingRewardRaw;
+

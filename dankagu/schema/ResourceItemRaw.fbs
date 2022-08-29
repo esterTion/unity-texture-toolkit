@@ -1,0 +1,29 @@
+namespace D4L.TakashoFes.Master;
+
+table ResourceItemRawEntry {
+  ID:int32;
+  Cost:int32;
+  Item1ID:int32;
+  Item1Prefix:int32;
+  Item1Count:int32;
+  Item2ID:int32;
+  Item2Prefix:int32;
+  Item2Count:int32;
+  Item3ID:int32;
+  Item3Prefix:int32;
+  Item3Count:int32;
+  Item4ID:int32;
+  Item4Prefix:int32;
+  Item4Count:int32;
+  Item5ID:int32;
+  Item5Prefix:int32;
+  Item5Count:int32;
+}
+
+table ResourceItemRaw {
+  Entries:[ResourceItemRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ResourceItemRaw;
+

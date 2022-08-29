@@ -1,0 +1,17 @@
+namespace D4L.TakashoFes.Master;
+
+table CoopEventTweetRawEntry {
+  ID:int32;
+  TweetID:int32;
+  Phase:int32;
+  UnlockTweetID:int32;
+  UnlockProgress:int32;
+}
+
+table CoopEventTweetRaw {
+  Entries:[CoopEventTweetRawEntry];
+}
+
+file_identifier "D4AO";
+root_type CoopEventTweetRaw;
+

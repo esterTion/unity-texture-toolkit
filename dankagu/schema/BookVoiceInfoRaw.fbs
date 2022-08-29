@@ -1,0 +1,21 @@
+namespace D4L.TakashoFes.Master;
+
+table BookVoiceInfoRawEntry {
+  ID:int32;
+  Enable:int32;
+  BookVoiceCategoryID:int32;
+  Name:string;
+  Priorty:int32;
+  VoiceCount:int32;
+  VoiceCuesheet:string;
+  VoicePrefix:string;
+  VoiceIDs:string;
+}
+
+table BookVoiceInfoRaw {
+  Entries:[BookVoiceInfoRawEntry];
+}
+
+file_identifier "D4AO";
+root_type BookVoiceInfoRaw;
+

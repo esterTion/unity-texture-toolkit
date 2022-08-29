@@ -1,0 +1,17 @@
+namespace D4L.TakashoFes.Master;
+
+table PartyRawEntry {
+  ID:int32;
+  CharacterMax:int32;
+  PartyPt:int32;
+  PartyTime:int32;
+  RewardNum:int32;
+}
+
+table PartyRaw {
+  Entries:[PartyRawEntry];
+}
+
+file_identifier "D4AO";
+root_type PartyRaw;
+

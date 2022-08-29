@@ -1,0 +1,15 @@
+namespace D4L.TakashoFes.Master;
+
+table StrengthenRawEntry {
+  ID:int32;
+  SameParamArray:[int32];
+  OtherParamArray:[int32];
+}
+
+table StrengthenRaw {
+  Entries:[StrengthenRawEntry];
+}
+
+file_identifier "D4AO";
+root_type StrengthenRaw;
+

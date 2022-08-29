@@ -1,0 +1,14 @@
+namespace D4L.TakashoFes.Master;
+
+table RGameActiveSkillTimingRawEntry {
+  ID:int32;
+  TimingArray:[int32];
+}
+
+table RGameActiveSkillTimingRaw {
+  Entries:[RGameActiveSkillTimingRawEntry];
+}
+
+file_identifier "D4AO";
+root_type RGameActiveSkillTimingRaw;
+

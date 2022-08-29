@@ -1,0 +1,36 @@
+namespace D4L.TakashoFes.Master;
+
+table MissionRawEntry {
+  ID:int64;
+  DataVersion:int32;
+  Enable:int32;
+  ConditionID:int32;
+  TargetValue:int64;
+  ConditionValue:int64;
+  LimitType:int32;
+  ItemPrefix:[int32];
+  ItemValue:[int32];
+  ItemCount:[int32];
+  OpenAt:int64;
+  CloseAt:int64;
+  GroupOrder:int32;
+  SortOrder:int32;
+  PreconditionID1:int32;
+  PreconditionValue1:int32;
+  PreconditionID2:int32;
+  PreconditionValue2:int32;
+  PreconditionID3:int32;
+  PreconditionValue3:int32;
+  PreconditionID4:int32;
+  PreconditionValue4:int32;
+  TransitionID:int32;
+  TransitionValue:string;
+}
+
+table MissionRaw {
+  Entries:[MissionRawEntry];
+}
+
+file_identifier "D4AO";
+root_type MissionRaw;
+

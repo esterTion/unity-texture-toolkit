@@ -1,0 +1,14 @@
+namespace D4L.TakashoFes.Master;
+
+table SystemStringRawEntry {
+  ID:int64;
+  Value:string;
+}
+
+table SystemStringRaw {
+  Entries:[SystemStringRawEntry];
+}
+
+file_identifier "D4AO";
+root_type SystemStringRaw;
+

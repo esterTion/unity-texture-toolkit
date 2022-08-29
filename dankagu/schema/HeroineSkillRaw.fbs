@@ -1,0 +1,16 @@
+namespace D4L.TakashoFes.Master;
+
+table HeroineSkillRawEntry {
+  ID:int32;
+  Description:string;
+  Value:int32;
+  Weight:int32;
+}
+
+table HeroineSkillRaw {
+  Entries:[HeroineSkillRawEntry];
+}
+
+file_identifier "D4AO";
+root_type HeroineSkillRaw;
+

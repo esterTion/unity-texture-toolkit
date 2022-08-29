@@ -1,0 +1,23 @@
+namespace D4L.TakashoFes.Master;
+
+table EventScheduleRawEntry {
+  ID:int32;
+  DataVersion:int32;
+  Enable:int32;
+  OpenAt:int64;
+  CloseAt:int64;
+  EventInfoVarientID:int32;
+  RewardStartAt:int64;
+  RankingStartAt:int64;
+  RankingEndAt:int64;
+  ResultEndAt:int64;
+  EventName:string;
+}
+
+table EventScheduleRaw {
+  Entries:[EventScheduleRawEntry];
+}
+
+file_identifier "D4AO";
+root_type EventScheduleRaw;
+

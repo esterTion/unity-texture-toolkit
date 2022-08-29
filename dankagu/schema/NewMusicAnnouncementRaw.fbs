@@ -1,0 +1,17 @@
+namespace D4L.TakashoFes.Master;
+
+table NewMusicAnnouncementRawEntry {
+  ID:int32;
+  MusicID:int32;
+  DispOrder:int32;
+  OpenAt:int64;
+  CloseAt:int64;
+}
+
+table NewMusicAnnouncementRaw {
+  Entries:[NewMusicAnnouncementRawEntry];
+}
+
+file_identifier "D4AO";
+root_type NewMusicAnnouncementRaw;
+

@@ -1,0 +1,18 @@
+namespace D4L.TakashoFes.Master;
+
+table AdMobMovieSettingRawEntry {
+  ID:int64;
+  Enable:int32;
+  IsDefault:int32;
+  MaxShowCountHome:int32;
+  GetAdPoint:[int32];
+  ContinueBonus:int32;
+}
+
+table AdMobMovieSettingRaw {
+  Entries:[AdMobMovieSettingRawEntry];
+}
+
+file_identifier "D4AO";
+root_type AdMobMovieSettingRaw;
+

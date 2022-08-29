@@ -1,0 +1,22 @@
+namespace D4L.TakashoFes.Master;
+
+table ExpeditionChallengeBonusRawEntry {
+  ID:int32;
+  Description:string;
+  BonusPercent:int32;
+  Type:int32;
+  Lv:int32;
+  Rarity:int32;
+  Element:int32;
+  Character:[int32];
+  MinimumNum:int32;
+  IsOnly:bool;
+}
+
+table ExpeditionChallengeBonusRaw {
+  Entries:[ExpeditionChallengeBonusRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ExpeditionChallengeBonusRaw;
+

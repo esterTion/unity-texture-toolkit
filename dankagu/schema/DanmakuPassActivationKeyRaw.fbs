@@ -1,0 +1,16 @@
+namespace D4L.TakashoFes.Master;
+
+table DanmakuPassActivationKeyRawEntry {
+  ID:int32;
+  DataVersion:int32;
+  Enable:int32;
+  ImageID:int32;
+}
+
+table DanmakuPassActivationKeyRaw {
+  Entries:[DanmakuPassActivationKeyRawEntry];
+}
+
+file_identifier "D4AO";
+root_type DanmakuPassActivationKeyRaw;
+

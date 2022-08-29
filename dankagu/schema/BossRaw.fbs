@@ -1,0 +1,15 @@
+namespace D4L.TakashoFes.Master;
+
+table BossRawEntry {
+  ID:int32;
+  AssetName:string;
+  HeroineID:int32;
+}
+
+table BossRaw {
+  Entries:[BossRawEntry];
+}
+
+file_identifier "D4AO";
+root_type BossRaw;
+

@@ -1,0 +1,78 @@
+namespace D4L.TakashoFes.Master;
+
+table MusicRawEntry {
+  ID:int32;
+  Enable:int32;
+  DataVersion:int32;
+  WavID:int32;
+  ScoreBaseID:int32;
+  MusicType:int32;
+  NotShowBossSpellName:int32;
+  CoverID:int32;
+  BackgroundID:int32;
+  MusicDateFileID:int32;
+  CharaType:int32;
+  BossID:int32;
+  BossID2:int32;
+  BossID3:int32;
+  BossHp:int32;
+  RankMaxScore:int32;
+  RankSScore:int32;
+  RankAScore:int32;
+  RankBScore:int32;
+  RankCScore:int32;
+  RankDScore:int32;
+  RankMaxTotal:int32;
+  RankSTotal:int32;
+  RankATotal:int32;
+  RankBTotal:int32;
+  RankCTotal:int32;
+  RankDTotal:int32;
+  MusicStartTime:int32;
+  SpellCardID:int32;
+  SpellCard2ID:int32;
+  SpellCard3ID:int32;
+  SpellCardMissionID:int32;
+  GroupeID:int32;
+  IllustratorName:string;
+  CreaterNo:int32;
+  MusicAttr:int32;
+  Circle:string;
+  Title:string;
+  TitleYomi:string;
+  OriginalName:string;
+  Vocal:string;
+  Part1:string;
+  Part2:string;
+  Part3:string;
+  Part4:string;
+  Part5:string;
+  Part6:string;
+  Part7:string;
+  Part8:string;
+  Part9:string;
+  Part10:string;
+  Part11:string;
+  DisplayOrder:int32;
+  DanmakuRate:int32;
+  ScoreRewardID:int32;
+  ComboRewardID:int32;
+  BossGaugeRewardID:int32;
+  ConsumeStamina:[int32];
+  GetExp:[int32];
+  GetNakayosiPt:[int32];
+  GetCardPt:[int32];
+  GetPartyPt:[int32];
+  BaseBPM:int32;
+  IsShowStageSelect:bool;
+  LunaticNoDamageClearEmblemID:int32;
+  DetailURL:string;
+}
+
+table MusicRaw {
+  Entries:[MusicRawEntry];
+}
+
+file_identifier "D4AO";
+root_type MusicRaw;
+

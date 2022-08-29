@@ -1,0 +1,22 @@
+namespace D4L.TakashoFes.Master;
+
+table EmblemRawEntry {
+  ID:int32;
+  SortNo:int32;
+  DataVersion:int32;
+  Enable:int32;
+  Name:string;
+  NameYomi:string;
+  Description:string;
+  ReleaseDescription:string;
+  ImageID:int32;
+  Type:int32;
+}
+
+table EmblemRaw {
+  Entries:[EmblemRawEntry];
+}
+
+file_identifier "D4AO";
+root_type EmblemRaw;
+

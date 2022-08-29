@@ -1,0 +1,22 @@
+namespace D4L.TakashoFes.Master;
+
+table AdMobSpecialChanceRawEntry {
+  ID:int32;
+  DataVersion:int32;
+  Enable:int32;
+  OpenAt:int64;
+  CloseAt:int64;
+  SpecialChanceTime:int64;
+  StepRewardGroup:int32;
+  StepShowCount:[int32];
+  StepRate:[int32];
+  CoolDay:int32;
+}
+
+table AdMobSpecialChanceRaw {
+  Entries:[AdMobSpecialChanceRawEntry];
+}
+
+file_identifier "D4AO";
+root_type AdMobSpecialChanceRaw;
+

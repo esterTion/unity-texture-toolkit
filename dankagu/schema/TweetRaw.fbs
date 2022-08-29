@@ -1,0 +1,35 @@
+namespace D4L.TakashoFes.Master;
+
+table TweetRawEntry {
+  ID:int32;
+  SortNo:int32;
+  Enable:int32;
+  DataVersion:int32;
+  Title:string;
+  Category:int32;
+  AssetNo:int32;
+  Character1ID:int32;
+  Character2ID:int32;
+  Character3ID:int32;
+  SpotID:int32;
+  Reconstruction:int32;
+  NakayosiPt:int32;
+  NakayosiCharacter1ID:int32;
+  NakayosiCharacter2ID:int32;
+  UnlockEpisodeID:int32;
+  Character1Thumbnail:int32;
+  Character2Thumbnail:int32;
+  Character3Thumbnail:int32;
+  ThumbnailBackgroundID:int32;
+  Priority:int32;
+  CharacterLv:int32;
+  EventTweet:int32;
+}
+
+table TweetRaw {
+  Entries:[TweetRawEntry];
+}
+
+file_identifier "D4AO";
+root_type TweetRaw;
+

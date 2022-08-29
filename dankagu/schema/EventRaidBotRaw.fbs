@@ -1,0 +1,17 @@
+namespace D4L.TakashoFes.Master;
+
+table EventRaidBotRawEntry {
+  ID:int32;
+  DispName:string;
+  IconType:int32;
+  HeroineId:int32;
+  CardId:int32;
+}
+
+table EventRaidBotRaw {
+  Entries:[EventRaidBotRawEntry];
+}
+
+file_identifier "D4AO";
+root_type EventRaidBotRaw;
+

@@ -1,0 +1,22 @@
+namespace D4L.TakashoFes.Master;
+
+table DailyBonusRawEntry {
+  ID:int32;
+  OpenAt:int64;
+  CloseAt:int64;
+  MonBonusID:int32;
+  TueBonusID:int32;
+  WedBonusID:int32;
+  ThuBonusID:int32;
+  FriBonusID:int32;
+  SatBonusID:int32;
+  SanBonusID:int32;
+}
+
+table DailyBonusRaw {
+  Entries:[DailyBonusRawEntry];
+}
+
+file_identifier "D4AO";
+root_type DailyBonusRaw;
+

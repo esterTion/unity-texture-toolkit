@@ -1,0 +1,19 @@
+namespace D4L.TakashoFes.Master;
+
+table GachaTicketRawEntry {
+  ID:int32;
+  GachaTicketType:int32;
+  PKVSName:string;
+  OpenAt:int64;
+  CloseAt:int64;
+  DeliverOpenAt:int64;
+  DeliverCloseAt:int64;
+}
+
+table GachaTicketRaw {
+  Entries:[GachaTicketRawEntry];
+}
+
+file_identifier "D4AO";
+root_type GachaTicketRaw;
+

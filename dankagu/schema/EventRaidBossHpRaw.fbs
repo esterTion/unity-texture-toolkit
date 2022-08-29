@@ -1,0 +1,17 @@
+namespace D4L.TakashoFes.Master;
+
+table EventRaidBossHpRawEntry {
+  ID:int32;
+  BossLvStart:int32;
+  BossLvEnd:int32;
+  BaseHp:int32;
+  AddPerLv:int32;
+}
+
+table EventRaidBossHpRaw {
+  Entries:[EventRaidBossHpRawEntry];
+}
+
+file_identifier "D4AO";
+root_type EventRaidBossHpRaw;
+

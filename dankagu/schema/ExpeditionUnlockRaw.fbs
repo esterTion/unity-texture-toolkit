@@ -1,0 +1,17 @@
+namespace D4L.TakashoFes.Master;
+
+table ExpeditionUnlockRawEntry {
+  ID:int32;
+  Type:int32;
+  Param1:int32;
+  Param2:int32;
+  Param3:int32;
+}
+
+table ExpeditionUnlockRaw {
+  Entries:[ExpeditionUnlockRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ExpeditionUnlockRaw;
+

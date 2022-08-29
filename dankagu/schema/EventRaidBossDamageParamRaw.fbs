@@ -1,0 +1,17 @@
+namespace D4L.TakashoFes.Master;
+
+table EventRaidBossDamageParamRawEntry {
+  ID:int32;
+  BaseDamage:int32;
+  BaseDamageWithBonus:int32;
+  DifficultyRate:[float];
+  ScoreRankRate:[float];
+}
+
+table EventRaidBossDamageParamRaw {
+  Entries:[EventRaidBossDamageParamRawEntry];
+}
+
+file_identifier "D4AO";
+root_type EventRaidBossDamageParamRaw;
+

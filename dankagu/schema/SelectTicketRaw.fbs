@@ -1,0 +1,18 @@
+namespace D4L.TakashoFes.Master;
+
+table SelectTicketRawEntry {
+  ID:int32;
+  SelectTicketType:int32;
+  PKVSName:string;
+  OpenAt:int64;
+  CloseAt:int64;
+  ImageID:int32;
+}
+
+table SelectTicketRaw {
+  Entries:[SelectTicketRawEntry];
+}
+
+file_identifier "D4AO";
+root_type SelectTicketRaw;
+

@@ -1,0 +1,23 @@
+namespace D4L.TakashoFes.Master;
+
+table RewardConditionRawEntry {
+  ID:int32;
+  Threshold1:int32;
+  ItemSet1ID:int32;
+  Threshold2:int32;
+  ItemSet2ID:int32;
+  Threshold3:int32;
+  ItemSet3ID:int32;
+  Threshold4:int32;
+  ItemSet4ID:int32;
+  Threshold5:int32;
+  ItemSet5ID:int32;
+}
+
+table RewardConditionRaw {
+  Entries:[RewardConditionRawEntry];
+}
+
+file_identifier "D4AO";
+root_type RewardConditionRaw;
+

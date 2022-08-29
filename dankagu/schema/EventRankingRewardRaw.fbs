@@ -1,0 +1,19 @@
+namespace D4L.TakashoFes.Master;
+
+table EventRankingRewardRawEntry {
+  ID:int64;
+  RankFrom:int64;
+  RankTo:int64;
+  AchievementKey:string;
+  ItemPrefix:[int32];
+  ItemValue:[int32];
+  ItemCount:[int32];
+}
+
+table EventRankingRewardRaw {
+  Entries:[EventRankingRewardRawEntry];
+}
+
+file_identifier "D4AO";
+root_type EventRankingRewardRaw;
+

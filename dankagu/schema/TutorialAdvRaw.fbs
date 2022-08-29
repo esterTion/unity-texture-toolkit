@@ -1,0 +1,25 @@
+namespace D4L.TakashoFes.Master;
+
+table TutorialAdvRawEntry {
+  ID:int32;
+  GroupID:int32;
+  Style:int32;
+  Chara:int32;
+  Motion:string;
+  Face:string;
+  Pos:int32;
+  Msg:string;
+  AppearanceID:int32;
+  Dir:int32;
+  TargetBtn:string;
+  Parent:string;
+  FocusType:int32;
+}
+
+table TutorialAdvRaw {
+  Entries:[TutorialAdvRawEntry];
+}
+
+file_identifier "D4AO";
+root_type TutorialAdvRaw;
+

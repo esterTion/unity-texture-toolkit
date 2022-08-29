@@ -1,0 +1,21 @@
+namespace D4L.TakashoFes.Master;
+
+table CharacterVoiceMotionTextRawEntry {
+  ID:int32;
+  CharacterID:int32;
+  ConditionID:int16;
+  MotionID:int16;
+  FaceID:int16;
+  VoiceTypeID:int16;
+  VoiceID:int32;
+  VoiceText:string;
+  MouceOff:int32;
+}
+
+table CharacterVoiceMotionTextRaw {
+  Entries:[CharacterVoiceMotionTextRawEntry];
+}
+
+file_identifier "D4AO";
+root_type CharacterVoiceMotionTextRaw;
+

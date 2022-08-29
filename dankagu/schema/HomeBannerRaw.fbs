@@ -1,0 +1,24 @@
+namespace D4L.TakashoFes.Master;
+
+table HomeBannerRawEntry {
+  ID:int64;
+  DataVersion:int32;
+  Enable:int32;
+  ImageID:string;
+  OpenAt:int64;
+  CloseAt:int64;
+  TransitionID:int32;
+  TransitionValue:string;
+  SortOrder:int32;
+  EventStatus:int32;
+  PlayerLevel:int32;
+  DisplayType:int32;
+}
+
+table HomeBannerRaw {
+  Entries:[HomeBannerRawEntry];
+}
+
+file_identifier "D4AO";
+root_type HomeBannerRaw;
+

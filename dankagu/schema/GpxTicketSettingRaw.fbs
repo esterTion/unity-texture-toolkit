@@ -1,0 +1,20 @@
+namespace D4L.TakashoFes.Master;
+
+table GpxTicketSettingRawEntry {
+  ID:int32;
+  HealTime:int32;
+  PlayVCCount:int32;
+  MaxHaveTicket:int32;
+  BuyTicketCount:int32;
+  PriodWarningTimeTop:int32;
+  PriodWarningTimeStart:int32;
+  StartTicket:int32;
+}
+
+table GpxTicketSettingRaw {
+  Entries:[GpxTicketSettingRawEntry];
+}
+
+file_identifier "D4AO";
+root_type GpxTicketSettingRaw;
+

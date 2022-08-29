@@ -1,0 +1,25 @@
+namespace D4L.TakashoFes.Master;
+
+table ScoreCefficientRawEntry {
+  ID:int32;
+  FlDiffcaltyAdd:int32;
+  FlScoreAdjustment:int32;
+  FlJadgeBrilliant:int32;
+  FlJadgeGreat:int32;
+  FlJadgeFastSlow:int32;
+  FlJadgeBad:int32;
+  FlJadgeMiss:int32;
+  FlAttrEm:int32;
+  FlAttrCo:int32;
+  FlAttrRo:int32;
+  FlAttrAll:int32;
+  ComboCefficientIDs:[int64];
+}
+
+table ScoreCefficientRaw {
+  Entries:[ScoreCefficientRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ScoreCefficientRaw;
+

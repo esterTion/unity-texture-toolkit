@@ -1,0 +1,25 @@
+namespace D4L.TakashoFes.Master;
+
+table HomeVoiceRawEntry {
+  ID:int32;
+  DataVersion:int32;
+  Enable:int32;
+  Cuesheet:string;
+  Prefix:string;
+  VoiceNo:int32;
+  ReserveNo:int32;
+  OpenAt:int64;
+  CloseAt:int64;
+  ConditionID:int32;
+  ConditionValue:string;
+  Weight:int32;
+  FirstVoice:int32;
+}
+
+table HomeVoiceRaw {
+  Entries:[HomeVoiceRawEntry];
+}
+
+file_identifier "D4AO";
+root_type HomeVoiceRaw;
+

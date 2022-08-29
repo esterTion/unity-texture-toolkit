@@ -1,0 +1,15 @@
+namespace D4L.TakashoFes.Master;
+
+table MissionConditionRawEntry {
+  ID:int32;
+  MissionCateogryID:int32;
+  TransitionID:int32;
+}
+
+table MissionConditionRaw {
+  Entries:[MissionConditionRawEntry];
+}
+
+file_identifier "D4AO";
+root_type MissionConditionRaw;
+

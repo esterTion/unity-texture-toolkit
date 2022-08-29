@@ -1,0 +1,22 @@
+namespace D4L.TakashoFes.Master;
+
+table CampaignExpeditionBoostRawEntry {
+  ID:int32;
+  Enable:int32;
+  DataVersion:int32;
+  OpenAt:int64;
+  CloseAt:int64;
+  Value:int32;
+  ExpeditionRangeMinID:int32;
+  ExpeditionRangeMaxID:int32;
+  ExcludedExpeditionIDs:[int32];
+  ExcludedRewardItemIDs:[int32];
+}
+
+table CampaignExpeditionBoostRaw {
+  Entries:[CampaignExpeditionBoostRawEntry];
+}
+
+file_identifier "D4AO";
+root_type CampaignExpeditionBoostRaw;
+

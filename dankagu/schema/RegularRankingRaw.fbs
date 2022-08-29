@@ -1,0 +1,19 @@
+namespace D4L.TakashoFes.Master;
+
+table RegularRankingRawEntry {
+  ID:int32;
+  DataVersion:int32;
+  Enable:int32;
+  SeriesNo:int32;
+  SlotNo:int32;
+  RankingStartAt:int64;
+  RankingEndAt:int64;
+}
+
+table RegularRankingRaw {
+  Entries:[RegularRankingRawEntry];
+}
+
+file_identifier "D4AO";
+root_type RegularRankingRaw;
+

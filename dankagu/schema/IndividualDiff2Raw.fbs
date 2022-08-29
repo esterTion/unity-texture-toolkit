@@ -1,0 +1,19 @@
+namespace D4L.TakashoFes.Master;
+
+table IndividualDiff2RawEntry {
+  ID:int32;
+  Up0ParamType:int32;
+  Up1ParamType:int32;
+  Up2ParamType:int32;
+  Up3ParamType:int32;
+  Up4ParamType:int32;
+  Weight:int32;
+}
+
+table IndividualDiff2Raw {
+  Entries:[IndividualDiff2RawEntry];
+}
+
+file_identifier "D4AO";
+root_type IndividualDiff2Raw;
+

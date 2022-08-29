@@ -1,0 +1,16 @@
+namespace D4L.TakashoFes.Master;
+
+table TutorialRGameRawEntry {
+  ID:int64;
+  NoteEventID:int64;
+  Msg:string;
+  Mode:int64;
+}
+
+table TutorialRGameRaw {
+  Entries:[TutorialRGameRawEntry];
+}
+
+file_identifier "D4AO";
+root_type TutorialRGameRaw;
+

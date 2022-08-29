@@ -1,0 +1,19 @@
+namespace D4L.TakashoFes.Master;
+
+table RandomTweetRawEntry {
+  ID:int32;
+  Enable:int32;
+  DataVersion:int32;
+  AssetNo:int32;
+  CharacterID:int32;
+  UseSpotSetID:int32;
+  IgnoreSpotSetID:int32;
+}
+
+table RandomTweetRaw {
+  Entries:[RandomTweetRawEntry];
+}
+
+file_identifier "D4AO";
+root_type RandomTweetRaw;
+

@@ -1,0 +1,33 @@
+namespace D4L.TakashoFes.Master;
+
+table RgCounstantRawEntry {
+  ID:int32;
+  MaxRange:int32;
+  MinRange:int32;
+  HitRectWidth:float;
+  HitRectTop:float;
+  HitRectBottom:float;
+  HitRectWidthWid:float;
+  HitRectTopWid:float;
+  HitRectBottomWid:float;
+  DamageBase:float;
+  AttackPower:float;
+  AttackBaseNum:float;
+  ComboSeparate:float;
+  ActiveSkillCoefficient:float;
+  ActiveSkillBrillantValue:int32;
+  ActiveSkillGreatValue:int32;
+  PowerMax:int32;
+  PowerCoef:float;
+  BossDamageAdjustRate:float;
+  BossPowerAdjustRate:float;
+  PassiveActivationRate:float;
+}
+
+table RgCounstantRaw {
+  Entries:[RgCounstantRawEntry];
+}
+
+file_identifier "D4AO";
+root_type RgCounstantRaw;
+

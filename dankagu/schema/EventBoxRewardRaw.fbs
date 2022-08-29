@@ -1,0 +1,20 @@
+namespace D4L.TakashoFes.Master;
+
+table EventBoxRewardRawEntry {
+  ID:int64;
+  BoxNo:int32;
+  ItemPrefix:int32;
+  ItemValue:int32;
+  ItemCount:int32;
+  Reset:bool;
+  LotteryWeight:int32;
+  RewardCount:int32;
+}
+
+table EventBoxRewardRaw {
+  Entries:[EventBoxRewardRawEntry];
+}
+
+file_identifier "D4AO";
+root_type EventBoxRewardRaw;
+

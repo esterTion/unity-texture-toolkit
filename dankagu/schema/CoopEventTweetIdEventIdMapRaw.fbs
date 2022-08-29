@@ -1,0 +1,14 @@
+namespace D4L.TakashoFes.Master;
+
+table CoopEventTweetIdEventIdMapRawEntry {
+  ID:int32;
+  CoopEventId:int32;
+}
+
+table CoopEventTweetIdEventIdMapRaw {
+  Entries:[CoopEventTweetIdEventIdMapRawEntry];
+}
+
+file_identifier "D4AO";
+root_type CoopEventTweetIdEventIdMapRaw;
+

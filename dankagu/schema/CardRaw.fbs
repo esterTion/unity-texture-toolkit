@@ -1,0 +1,53 @@
+namespace D4L.TakashoFes.Master;
+
+table CardRawEntry {
+  ID:int32;
+  SortNo:int32;
+  Enable:int32;
+  DataVersion:int32;
+  CharaID:int32;
+  ImageID:int32;
+  AwakeImageID:int32;
+  Name:string;
+  SecondName:string;
+  NameYomi:string;
+  NameDispText:string;
+  IllustratorName:string;
+  FlavorText:string;
+  AwakeFlavorText:string;
+  EpisodeID1:int32;
+  EpisodeID2:int32;
+  Rarity:int32;
+  Element:int32;
+  ParamAMin:int32;
+  ParamAMax:int32;
+  ParamBMin:int32;
+  ParamBMax:int32;
+  ParamCMin:int32;
+  ParamCMax:int32;
+  AwakeID:int32;
+  LimitBreakID:int32;
+  StrengthenID:int32;
+  PassiveSkillID:int32;
+  ActiveSkillID:int32;
+  LinkBurstSkillID:int32;
+  ExpeditionSkillID:int32;
+  DanmakuExp2LvID:int32;
+  DecomposeItemID:int32;
+  FlUvX:int32;
+  FlUvY:int32;
+  FlUvW:int32;
+  GachaMessage:string;
+  StampDir:int32;
+  DisplayOrder:int32;
+  OffsetUvX:int32;
+  OffsetUvY:int32;
+}
+
+table CardRaw {
+  Entries:[CardRawEntry];
+}
+
+file_identifier "D4AO";
+root_type CardRaw;
+

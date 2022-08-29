@@ -1,0 +1,22 @@
+namespace D4L.TakashoFes.Master;
+
+table LimitBreakRawEntry {
+  ID:int32;
+  CardCount:[int32];
+  Cost:[int32];
+  ParamAdd:[int32];
+  ItemCount:[int32];
+  FlSameParam:[int32];
+  FlOtherParam:[int32];
+  PassiveSkillLv:[int32];
+  ActiveSkillLv:[int32];
+  ExpeditionSkillLv:[int32];
+}
+
+table LimitBreakRaw {
+  Entries:[LimitBreakRawEntry];
+}
+
+file_identifier "D4AO";
+root_type LimitBreakRaw;
+

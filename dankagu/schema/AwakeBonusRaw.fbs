@@ -1,0 +1,16 @@
+namespace D4L.TakashoFes.Master;
+
+table AwakeBonusRawEntry {
+  ID:int32;
+  TotalFrom:int32;
+  TotalTo:int32;
+  FlUpPer:int32;
+}
+
+table AwakeBonusRaw {
+  Entries:[AwakeBonusRawEntry];
+}
+
+file_identifier "D4AO";
+root_type AwakeBonusRaw;
+

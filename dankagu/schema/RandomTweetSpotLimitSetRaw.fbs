@@ -1,0 +1,14 @@
+namespace D4L.TakashoFes.Master;
+
+table RandomTweetSpotLimitSetRawEntry {
+  ID:int32;
+  SpotIDs:[int32];
+}
+
+table RandomTweetSpotLimitSetRaw {
+  Entries:[RandomTweetSpotLimitSetRawEntry];
+}
+
+file_identifier "D4AO";
+root_type RandomTweetSpotLimitSetRaw;
+

@@ -1,0 +1,18 @@
+namespace D4L.TakashoFes.Master;
+
+table DefaultHaveItemRawEntry {
+  ID:int32;
+  DataVersion:int32;
+  Enable:int32;
+  ItemPrefix:int32;
+  ItemValue:int32;
+  ItemCount:int32;
+}
+
+table DefaultHaveItemRaw {
+  Entries:[DefaultHaveItemRawEntry];
+}
+
+file_identifier "D4AO";
+root_type DefaultHaveItemRaw;
+

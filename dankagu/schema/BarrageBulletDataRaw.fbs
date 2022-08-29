@@ -1,0 +1,22 @@
+namespace D4L.TakashoFes.Master;
+
+table BarrageBulletDataRawEntry {
+  ID:int32;
+  Path:string;
+  Name:string;
+  IsActive:int32;
+  SeCueName:string;
+  SeCueID:int32;
+  TotalNumOfAnims:int32;
+  NumOfAnimWraps:int32;
+  AddAnimPosX:int32;
+  AddAnimPosY:int32;
+}
+
+table BarrageBulletDataRaw {
+  Entries:[BarrageBulletDataRawEntry];
+}
+
+file_identifier "D4AO";
+root_type BarrageBulletDataRaw;
+

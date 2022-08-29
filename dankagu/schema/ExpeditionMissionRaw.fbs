@@ -1,0 +1,39 @@
+namespace D4L.TakashoFes.Master;
+
+table ExpeditionMissionRawEntry {
+  ID:int32;
+  SortNo:int32;
+  Enable:int32;
+  DataVersion:int32;
+  SpotID:int32;
+  Name:string;
+  Category:int32;
+  ResourceType:int32;
+  ResourceValue:int64;
+  UnlockID:int32;
+  CloseID:int32;
+  ConditionID:int32;
+  ProductPattern:int32;
+  CharacterID:int32;
+  ExpeditionReward1ID:int32;
+  GetExp:int32;
+  GetPartyPt:int32;
+  GetNakayosiPt:int32;
+  GetCardExp:int32;
+  IsOnce:int32;
+  TryDayOfWeek:int32;
+  IsAllReconstructComplete:int32;
+  ChallengeList:[int32];
+  ChallengeOpenAt:int64;
+  ChallengeFinishAt:int64;
+  ChallengeCloseAt:int64;
+  FilterType:int32;
+}
+
+table ExpeditionMissionRaw {
+  Entries:[ExpeditionMissionRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ExpeditionMissionRaw;
+

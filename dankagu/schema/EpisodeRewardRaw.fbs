@@ -1,0 +1,16 @@
+namespace D4L.TakashoFes.Master;
+
+table EpisodeRewardRawEntry {
+  ID:int32;
+  ItemID:int32;
+  ItemPrefix:int32;
+  ItemCount:int32;
+}
+
+table EpisodeRewardRaw {
+  Entries:[EpisodeRewardRawEntry];
+}
+
+file_identifier "D4AO";
+root_type EpisodeRewardRaw;
+

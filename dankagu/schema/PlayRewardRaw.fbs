@@ -1,0 +1,18 @@
+namespace D4L.TakashoFes.Master;
+
+table PlayRewardRawEntry {
+  ID:int32;
+  ItemPrefix:int32;
+  ItemValue:int32;
+  ItemCount:int32;
+  Condition:int32;
+  LotteryWeight:int32;
+}
+
+table PlayRewardRaw {
+  Entries:[PlayRewardRawEntry];
+}
+
+file_identifier "D4AO";
+root_type PlayRewardRaw;
+

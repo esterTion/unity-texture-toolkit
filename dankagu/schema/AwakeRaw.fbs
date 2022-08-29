@@ -1,0 +1,19 @@
+namespace D4L.TakashoFes.Master;
+
+table AwakeRawEntry {
+  ID:int32;
+  AwakeItem1ID:int32;
+  AwakeItem2ID:int32;
+  AwakeItem3ID:int32;
+  AwakeItem4ID:int32;
+  AwakeItem5ID:int32;
+  AwakeItem6ID:int32;
+}
+
+table AwakeRaw {
+  Entries:[AwakeRawEntry];
+}
+
+file_identifier "D4AO";
+root_type AwakeRaw;
+

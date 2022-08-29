@@ -1,0 +1,40 @@
+namespace D4L.TakashoFes.Master;
+
+table CoopEventInfoRawEntry {
+  ID:int32;
+  Enable:int32;
+  DataVersion:int32;
+  Name:string;
+  OpenAt:int64;
+  EntryStartAt:int64;
+  EntryEndAt:int64;
+  CloseAt:int64;
+  PhaseMax:int32;
+  PhaseProgressAt:int64;
+  PhaseProgressAt2:int64;
+  PhaseProgressAt3:int64;
+  PhaseProgressAt4:int64;
+  PhaseSpotIDs:[int32];
+  PhaseMaxPoints:[int64];
+  PhaseShopLineupIDs:[int32];
+  PhaseProgressItemIDs:[int32];
+  ImageHelpIDs:[int32];
+  ImageHelpIDs2:[int32];
+  ImageHelpIDs3:[int32];
+  ImageHelpIDs4:[int32];
+  ResourcePointID:int32;
+  KaguraBasePt:int32;
+  ExpeditionBasePtVarientID:int32;
+  ProgressRewardVarientID:int32;
+  PhaseTweetVarientID:int32;
+  TweetIntervalTime:int32;
+  BannerIDs:[int32];
+}
+
+table CoopEventInfoRaw {
+  Entries:[CoopEventInfoRawEntry];
+}
+
+file_identifier "D4AO";
+root_type CoopEventInfoRaw;
+

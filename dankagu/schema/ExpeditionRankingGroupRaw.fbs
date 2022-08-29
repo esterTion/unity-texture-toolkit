@@ -1,0 +1,15 @@
+namespace D4L.TakashoFes.Master;
+
+table ExpeditionRankingGroupRawEntry {
+  ID:int32;
+  RankFrom:int64;
+  RankTo:int64;
+}
+
+table ExpeditionRankingGroupRaw {
+  Entries:[ExpeditionRankingGroupRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ExpeditionRankingGroupRaw;
+

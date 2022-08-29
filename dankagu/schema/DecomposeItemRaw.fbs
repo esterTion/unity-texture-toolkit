@@ -1,0 +1,19 @@
+namespace D4L.TakashoFes.Master;
+
+table DecomposeItemRawEntry {
+  ID:int32;
+  Item1ID:int32;
+  Item1Prefix:int32;
+  Item1Count:int32;
+  Item2ID:int32;
+  Item2Prefix:int32;
+  Item2Count:int32;
+}
+
+table DecomposeItemRaw {
+  Entries:[DecomposeItemRawEntry];
+}
+
+file_identifier "D4AO";
+root_type DecomposeItemRaw;
+

@@ -1,0 +1,16 @@
+namespace D4L.TakashoFes.Master;
+
+table ComboMaxRawEntry {
+  ID:int32;
+  Count:int32;
+  TotalAttack:int32;
+  DapSec:int32;
+}
+
+table ComboMaxRaw {
+  Entries:[ComboMaxRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ComboMaxRaw;
+

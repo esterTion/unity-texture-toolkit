@@ -1,0 +1,14 @@
+namespace D4L.TakashoFes.Master;
+
+table CampaignCategoryRawEntry {
+  ID:int32;
+  CategoryName:string;
+}
+
+table CampaignCategoryRaw {
+  Entries:[CampaignCategoryRawEntry];
+}
+
+file_identifier "D4AO";
+root_type CampaignCategoryRaw;
+

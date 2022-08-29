@@ -1,0 +1,46 @@
+namespace D4L.TakashoFes.Master;
+
+table CharacterParameterRawEntry {
+  ID:int32;
+  Enable:int32;
+  DataVersion:int32;
+  CharaID:int32;
+  ImageID:int32;
+  MenuText1:string;
+  MenuText2:string;
+  MenuText3:string;
+  MenuText4:string;
+  Voice1:int32;
+  Voice2:int32;
+  Voice3:int32;
+  Voice4:int32;
+  MouceOff1:int32;
+  MouceOff2:int32;
+  MouceOff3:int32;
+  MouceOff4:int32;
+  Motion1:int32;
+  Motion2:int32;
+  Face1:int32;
+  Face2:int32;
+  Presonality:int32;
+  Animationtype:int32;
+  PartyWalk:int32;
+  NgEmotion:[int32];
+  NgInteractObject:[int32];
+  PartyItem:string;
+  SDTalkSpeed:float;
+  SDTalkDispTime:float;
+  SDFlyUpWaitTime:float;
+  SDFlyDownWaitTime:float;
+  SDMoveSpeed:float;
+  SDPartyMoveSpeed:float;
+  SDOption:int32;
+}
+
+table CharacterParameterRaw {
+  Entries:[CharacterParameterRawEntry];
+}
+
+file_identifier "D4AO";
+root_type CharacterParameterRaw;
+

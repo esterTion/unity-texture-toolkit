@@ -1,0 +1,32 @@
+namespace D4L.TakashoFes.Master;
+
+table SpotObjectRawEntry {
+  ID:int32;
+  Enable:int32;
+  DataVersion:int32;
+  SpotID:int32;
+  SpotObjectItemID:int32;
+  SpotObjectItem2ID:int32;
+  AssetNo:int32;
+  SpotObjectUnlockStep:int32;
+  ResourceItemID:[int32];
+  ReconstructionStep:[int32];
+  RequiredTime:int64;
+  Reconstruction:int32;
+  ReconstructionReward1ID:[int32];
+  ReconstructionReward1Step:[int32];
+  ReconstructionReward2ID:[int32];
+  ReconstructionReward2Step:[int32];
+  ReconstructionReward3ID:[int32];
+  ReconstructionReward3Step:[int32];
+  ReconstructionMesssage:string;
+  UnlockSpotObject:[int32];
+}
+
+table SpotObjectRaw {
+  Entries:[SpotObjectRawEntry];
+}
+
+file_identifier "D4AO";
+root_type SpotObjectRaw;
+

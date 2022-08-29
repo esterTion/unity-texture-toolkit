@@ -1,0 +1,20 @@
+namespace D4L.TakashoFes.Master;
+
+table TitleBGRawEntry {
+  ID:int32;
+  DataVersion:int32;
+  Enable:int32;
+  ImageID:string;
+  OpenAt:int64;
+  CloseAt:int64;
+  LogoMovieID:string;
+  SysBgmID:int32;
+}
+
+table TitleBGRaw {
+  Entries:[TitleBGRawEntry];
+}
+
+file_identifier "D4AO";
+root_type TitleBGRaw;
+

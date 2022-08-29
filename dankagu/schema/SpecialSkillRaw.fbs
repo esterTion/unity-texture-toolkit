@@ -1,0 +1,21 @@
+namespace D4L.TakashoFes.Master;
+
+table SpecialSkillRawEntry {
+  ID:int32;
+  Name:string;
+  Description:string;
+  FlRate:int32;
+  Life:int32;
+  FlParamA:int32;
+  FlParamB:int32;
+  FlParamC:int32;
+  Shot:int32;
+}
+
+table SpecialSkillRaw {
+  Entries:[SpecialSkillRawEntry];
+}
+
+file_identifier "D4AO";
+root_type SpecialSkillRaw;
+

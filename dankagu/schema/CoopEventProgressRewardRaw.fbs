@@ -1,0 +1,18 @@
+namespace D4L.TakashoFes.Master;
+
+table CoopEventProgressRewardRawEntry {
+  ID:int32;
+  Phase:int32;
+  Progress:int32;
+  PointBonusRatio:int32;
+  TweetIDs:[int32];
+  ShopLineupIDs:[int32];
+}
+
+table CoopEventProgressRewardRaw {
+  Entries:[CoopEventProgressRewardRawEntry];
+}
+
+file_identifier "D4AO";
+root_type CoopEventProgressRewardRaw;
+

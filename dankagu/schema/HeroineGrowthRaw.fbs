@@ -1,0 +1,22 @@
+namespace D4L.TakashoFes.Master;
+
+table HeroineGrowthRawEntry {
+  ID:int32;
+  FlParamA:int32;
+  FlParamB:int32;
+  FlParamC:int32;
+  Life:int32;
+  Shot:int32;
+  RewardItemPrefix:int32;
+  RewardItemValue:int32;
+  RewardItemCount:int32;
+  ResourceFlagmentCount:int32;
+}
+
+table HeroineGrowthRaw {
+  Entries:[HeroineGrowthRawEntry];
+}
+
+file_identifier "D4AO";
+root_type HeroineGrowthRaw;
+

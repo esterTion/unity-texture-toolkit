@@ -1,0 +1,26 @@
+namespace D4L.TakashoFes.Master;
+
+table SpotRepairObjectRawEntry {
+  ID:int32;
+  Enable:int32;
+  DataVersion:int32;
+  SpotRepairID:int32;
+  SpotObjectID:int32;
+  ResourceItemID:[int32];
+  RepairStep:[int32];
+  RepairReward1ID:[int32];
+  RepairReward1Step:[int32];
+  RepairReward2ID:[int32];
+  RepairReward2Step:[int32];
+  RepairReward3ID:[int32];
+  RepairReward3Step:[int32];
+  DestructionObjectType:int32;
+}
+
+table SpotRepairObjectRaw {
+  Entries:[SpotRepairObjectRawEntry];
+}
+
+file_identifier "D4AO";
+root_type SpotRepairObjectRaw;
+

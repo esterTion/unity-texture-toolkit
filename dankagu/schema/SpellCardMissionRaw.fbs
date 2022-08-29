@@ -1,0 +1,16 @@
+namespace D4L.TakashoFes.Master;
+
+table SpellCardMissionRawEntry {
+  ID:int32;
+  Type:int32;
+  Threshold:int32;
+  Name:string;
+}
+
+table SpellCardMissionRaw {
+  Entries:[SpellCardMissionRawEntry];
+}
+
+file_identifier "D4AO";
+root_type SpellCardMissionRaw;
+

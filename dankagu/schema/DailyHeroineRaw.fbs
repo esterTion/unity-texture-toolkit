@@ -1,0 +1,17 @@
+namespace D4L.TakashoFes.Master;
+
+table DailyHeroineRawEntry {
+  ID:int32;
+  OpenAt:int64;
+  CloseAt:int64;
+  HeroineIDs:[int32];
+  Magnification:int32;
+}
+
+table DailyHeroineRaw {
+  Entries:[DailyHeroineRawEntry];
+}
+
+file_identifier "D4AO";
+root_type DailyHeroineRaw;
+

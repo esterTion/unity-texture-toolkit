@@ -1,0 +1,15 @@
+namespace D4L.TakashoFes.Master;
+
+table VCRawEntry {
+  ID:int32;
+  Label:string;
+  Paid:int32;
+}
+
+table VCRaw {
+  Entries:[VCRawEntry];
+}
+
+file_identifier "D4AO";
+root_type VCRaw;
+

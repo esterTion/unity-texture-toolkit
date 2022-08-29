@@ -1,0 +1,20 @@
+namespace D4L.TakashoFes.Master;
+
+table PlayerLvUpRewardRawEntry {
+  ID:int32;
+  Lv:int32;
+  VC:int32;
+  Coin:int32;
+  SkipTicket:int32;
+  BoostRecoverType:int32;
+  BoostRecoverCount:int32;
+  UnlockType:int32;
+}
+
+table PlayerLvUpRewardRaw {
+  Entries:[PlayerLvUpRewardRawEntry];
+}
+
+file_identifier "D4AO";
+root_type PlayerLvUpRewardRaw;
+

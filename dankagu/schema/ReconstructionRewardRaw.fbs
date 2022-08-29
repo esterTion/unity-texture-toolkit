@@ -1,0 +1,21 @@
+namespace D4L.TakashoFes.Master;
+
+table ReconstructionRewardRawEntry {
+  ID:int32;
+  EpisodeID:int32;
+  CharacterID:int32;
+  SpotObjectRewardID:int32;
+  ExpeditionID:int32;
+  ItemID:int32;
+  ItemPrefix:int32;
+  ItemCount:int32;
+  IsUniqueItem:int32;
+}
+
+table ReconstructionRewardRaw {
+  Entries:[ReconstructionRewardRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ReconstructionRewardRaw;
+

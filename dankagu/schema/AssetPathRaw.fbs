@@ -1,0 +1,20 @@
+namespace D4L.TakashoFes.Master;
+
+table AssetPathRawEntry {
+  ID:int64;
+  AssetPath:string;
+  HashedPath:string;
+  FileHash:string;
+  FileSize:int32;
+  FileRev:int32;
+  FileType:int32;
+  DownloadOption:int32;
+}
+
+table AssetPathRaw {
+  Entries:[AssetPathRawEntry];
+}
+
+file_identifier "D4AO";
+root_type AssetPathRaw;
+

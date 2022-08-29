@@ -1,0 +1,21 @@
+namespace D4L.TakashoFes.Master;
+
+table SpellCardRawEntry {
+  ID:int32;
+  Name:string;
+  DanmakuID:int32;
+  AssetName:string;
+  BeginnerSpellCardID:int32;
+  EasySpellCardID:int32;
+  NormalSpellCardID:int32;
+  HardSpellCardID:int32;
+  LunaticSpellCardID:int32;
+}
+
+table SpellCardRaw {
+  Entries:[SpellCardRawEntry];
+}
+
+file_identifier "D4AO";
+root_type SpellCardRaw;
+

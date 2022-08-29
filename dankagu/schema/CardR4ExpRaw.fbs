@@ -1,0 +1,14 @@
+namespace D4L.TakashoFes.Master;
+
+table CardR4ExpRawEntry {
+  ID:int32;
+  Exp:int32;
+}
+
+table CardR4ExpRaw {
+  Entries:[CardR4ExpRawEntry];
+}
+
+file_identifier "D4AO";
+root_type CardR4ExpRaw;
+

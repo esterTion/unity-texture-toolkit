@@ -1,0 +1,14 @@
+namespace D4L.TakashoFes.Master;
+
+table ExpeditionFilterTypeRawEntry {
+  ID:int32;
+  Description:string;
+}
+
+table ExpeditionFilterTypeRaw {
+  Entries:[ExpeditionFilterTypeRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ExpeditionFilterTypeRaw;
+

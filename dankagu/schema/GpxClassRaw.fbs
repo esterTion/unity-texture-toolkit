@@ -1,0 +1,16 @@
+namespace D4L.TakashoFes.Master;
+
+table GpxClassRawEntry {
+  ID:int64;
+  Name:string;
+  RankFrom:int64;
+  RankTo:int64;
+}
+
+table GpxClassRaw {
+  Entries:[GpxClassRawEntry];
+}
+
+file_identifier "D4AO";
+root_type GpxClassRaw;
+

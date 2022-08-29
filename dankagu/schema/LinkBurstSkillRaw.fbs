@@ -1,0 +1,22 @@
+namespace D4L.TakashoFes.Master;
+
+table LinkBurstSkillRawEntry {
+  ID:int32;
+  Strength:int32;
+  Name:string;
+  Description:string;
+  Detail:string;
+  Type1:int32;
+  FlParam11Array:[int32];
+  FlParam12Array:[int32];
+  FlParam13Array:[int32];
+  FlParam14Array:[int32];
+}
+
+table LinkBurstSkillRaw {
+  Entries:[LinkBurstSkillRawEntry];
+}
+
+file_identifier "D4AO";
+root_type LinkBurstSkillRaw;
+

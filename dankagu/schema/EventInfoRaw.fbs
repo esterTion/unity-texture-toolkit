@@ -1,0 +1,62 @@
+namespace D4L.TakashoFes.Master;
+
+table EventInfoRawEntry {
+  ID:int32;
+  Enable:int32;
+  DataVersion:int32;
+  Name:string;
+  OpenAt:int64;
+  RankingStartAt:int64;
+  RankingEndAt:int64;
+  RewardStartAt:int64;
+  ResultEndAt:int64;
+  CloseAt:int64;
+  EventType:string;
+  ImageHelpIDs:[int32];
+  ImageHelpIDs2:[int32];
+  TotalRewardVarientIDs:[int32];
+  BoxRewardValientIDs:[int32];
+  EventRankingRewardIDs:[string];
+  EventMissionVarientIDs:[int32];
+  RankingVarientIDs:[int32];
+  RankingTargetValueIDs:[int32];
+  EventElement:int32;
+  EventCharacter:[int32];
+  EventCharacter2:[int32];
+  EventCharacter2OpenAt:int64;
+  EventElementCefficient:int32;
+  EventElementCefficients:[int32];
+  EventCharacterCefficient:int32;
+  EventCharacterCefficients:[int32];
+  EventCharacterElementCefficients:[int32];
+  EventMusicID:int32;
+  MainRewardCardIDs:[int32];
+  NormalBasePt:int32;
+  EventBasePt:int32;
+  NormalPlayDiffcultyCefficient:[int32];
+  EventPlayDiffcultyCefficient:[int32];
+  NormalClearRankCefficient:[int32];
+  EventClearRankCefficient:[int32];
+  BossGaugePt:[int32];
+  ExpedtionIDs:[int32];
+  ExpedtionMaxCount:[int32];
+  ExpeditionRaidDifficultyRate:[int32];
+  BackgroundID:int32;
+  PrologueEpisodeID:int32;
+  EpilogueEpisodeID:int32;
+  OpenBoxPoint:int32;
+  BannerIDs:[int32];
+  IllustScaleX:float;
+  RaidBossVarientIDs:[int32];
+  IllustScaleY:float;
+  IllustOffsetX:float;
+  IllustOffsetY:float;
+}
+
+table EventInfoRaw {
+  Entries:[EventInfoRawEntry];
+}
+
+file_identifier "D4AO";
+root_type EventInfoRaw;
+

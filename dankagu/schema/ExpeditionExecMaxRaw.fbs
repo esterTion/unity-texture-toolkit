@@ -1,0 +1,15 @@
+namespace D4L.TakashoFes.Master;
+
+table ExpeditionExecMaxRawEntry {
+  ID:int32;
+  SpotCount:int32;
+  ExecMax:int32;
+}
+
+table ExpeditionExecMaxRaw {
+  Entries:[ExpeditionExecMaxRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ExpeditionExecMaxRaw;
+

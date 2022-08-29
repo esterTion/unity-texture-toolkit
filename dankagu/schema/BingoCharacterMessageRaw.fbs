@@ -1,0 +1,16 @@
+namespace D4L.TakashoFes.Master;
+
+table BingoCharacterMessageRawEntry {
+  ID:int32;
+  DataVersion:int32;
+  Enable:int32;
+  MessageTable:[string];
+}
+
+table BingoCharacterMessageRaw {
+  Entries:[BingoCharacterMessageRawEntry];
+}
+
+file_identifier "D4AO";
+root_type BingoCharacterMessageRaw;
+

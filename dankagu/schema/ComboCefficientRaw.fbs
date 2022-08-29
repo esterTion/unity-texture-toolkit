@@ -1,0 +1,16 @@
+namespace D4L.TakashoFes.Master;
+
+table ComboCefficientRawEntry {
+  ID:int64;
+  UpperLimit:int32;
+  LowerLimit:int32;
+  FlValue:int32;
+}
+
+table ComboCefficientRaw {
+  Entries:[ComboCefficientRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ComboCefficientRaw;
+

@@ -1,0 +1,19 @@
+namespace D4L.TakashoFes.Master;
+
+table MusicProductRawEntry {
+  ID:int32;
+  PurchaseType:int32;
+  ConsumeItemPrefix:int32;
+  ConsumeItemValue:int32;
+  Price:int32;
+  OpenAt:int64;
+  CloseAt:int64;
+}
+
+table MusicProductRaw {
+  Entries:[MusicProductRawEntry];
+}
+
+file_identifier "D4AO";
+root_type MusicProductRaw;
+

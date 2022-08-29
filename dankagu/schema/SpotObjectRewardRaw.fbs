@@ -1,0 +1,19 @@
+namespace D4L.TakashoFes.Master;
+
+table SpotObjectRewardRawEntry {
+  ID:int32;
+  SpotObjectID:int32;
+  ItemID:int32;
+  ItemPrefix:int32;
+  Count:int32;
+  Max:int32;
+  Interval:int64;
+}
+
+table SpotObjectRewardRaw {
+  Entries:[SpotObjectRewardRawEntry];
+}
+
+file_identifier "D4AO";
+root_type SpotObjectRewardRaw;
+

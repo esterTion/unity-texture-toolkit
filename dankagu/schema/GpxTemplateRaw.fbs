@@ -1,0 +1,14 @@
+namespace D4L.TakashoFes.Master;
+
+table GpxTemplateRawEntry {
+  ID:int32;
+  Value:string;
+}
+
+table GpxTemplateRaw {
+  Entries:[GpxTemplateRawEntry];
+}
+
+file_identifier "D4AO";
+root_type GpxTemplateRaw;
+

@@ -1,0 +1,18 @@
+namespace D4L.TakashoFes.Master;
+
+table DanmakuPassPlanRawEntry {
+  ID:int32;
+  DanmakuPassID:int32;
+  VarientID:int32;
+  PassType:int32;
+  OpenAt:int64;
+  CloseAt:int64;
+}
+
+table DanmakuPassPlanRaw {
+  Entries:[DanmakuPassPlanRawEntry];
+}
+
+file_identifier "D4AO";
+root_type DanmakuPassPlanRaw;
+

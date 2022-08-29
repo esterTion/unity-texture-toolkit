@@ -1,0 +1,14 @@
+namespace D4L.TakashoFes.Master;
+
+table ExpeditionChallengeTypeRawEntry {
+  ID:int32;
+  Description:string;
+}
+
+table ExpeditionChallengeTypeRaw {
+  Entries:[ExpeditionChallengeTypeRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ExpeditionChallengeTypeRaw;
+

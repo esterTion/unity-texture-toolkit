@@ -1,0 +1,15 @@
+namespace D4L.TakashoFes.Master;
+
+table ErrorMessageRawEntry {
+  ID:int32;
+  ErrorTitle:string;
+  ErrorMessage:string;
+}
+
+table ErrorMessageRaw {
+  Entries:[ErrorMessageRawEntry];
+}
+
+file_identifier "D4AO";
+root_type ErrorMessageRaw;
+

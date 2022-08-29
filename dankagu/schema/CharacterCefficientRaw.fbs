@@ -1,0 +1,28 @@
+namespace D4L.TakashoFes.Master;
+
+table CharacterCefficientRawEntry {
+  ID:int32;
+  StrengthenCostCefficient:int32;
+  HeroineGetFlagmentCount:int32;
+  HeroineExchangeFlagmentCount:int32;
+  NakayosiPtMax:int32;
+  NakayosiPtThreshold:[int32];
+  FlIndividualUp0:int32;
+  FlIndividualUp1:int32;
+  FlIndividualUp2:int32;
+  FlIndividualUp3:int32;
+  FlIndividualUp4:int32;
+  FlIndividualUpLifeShot0:int32;
+  FlIndividualUpLifeShot1:int32;
+  FlIndividualUpLifeShot2:int32;
+  FlIndividualUpLifeShot3:int32;
+  FlIndividualUpLifeShot4:int32;
+}
+
+table CharacterCefficientRaw {
+  Entries:[CharacterCefficientRawEntry];
+}
+
+file_identifier "D4AO";
+root_type CharacterCefficientRaw;
+

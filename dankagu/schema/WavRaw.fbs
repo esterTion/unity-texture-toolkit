@@ -1,0 +1,17 @@
+namespace D4L.TakashoFes.Master;
+
+table WavRawEntry {
+  ID:int32;
+  Enable:int32;
+  DataVersion:int32;
+  CuesheetID:int64;
+  DecKey:int64;
+}
+
+table WavRaw {
+  Entries:[WavRawEntry];
+}
+
+file_identifier "D4AO";
+root_type WavRaw;
+

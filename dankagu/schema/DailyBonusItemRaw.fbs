@@ -1,0 +1,17 @@
+namespace D4L.TakashoFes.Master;
+
+table DailyBonusItemRawEntry {
+  ID:int32;
+  ItemPrefix:[int32];
+  ItemValue:[int32];
+  ItemCount:[int32];
+  ItemWeight:[int32];
+}
+
+table DailyBonusItemRaw {
+  Entries:[DailyBonusItemRawEntry];
+}
+
+file_identifier "D4AO";
+root_type DailyBonusItemRaw;
+

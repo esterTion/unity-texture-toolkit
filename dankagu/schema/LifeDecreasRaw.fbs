@@ -1,0 +1,21 @@
+namespace D4L.TakashoFes.Master;
+
+table LifeDecreasRawEntry {
+  ID:int32;
+  FlNomalBad:int32;
+  FlNomalMiss:int32;
+  FlLongBad:int32;
+  FlLongMiss:int32;
+  FlSlideBad:int32;
+  FlSlideMiss:int32;
+  FlFuzzyBad:int32;
+  FlFuzzyMiss:int32;
+}
+
+table LifeDecreasRaw {
+  Entries:[LifeDecreasRawEntry];
+}
+
+file_identifier "D4AO";
+root_type LifeDecreasRaw;
+
