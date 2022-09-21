@@ -1,0 +1,15 @@
+namespace D4L.TakashoFes.Master;
+
+table CoopEventPhaseVisitMaxRawEntry {
+  ID:int32;
+  Phase:int32;
+  VisitMax:int32;
+}
+
+table CoopEventPhaseVisitMaxRaw {
+  Entries:[CoopEventPhaseVisitMaxRawEntry];
+}
+
+file_identifier "D4AO";
+root_type CoopEventPhaseVisitMaxRaw;
+
