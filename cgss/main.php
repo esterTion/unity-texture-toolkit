@@ -273,7 +273,7 @@ $game_start_header = [
   'DEVICE-NAME: iPhone8,4',
   'UDID: 002423;541<818p713l356;558<788<512B1167165B452A426p575p3447527>745B625l856B6417737l515;535;726A7217263;113@551n768l838:516m832;624A287p772p121o626:634466828748373881115683521611874',
   'SID: 5348ecbff2589a204166891e1798483a',
-  'X-Unity-Version: 2017.4.2f2',
+  'X-Unity-Version: 2020.3.8f1',
   'Connection: keep-alive',
   'CARRIER: ',
   'Accept-Language: en-us',
@@ -292,7 +292,7 @@ if (date('H') == '13') {
     CURLOPT_RETURNTRANSFER=>true,
     CURLOPT_HEADER=>0,
     CURLOPT_SSL_VERIFYPEER=>false,
-    CURLOPT_HTTPHEADER=>['X-Unity-Version: 2017.4.2f2', 'Range: bytes=0-0']
+    CURLOPT_HTTPHEADER=>['X-Unity-Version: 2020.3.8f1', 'Range: bytes=0-0']
   ));
   $TruthVersion = $last_version['TruthVersion'];
   $current_ver = $TruthVersion|0;
@@ -357,7 +357,7 @@ curl_setopt_array($curl, array(
   CURLOPT_RETURNTRANSFER=>true,
   CURLOPT_HEADER=>0,
   CURLOPT_SSL_VERIFYPEER=>false,
-  CURLOPT_HTTPHEADER=>['X-Unity-Version: 2017.4.2f2']
+  CURLOPT_HTTPHEADER=>['X-Unity-Version: 2020.3.8f1']
 ));
 $manifest_comp = curl_exec($curl);
 
@@ -400,7 +400,7 @@ $last_version['hash'] = $masterHash;
 _log("downloading bundle for TruthVersion ${TruthVersion}, hash: ${masterHash}");
 curl_setopt_array($curl, array(
   CURLOPT_URL=>'http://asset-starlight-stage.akamaized.net/dl/resources/Generic/'.substr($masterHash, 0, 2).'/'.$masterHash,
-  CURLOPT_HTTPHEADER=>['X-Unity-Version: 2017.4.2f2'],
+  CURLOPT_HTTPHEADER=>['X-Unity-Version: 2020.3.8f1'],
   CURLOPT_RETURNTRANSFER=>true
 ));
 $master_compressed = curl_exec($curl);

@@ -41,13 +41,13 @@ define('RESOURCE_PATH_PREFIX', '/data/home/web/_redive/cgss/');
 
 function checkAndUpdateResource() {
   global $resourceToExport;
-  global $curl;
+  $curl = curl_init();
   global $poseData;
   chdir(__DIR__);
   $currenttime = time();
   curl_setopt_array($curl, array(
     CURLOPT_CONNECTTIMEOUT=>5,
-    CURLOPT_HTTPHEADER=>['X-Unity-Version: 2017.4.2f2'],
+    CURLOPT_HTTPHEADER=>['X-Unity-Version: 2020.3.8f1'],
     CURLOPT_RETURNTRANSFER=>true,
     CURLOPT_HEADER=>0,
     CURLOPT_SSL_VERIFYPEER=>false,
@@ -61,13 +61,14 @@ function checkAndUpdateResource() {
     if (($rule = findRule($name, $resourceToExport)) !== false && shouldUpdate($name, $hash)) {
       _log('download '. $name);
       curl_setopt_array($curl, array(
-        CURLOPT_URL=>'http://asset-starlight-stage.akamaized.net/dl/resources/AssetBundles/'.substr($hash, 0, 2).'/'.$hash,
+        CURLOPT_URL=>'https://asset-starlight-stage.akamaized.net/dl/resources/AssetBundles/'.substr($hash, 0, 2).'/'.$hash,
       ));
       $bundleData = curl_exec($curl);
       $bundleTime = curl_getinfo($curl, CURLINFO_FILETIME);
       $bundleTime -= $bundleTime % 60;
-      if (hash('md5', $bundleData) != $hash) {
-        _log('download failed  '.$name);
+      $gotHash = hash('md5', $bundleData);
+      if ($gotHash != $hash) {
+        _log('download failed  '.$name." expected $hash got $gotHash");
         continue;
       }
       $bundleData = new MemoryStream(cgss_data_uncompress($bundleData));
