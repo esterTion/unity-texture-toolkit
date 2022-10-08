@@ -2637,6 +2637,7 @@ message MasterPremiumPassDetail {
   optional string detailDialogUrl = 10; // normal type
   optional uint32 receivableCount = 11; // normal type
   optional string receivePassName = 12; // normal type
+  optional string dialogMessage = 13; // normal type
 }
 message uint_MasterPremiumPassDetail {
   optional uint32 uint_MasterPremiumPassDetail_key = 1; // normal type
