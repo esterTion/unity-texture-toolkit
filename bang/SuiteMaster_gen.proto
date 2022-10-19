@@ -3504,6 +3504,7 @@ message MasterDeckRank {
   optional string rank = 1; // normal type
   optional uint32 level = 2; // normal type
   optional uint32 score = 3; // normal type
+  optional uint64 publishedAt = 4; // normal type
 }
 message MasterDeckRankInfo {
   repeated MasterDeckRank totalDeckRank = 1; // array
@@ -3623,6 +3624,41 @@ message uint_MasterLiveBoostBonusRate {
 }
 message MasterLiveBoostBonusRateMap {
   repeated uint_MasterLiveBoostBonusRate entries = 1; // dictionary
+}
+message MasterMonthlyMissionSeason {
+  optional uint32 missionSeasonId = 1; // normal type
+  optional uint64 startAt = 2; // normal type
+  optional uint64 endAt = 3; // normal type
+  optional bool isPublishPremiusmMission = 4; // normal type
+}
+message uint_MasterMonthlyMissionSeason {
+  optional uint32 uint_MasterMonthlyMissionSeason_key = 1; // normal type
+  optional MasterMonthlyMissionSeason uint_MasterMonthlyMissionSeason_value = 2; // sub class
+}
+message MasterMonthlyMissionSeasonMap {
+  repeated uint_MasterMonthlyMissionSeason entries = 1; // dictionary
+}
+message MasterMonthlyMissionRewardDetail {
+  optional string missionType = 1; // normal type
+  optional bool pickup = 2; // normal type
+  optional string resourceType = 3; // normal type
+  optional uint32 resourceId = 4; // normal type
+  optional uint32 quantity = 5; // normal type
+}
+message MasterMonthlyMissionReward {
+  optional uint32 missionSeasonId = 1; // normal type
+  optional uint32 livePoint = 2; // normal type
+  repeated MasterMonthlyMissionRewardDetail masterMonthlyMissionRewardDetailList = 3; // array
+}
+message MasterMonthlyMissionRewardList {
+  repeated MasterMonthlyMissionReward entries = 1; // array
+}
+message uint_MasterMonthlyMissionRewardList {
+  optional uint32 uint_MasterMonthlyMissionRewardList_key = 1; // normal type
+  optional MasterMonthlyMissionRewardList uint_MasterMonthlyMissionRewardList_value = 2; // sub class
+}
+message MasterMonthlyMissionRewardListMap {
+  repeated uint_MasterMonthlyMissionRewardList entries = 1; // dictionary
 }
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
@@ -3823,4 +3859,6 @@ message SuiteMasterGetResponse {
   optional MasterStageChallengeRewardMap masterStageChallengeRewardMap = 1196; // sub class
   optional MasterStarSealExchangeDetailMap masterStarSealExchangeDetailMap = 1200; // sub class
   optional MasterLiveBoostBonusRateMap masterLiveBoostBonusRateMap = 1203; // sub class
+  optional MasterMonthlyMissionSeasonMap masterMonthlyMissionSeasonMap = 1210; // sub class
+  optional MasterMonthlyMissionRewardListMap masterMonthlyMissionRewardListMap = 1211; // sub class
 }
