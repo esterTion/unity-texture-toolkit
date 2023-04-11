@@ -307,7 +307,7 @@ function extractBundle($bundle) {
       $bundle->alignStream(16);
     }
     $blocksInfoBytes = $bundle->readData($compressedSize);
-    if ($format >= 8) {
+    if (($flag & 512) != 0) {
       $bundle->alignStream(16);
     }
   }
