@@ -233,6 +233,15 @@ function checkAndCreateFile(string $saveTo, string $data, int $modifiedTime = 0)
 function lz4_uncompress_stream($data, $uncompressedSize) {
   return lz4_uncompress(pack('V', $uncompressedSize).$data);
 }
+function encrypt($string = '', $key = '', $iv = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0") {
+  return openssl_encrypt($string, 'AES-128-CBC', $key, OPENSSL_RAW_DATA, $iv);
+}
+
+function decrypt($string = '', $key = '', $iv = "\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0") {
+  $data = openssl_decrypt($string, 'AES-128-CBC', $key, OPENSSL_RAW_DATA+OPENSSL_ZERO_PADDING, $iv);
+  $pad = ord(substr($data, -1, 1));
+  return substr($data, 0, -$pad);
+}
 
 function extractBundle($bundle) {
 
@@ -274,6 +283,7 @@ function extractBundle($bundle) {
     return $fileList;
   } else if ($format == 6) {
   } else if ($format == 7) {
+  } else if ($format == 8) {
   } else {
     throw new Exception('unknown version: '.$format);
   }
@@ -284,12 +294,22 @@ function extractBundle($bundle) {
   $flag = $bundle->long;
 
   if (($flag & 128) != 0) {
-    throw new Exception('block info at end');
+    //throw new Exception('block info at end');
+    if ($format >= 7) {
+      $bundle->alignStream(16);
+    }
+    $pos = $bundle->position;
+    $bundle->position = $bundle->size - $compressedSize;
+    $blocksInfoBytes = $bundle->readData($compressedSize);
+    $bundle->position = $pos;
   } else {
-    if ($format == 7) {
+    if ($format >= 7) {
       $bundle->alignStream(16);
     }
     $blocksInfoBytes = $bundle->readData($compressedSize);
+    if ($format >= 8) {
+      $bundle->alignStream(16);
+    }
   }
 
   switch ($flag & 63) {

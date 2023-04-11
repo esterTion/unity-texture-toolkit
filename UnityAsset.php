@@ -25,7 +25,7 @@ class AssetFile {
   function __construct($file) {
     $file = realpath($file);
     if ($file == false) {
-      throw new Excpetion('Invalid filename');
+      throw new Exception('Invalid filename');
     }
     $this->stream = new FileStream($file);
     $this->filePath = $file;
@@ -56,6 +56,9 @@ class AssetFile {
 
       if ($this->fileGen >= 7) {
         $this->m_Version = $stream->string;
+        if ($this->m_Version === '0.0.0' && defined('UNITY_ASSET_VERSION_OVERRIDE')) {
+          $this->m_Version = constant('UNITY_ASSET_VERSION_OVERRIDE');
+        }
       }
       if ($this->fileGen >= 8) {
         $this->platform = $stream->long;
@@ -154,7 +157,7 @@ class AssetFile {
         $this->sharedAssetsList[] = $shared;
       }
       $this->valid = true;
-    } catch (Excepti4on $e) { }
+    } catch (Exception $e) { }
   }
 
   private function readSerializedType() {
@@ -697,7 +700,7 @@ class Texture2D {
     $this->textureFormatStr = TextureFormat::map[$this->textureFormat];
 
     if ($readSwitch) {
-      if (isset($this->path)) {
+      if (isset($this->path) && !empty($this->path)) {
         $this->path = dirname($sourceFile->filePath) . '/'. str_replace('archive:/','', $this->path);
         if (file_exists($this->path) || file_exists($this->path = dirname($sourceFile->filePath) . '/'. pathinfo($this->path, PATHINFO_BASENAME))) {
           $reader = new FileStream($this->path);
@@ -712,7 +715,7 @@ class Texture2D {
       }
       
 			switch ($this->textureFormat) {
-        case TextureFormat::ASTC_RGBA_4x4:
+        case TextureFormat::ASTC_RGB_4x4:
         case TextureFormat::ASTC_RGB_5x5:
         case TextureFormat::ASTC_RGB_6x6:
         case TextureFormat::ASTC_RGB_8x8:
