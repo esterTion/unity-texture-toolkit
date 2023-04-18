@@ -4561,6 +4561,19 @@ message uint_MasterCharacterCostume3dDefault {
 message MasterCharacterCostume3dDefaultMap {
   repeated uint_MasterCharacterCostume3dDefault entries = 1; // dictionary
 }
+message MasterConfigInitializeTutorial {
+  optional uint32 configId = 1; // normal type
+  optional string tutorialStatus = 2; // normal type
+  optional uint32 actionSetId = 3; // normal type
+  optional bool onlyTutorial = 4; // normal type
+}
+message uint_MasterConfigInitializeTutorial {
+  optional uint32 uint_MasterConfigInitializeTutorial_key = 1; // normal type
+  optional MasterConfigInitializeTutorial uint_MasterConfigInitializeTutorial_value = 2; // sub class
+}
+message MasterConfigInitializeTutorialMap {
+  repeated uint_MasterConfigInitializeTutorial entries = 1; // dictionary
+}
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
   optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
@@ -4820,4 +4833,5 @@ message SuiteMasterGetResponse {
   optional MasterDeviceSettingIosList masterDeviceSettingIosList = 2073; // sub class
   optional MasterDeviceSettingAndroidList masterDeviceSettingAndroidList = 2074; // sub class
   optional MasterCharacterCostume3dDefaultMap masterCharacterCostume3dDefaultMap = 2075; // sub class
+  optional MasterConfigInitializeTutorialMap masterConfigInitializeTutorialMap = 2076; // sub class
 }
