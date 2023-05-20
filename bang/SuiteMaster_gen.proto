@@ -4574,6 +4574,15 @@ message uint_MasterConfigInitializeTutorial {
 message MasterConfigInitializeTutorialMap {
   repeated uint_MasterConfigInitializeTutorial entries = 1; // dictionary
 }
+message MasterCostume3dShopBanner {
+  optional uint32 bannerId = 1; // normal type
+  optional string assetBundleName = 2; // normal type
+  optional uint64 published_at = 3; // normal type
+  optional uint64 closed_at = 4; // normal type
+}
+message MasterCostume3dShopBannerList {
+  repeated MasterCostume3dShopBanner entries = 1; // array
+}
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
   optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
@@ -4834,4 +4843,5 @@ message SuiteMasterGetResponse {
   optional MasterDeviceSettingAndroidList masterDeviceSettingAndroidList = 2074; // sub class
   optional MasterCharacterCostume3dDefaultMap masterCharacterCostume3dDefaultMap = 2075; // sub class
   optional MasterConfigInitializeTutorialMap masterConfigInitializeTutorialMap = 2076; // sub class
+  optional MasterCostume3dShopBannerList masterCostume3dShopBannerList = 2077; // sub class
 }
