@@ -1,5 +1,8 @@
 <?php
 
+ini_set('precision', 7);
+ini_set('serialize_precision', 7);
+
 chdir(__DIR__);
 require_once 'resource_fetch.php';
 if (!file_exists('last_version')) {
@@ -182,6 +185,7 @@ parseProtoBuf('SuiteMasterGetResponse', $masterData->size, $masterData, $MasterP
     global $charaInfo;
     $charaInfo = $sub;
   }
+  echo "$name ".memory_get_usage()."\n";
   file_put_contents("data/${name}.json", prettifyJSON($sub));
   return false;
 });

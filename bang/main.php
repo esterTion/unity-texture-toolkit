@@ -1,5 +1,8 @@
 <?php
 
+ini_set('precision', 7);
+ini_set('serialize_precision', 7);
+
 chdir(__DIR__);
 require_once 'UnityBundle.php';
 require_once 'resource_fetch.php';
