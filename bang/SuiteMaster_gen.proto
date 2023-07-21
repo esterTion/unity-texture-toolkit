@@ -4641,6 +4641,7 @@ message MasterCostume3dShopBanner {
   optional string assetBundleName = 2; // normal type
   optional uint64 published_at = 3; // normal type
   optional uint64 closed_at = 4; // normal type
+  optional uint32 purchaseMenuId = 5; // normal type
 }
 message MasterCostume3dShopBannerList {
   repeated MasterCostume3dShopBanner entries = 1; // array
