@@ -26,6 +26,13 @@ class WdsNotationConverter {
 	static function _log($s) {
 		echo date('[Y/m/d H:i:s] ')."$s\n";
 	}
+	static function delTree($dir) {
+		$files = array_diff(scandir($dir), array('.','..'));
+		foreach ($files as $file) {
+			(is_dir("$dir/$file")) ? static::delTree("$dir/$file") : unlink("$dir/$file");
+		}
+		return rmdir($dir);
+	}
 
 	static $ch = null;
 	static function initCurl() {
@@ -42,8 +49,12 @@ class WdsNotationConverter {
 	static function downloadAddressable() {
 		chdir(__DIR__);
 		static::initCurl();
+		if (file_exists('cache_addressable.dat')) {
+			unlink('cache_addressable.dat');
+		}
 		foreach (['2d', '3d', 'cri'] as $type) {
 			$path = "$type-assets.json";
+			static::_log($path);
 			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl("catalog_1.0.0.json", "$type-assets"));
 			$data = curl_exec(static::$ch);
 			file_put_contents($path, $data);
@@ -52,7 +63,7 @@ class WdsNotationConverter {
 	static $addressable = null;
 	static function loadAddressable() {
 		if (!empty(static::$addressable)) return;
-		if (file_exists('cache_addressable.dat')){
+		if (file_exists('cache_addressable.dat')) {
 			static::$addressable = json_decode(file_get_contents('cache_addressable.dat'), true);
 			return;
 		}
@@ -197,16 +208,25 @@ class WdsNotationConverter {
 		$x = 0;
 		for ($i=0; $i<$boundariesCount; $i++) {
 			$color = $colors[$i % count($colors)];
+			$colorStops = [];
 			if ($color['a'] == 1) {
 				$color = [$color['r'], $color['g'], $color['b']];
+				$colorStops[] = '<stop offset="0%" stop-color="rgba('.implode(',', array_map(function ($i) { return ($i*100).'%';}, $color)).',0)" />';
+				$colorStops[] = '<stop offset="30%" stop-color="rgba('.implode(',', array_map(function ($i) { return ($i*100).'%';}, $color)).',0.6)" />';
+				$colorStops[] = '<stop offset="100%" stop-color="rgba('.implode(',', array_map(function ($i) { return ($i*100).'%';}, $color)).',0.8)" />';
 				$color = 'rgb('.implode(',', array_map(function ($i) { return ($i*100).'%';}, $color)).')';
 			} else {
+				$a = $color['a'];
 				$color = [$color['r'], $color['g'], $color['b'], $color['a']];
-				$color = 'rgba('.implode(',', array_map(function ($i) { return ($i*100).'%';}, $color)).')';
+				$color[3] = $a * 0.0; $colorStops[] = '<stop offset="0%" stop-color="rgba('.implode(',', array_map(function ($i) { return ($i*100).'%';}, $color)).')" />';
+				$color[3] = $a * 0.6; $colorStops[] = '<stop offset="30%" stop-color="rgba('.implode(',', array_map(function ($i) { return ($i*100).'%';}, $color)).')" />';
+				$color[3] = $a * 0.8; $colorStops[] = '<stop offset="100%" stop-color="rgba('.implode(',', array_map(function ($i) { return ($i*100).'%';}, $color)).')" />';
+				$color[3] = $a; $color = 'rgba('.implode(',', array_map(function ($i) { return ($i*100).'%';}, $color)).')';
 			}
 			$boundary = [
 				'x' => $x,
 				'color' => $color,
+				'colorFadeout' => implode('', $colorStops),
 			];
 			$boundaries[] = $boundary;
 			$x += $stepOffsets[$boundariesCount][$i];
@@ -214,10 +234,20 @@ class WdsNotationConverter {
 		return $boundaries;
 	}
 
+	static function getCachedHash($path) {
+		return '';
+	}
+	static function shouldDownload($path, $hash) {
+		return static::getCachedHash($path) === $hash;
+	}
+	static function setCachedHash($path, $hash) {
+		return;
+	}
 	static function downloadJackets() {
 		chdir(__DIR__);
 		static::loadAddressable();
 		static::initCurl();
+		$downloadedBundles = [];
 		foreach (static::$addressable['2d'][0] as $item) {
 			if (!preg_match('/jacket_assets_jacket\/.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
 			$path = static::getAssetPath($item['primaryKey']);
@@ -227,7 +257,26 @@ class WdsNotationConverter {
 			$data = curl_exec(static::$ch);
 			@mkdir(dirname($path), 0777, true);
 			file_put_contents($path, $data);
+			$downloadedBundles[] = $path;
 		}
+	}
+	static function downloadMusics() {
+		chdir(__DIR__);
+		static::loadAddressable();
+		static::initCurl();
+		$downloadedBundles = [];
+		foreach (static::$addressable['cri'][0] as $item) {
+			if (!preg_match('/cridata_remote_assets_criaddressables\/music_.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
+			$path = static::getAssetPath($item['primaryKey']);
+			if (file_exists($path)) continue;
+			static::_log($path);
+			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, 'cri-assets'));
+			$data = curl_exec(static::$ch);
+			@mkdir(dirname($path), 0777, true);
+			file_put_contents($path, $data);
+			$downloadedBundles[] = $path;
+		}
+		return $downloadedBundles;
 	}
 	static function downloadNotations() {
 		static::downloadJackets();
@@ -306,6 +355,29 @@ class WdsNotationConverter {
 			}
 		}
 	}
+	static function exportMusics() {
+		$downloadedBundles = static::downloadMusics();
+		$downloadedBundles = glob('cridata_remote_assets_criaddressables/music_*.acb.bundle');
+		$saveTo = static::getResourcePathPrefix() . 'sound/music';
+		$saveTo = 'sound/music';
+		foreach ($downloadedBundles as $acbName) {
+			static::_log('exporting '. $acbName);
+			$nullptr = NULL;
+			exec('acb2wavs '.$acbName.' -b 0 -a 0 -n', $nullptr);
+			$acbUnpackDir = dirname($acbName).'/_acb_'.pathinfo($acbName, PATHINFO_BASENAME);
+			foreach (['internal', 'external'] as $awbFolder) {
+				if (file_exists($acbUnpackDir .'/'. $awbFolder)) {
+					foreach (glob($acbUnpackDir .'/'. $awbFolder.'/*.wav') as $waveFile) {
+						$m4aFile = substr($waveFile, 0, -3).'m4a';
+						$finalPath = $saveTo.'/'.pathinfo($m4aFile, PATHINFO_BASENAME);
+						exec('ffmpeg -hide_banner -loglevel quiet -y -i '.$waveFile.' -vbr 5 -movflags faststart '.$m4aFile, $nullptr);
+						checkAndMoveFile($m4aFile, $finalPath);
+					}
+				}
+			}
+			static::delTree($acbUnpackDir);
+		}
+	}
 
 	static function parseNotation($text) {
 		return array_map(function ($line) {
@@ -329,7 +401,8 @@ class WdsNotationConverter {
 	}
 
 	static function notationToSvg($notation) {
-		$DurationPerColumn = 10;
+		$DurationPerColumn = 5;
+		$HeightPerSecond = 800 / $DurationPerColumn;
 		$endOfChartTs = 0;
 		$normalNotes = [];
 		$scratchNotes = [];
@@ -384,7 +457,6 @@ class WdsNotationConverter {
 		$svgParts[] = '<defs>';
 		$svgParts[] = '  <linearGradient id="line_hold_gradient"><stop offset="0%" stop-color="rgba(155,255,255,0.9)" /><stop offset="30%" stop-color="rgba(119,200,200,0.6)" /><stop offset="70%" stop-color="rgba(119,200,200,0.6)" /><stop offset="100%" stop-color="rgba(155,255,255,0.9)" /></linearGradient>';
 		$svgParts[] = '  <linearGradient id="line_scratch_gradient"><stop offset="0%" stop-color="rgba(228,128,255,0.9)" /><stop offset="30%" stop-color="rgba(151,83,215,0.6)" /><stop offset="70%" stop-color="rgba(151,83,215,0.6)" /><stop offset="100%" stop-color="rgba(228,128,255,0.9)" /></linearGradient>';
-		$svgParts[] = '  <g width="3" height="80" id="split_fadeout" style="mask-image:linear-gradient(to bottom,rgba(255,255,255,0),rgba(255,255,255,0.6) 30%,rgba(255,255,255,0.8))"><path d="M0,0v80h3v-80z" /></g>';
 		$svgParts[] = '  <g width="20" height="8" id="normal"  ><path d="M0,2v4a2,2,90,0,0,2,2h16a2,-2,90,0,0,2,-2v-4a-2,-2,90,0,0,-2,-2h-16a-2,2,90,0,0,-2,2" fill="rgb(253,98,163)" /><path d="M1,3v2a2,2,90,0,0,2,2h14a2,-2,90,0,0,2,-2v-2a-2,-2,90,0,0,-2,-2h-14a-2,2,90,0,0,-2,2" stroke="rgb(255,225,104)" fill="transparent" /></g>';
 		$svgParts[] = '  <g width="20" height="8" id="critical"><path d="M0,2v4a2,2,90,0,0,2,2h16a2,-2,90,0,0,2,-2v-4a-2,-2,90,0,0,-2,-2h-16a-2,2,90,0,0,-2,2" fill="rgb(254,166,43)" /><path d="M1,3v2a2,2,90,0,0,2,2h14a2,-2,90,0,0,2,-2v-2a-2,-2,90,0,0,-2,-2h-14a-2,2,90,0,0,-2,2" stroke="rgb(255,225,104)" fill="transparent" /></g>';
 		$svgParts[] = '  <g width="20" height="8" id="hold"    ><path d="M0,2v4a2,2,90,0,0,2,2h16a2,-2,90,0,0,2,-2v-4a-2,-2,90,0,0,-2,-2h-16a-2,2,90,0,0,-2,2" fill="rgb(18,155,250)" /><path d="M1,3v2a2,2,90,0,0,2,2h14a2,-2,90,0,0,2,-2v-2a-2,-2,90,0,0,-2,-2h-14a-2,2,90,0,0,-2,2" stroke="rgb(255,225,104)" fill="transparent" /></g>';
@@ -396,17 +468,17 @@ class WdsNotationConverter {
 		$svgParts[] = '  <g width="20" height="20" id="sound_purple"><path d="M10,1l3,7l7,3l-7,3l-3,7l-3,-7l-7,-3l7,-3l3,-7" stroke="rgb(121,77,211)" fill="rgb(197,146,253)" /></g>';
 		$svgParts[] = '  <g width="20" height="20" id="line_hold"><path d="M0,0h20v20h-20z" fill="url(\'#line_hold_gradient\')" /></g>';
 		$svgParts[] = '  <g width="20" height="20" id="line_scratch"><path d="M0,0h20v20h-20z" fill="url(\'#line_scratch_gradient\')" /></g>';
-		$svgParts[] = '  <g id="beat_section" width="160" height="80"><path d="M20,0v80M140,0v80M0,0" stroke="#CCCCCC" /><path d="M40,0v80M60,0v80M80,0v80M100,0v80M120,0v80M0,0" stroke="#444444" /></g>';
-		$svgParts[] = '  <g id="beat_section_top" width="160" height="80"><path d="M20,0v80M140,0v80M0,0" stroke="#CCCCCC" /><path d="M20,0h120M40,0v80M60,0v80M80,0v80M100,0v80M120,0v80M0,0" stroke="#444444" /></g>';
-		$svgParts[] = '  <g id="beat_section_bottom" width="160" height="80"><path d="M20,0v80M140,0v80M0,0" stroke="#CCCCCC" /><path d="M20,80h120M40,0v80M60,0v80M80,0v80M100,0v80M120,0v80M0,0" stroke="#444444" /></g>';
+		$svgParts[] = '  <g id="beat_section" width="160" height="160"><path d="M20,0v160M140,0v160M0,0" stroke="#CCCCCC" /><path d="M40,0v160M60,0v160M80,0v160M100,0v160M120,0v160M0,0" stroke="#444444" /></g>';
+		$svgParts[] = '  <g id="beat_section_top" width="160" height="160"><path d="M20,0v160M140,0v160M0,0" stroke="#CCCCCC" /><path d="M20,0h120M40,0v160M60,0v160M80,0v160M100,0v160M120,0v160M0,0" stroke="#444444" /></g>';
+		$svgParts[] = '  <g id="beat_section_bottom" width="160" height="160"><path d="M20,0v160M140,0v160M0,0" stroke="#CCCCCC" /><path d="M20,160h120M40,0v160M60,0v160M80,0v160M100,0v160M120,0v160M0,0" stroke="#444444" /></g>';
 		$svgParts[] = '</defs>';
 
 		$svgParts[] = '<g class="bg_layer">';
-		for ($i=0; $i<$endOfChartTs; $i++) {
-			$isBottom = ($i%10) == 0;
-			$isTop = ($i+1) == $endOfChartTs || ($i%10) == 9;
+		for ($i=0; $i<$endOfChartTs+1; $i++) {
+			$isBottom = ($i%$DurationPerColumn) == 0;
+			$isTop = $i >= $endOfChartTs || ($i%$DurationPerColumn) == $DurationPerColumn - 1;
 			$x = 200 * floor($i / $DurationPerColumn) + 30;
-			$y = 850 - 80 - 80 * ($i % $DurationPerColumn);
+			$y = 850 - $HeightPerSecond - $HeightPerSecond * ($i % $DurationPerColumn);
 			$svgParts[] = '<use href="#beat_section'.($isTop?'_top':($isBottom?'_bottom':'')).'" x="'.$x.'" y="'.$y.'" />';
 		}
 		$svgParts[] = '</g>';
@@ -538,10 +610,10 @@ class WdsNotationConverter {
 			$style = count($transform) ? 'style="transform:'.implode(' ', $transform).';transform-origin:'.static::roundReal($x).'px '.static::roundReal($y).'px"' : '';
 			
 			$svgParts[] = '<use href="#'.$noteType.'" x="'.$x.'" y="'.$y.'" '.$style.' />';
-			if ($noteTime - floor($noteTime / 10) * 10 > 19.9) {
+			if ($noteTime - floor($noteTime / $DurationPerColumn) * $DurationPerColumn > $DurationPerColumn * 0.99) {
 				$style = count($transform) ? 'style="transform:'.implode(' ', $transform).';transform-origin:'.static::roundReal($x + 200).'px '.static::roundReal($y + 800).'px"' : '';
 				$svgParts[] = '<use href="#'.$noteType.'" x="'.($x + 200).'" y="'.($y + 800).'" '.$style.' />';
-			} else if ($noteTime > 1 && $noteTime - floor($noteTime / 10) * 10 < 0.1) {
+			} else if ($noteTime > 1 && $noteTime - floor($noteTime / $DurationPerColumn) * $DurationPerColumn < $DurationPerColumn * 0.01) {
 				$style = count($transform) ? 'style="transform:'.implode(' ', $transform).';transform-origin:'.static::roundReal($x - 200).'px '.static::roundReal($y - 800).'px"' : '';
 				$svgParts[] = '<use href="#'.$noteType.'" x="'.($x - 200).'" y="'.($y - 800).'" '.$style.' />';
 			}
@@ -598,16 +670,16 @@ class WdsNotationConverter {
 			
 			$svgParts[] = '<use href="#'.$noteType.'" x="'.$x.'" y="'.$y.'" '.$style.' />';
 			$arrowParts[] = '<use href="#scratch_arrow_'.$scracthDirection.'" x="'.($x + $width / 2 - 10).'" y="'.($y - 12).'" />';
-			if ($noteTime - floor($noteTime / 10) * 10 > 19.9) {
+			if ($noteTime - floor($noteTime / $DurationPerColumn) * $DurationPerColumn > $DurationPerColumn * 0.99) {
 				$x += 200;
 				$y += 800;
 				$style = count($transform) ? 'style="transform:'.implode(' ', $transform).';transform-origin:'.$x.'px '.$y.'px"' : '';
-				$svgParts[] = '<use href="#'.$noteType.'" x="'.($x + 200).'" y="'.($y + 800).'" '.$style.' />';
-			} else if ($noteTime > 1 && $noteTime - floor($noteTime / 10) * 10 < 0.1) {
+				$svgParts[] = '<use href="#'.$noteType.'" x="'.$x.'" y="'.$y.'" '.$style.' />';
+			} else if ($noteTime > 1 && $noteTime - floor($noteTime / $DurationPerColumn) * $DurationPerColumn < $DurationPerColumn * 0.01) {
 				$x -= 200;
 				$y -= 800;
 				$style = count($transform) ? 'style="transform:'.implode(' ', $transform).';transform-origin:'.$x.'px '.$y.'px"' : '';
-				$svgParts[] = '<use href="#'.$noteType.'" x="'.($x - 200).'" y="'.($y - 800).'" '.$style.' />';
+				$svgParts[] = '<use href="#'.$noteType.'" x="'.$x.'" y="'.$y.'" '.$style.' />';
 			}
 		}
 		$svgParts[] = '</g>';
@@ -618,7 +690,9 @@ class WdsNotationConverter {
 		$lines = [];
 		foreach ($splitSections as $note) {
 			$startPos = static::getNotePos($note['start'], 1);
-			$endPos = static::getNotePos($note['end'], 1);
+			$endFadeTime = max($note['start'], $note['end'] - 1);
+			$fadeStartPos = static::getNotePos($note['end'] - 1, 1);
+			$endPos = static::getNotePos($endFadeTime, 1);
 			$line = [
 				'type' => $note['gimmickType'],
 				'effect' => $note['gimmickValue'],
@@ -626,6 +700,11 @@ class WdsNotationConverter {
 					't' => $note['start'],
 					'x' => $startPos[0],
 					'y' => $startPos[1],
+				],
+				'fade' => [
+					't' => $endFadeTime,
+					'x' => $fadeStartPos[0],
+					'y' => $fadeStartPos[1],
 				],
 				'end' => [
 					't' => $note['end'],
@@ -645,6 +724,7 @@ class WdsNotationConverter {
 					'type' => $line['type'],
 					'effect' => $line['effect'],
 					'start' => $line['start'],
+					'fade' => $line['fade'],
 					'end' => [
 						't' => $insertEnd['t'],
 						'x' => $insertEnd['x'] - 200,
@@ -658,6 +738,7 @@ class WdsNotationConverter {
 			$lines[] = $line;
 		}
 		$svgParts[] = '<g class="split_layer">';
+		$fadeOutGradients = [];
 		foreach ($lines as $line) {
 			$x = $line['end']['x'];
 			$y1 = $line['start']['y'];
@@ -673,23 +754,33 @@ class WdsNotationConverter {
 			}
 
 			if ($line['isFinal']) {
-				$y1 = $y2 - 80;
+				$x = $line['fade']['x'];
+				$y1 = $line['fade']['y'] - $HeightPerSecond;
 				foreach ($splitBoundaries as $boundary) {
 					$x1 = $x + $boundary['x'] - 1.5;
-					$color = $boundary['color'];
+					$color = $boundary['colorFadeout'];
+					if (isset($fadeOutGradients[$color])) {
+						$fadeOutId = $fadeOutGradients[$color];
+					}
+					$fadeOutId = isset($fadeOutGradients[$color]) ? $fadeOutGradients[$color] : ($fadeOutGradients[$color] = count($fadeOutGradients));
 					if ($y1 < 50) {
 						$h1 = 50 - $y1;
-						$h2 = 80 - $h1;
-						$svgParts[] = "<use href=\"#split_fadeout\" x=\"$x1\" y=\"$y1\" fill=\"$color\" clip-path=\"path('M0,${h1}v${h2}h3v-${h2}')\"/>";
+						$h2 = $HeightPerSecond - $h1;
+						$svgParts[] = "<path d=\"M${x1},${y1}v${HeightPerSecond}h3v-${HeightPerSecond}z\" fill=\"url(#split_fadeout_$fadeOutId)\" clip-path=\"path('M${x1},${y1}m0,${h1}v${h2}h3v-${h2}')\" />";
 						$x2 = $x1 + 200;
 						$y2 = $y1 + 800;
-						$svgParts[] = "<use href=\"#split_fadeout\" x=\"$x2\" y=\"$y2\" fill=\"$color\" clip-path=\"path('M0,0v${h1}h3v-${h1}')\"/>";
+						$svgParts[] = "<path d=\"M${x2},${y2}v${HeightPerSecond}h3v-${HeightPerSecond}z\" fill=\"url(#split_fadeout_$fadeOutId)\" clip-path=\"path('M${x2},${y2}v${h1}h3v-${h1}')\" />";
 					} else {
-						$svgParts[] = "<use href=\"#split_fadeout\" x=\"$x1\" y=\"$y1\" fill=\"$color\" />";
+						$svgParts[] = "<path d=\"M${x1},${y1}v${HeightPerSecond}h3v-${HeightPerSecond}z\" fill=\"url(#split_fadeout_$fadeOutId)\" />";
 					}
 				}
 			}
 		}
+		$svgParts[] = '<defs>';
+		foreach ($fadeOutGradients as $color=>$id) {
+			$svgParts[] = "<linearGradient id=\"split_fadeout_$id\" x2=\"0\" y2=\"100%\">$color</linearGradient>";
+		}
+		$svgParts[] = '</defs>';
 		$svgParts[] = '</g>';
 
 		$syncLayerParts = [];
@@ -699,12 +790,12 @@ class WdsNotationConverter {
 			if ($x1 >= $x2) continue;
 			$syncLayerParts[] = "<path d=\"M$x1,$y H$x2\" stroke=\"#B4B4B4\" />";
 			
-			if ($t - floor($t / 10) * 10 > 19.9) {
+			if ($t - floor($t / $DurationPerColumn) * $DurationPerColumn > $DurationPerColumn * 0.99) {
 				$x1 += 200;
 				$x2 += 200;
 				$y += 800;
 				$svgParts[] = "<path d=\"M$x1,$y H$x2\" stroke=\"#B4B4B4\" />";
-			} else if ($t > 1 && $t - floor($t / 10) * 10 < 0.1) {
+			} else if ($t > 1 && $t - floor($t / $DurationPerColumn) * $DurationPerColumn < $DurationPerColumn * 0.01) {
 				$x1 -= 200;
 				$x2 -= 200;
 				$y -= 800;
@@ -718,7 +809,7 @@ class WdsNotationConverter {
 		for ($i=0; $i<=$endOfChartTs; $i+=1) {
 			$column = floor($i / $DurationPerColumn);
 			$x = 200 * $column + 175;
-			$y = 850 - 80 * ($i - $column * $DurationPerColumn);
+			$y = 850 - $HeightPerSecond * ($i - $column * $DurationPerColumn);
 			$svgParts[] = '<text class="section_mark" x="'.$x.'" y="'.$y.'">'.($i).'</text>';
 		}
 		$svgParts[] = '</g>';
@@ -727,10 +818,11 @@ class WdsNotationConverter {
 		return implode("\n",$svgParts);
 	}
 	static function getNotePos($time, $track) {
-		$DurationPerColumn = 10;
+		$DurationPerColumn = 5;
+		$HeightPerSecond = 800 / $DurationPerColumn;
 		$timeInt = floor($time);
 		$x = 200 * floor($timeInt / $DurationPerColumn) + 40 + 10 * $track;
-		$y = 850 - 80 * (($timeInt % $DurationPerColumn) + ($time - $timeInt));
+		$y = 850 - $HeightPerSecond * (($timeInt % $DurationPerColumn) + ($time - $timeInt));
 		return [$x, $y];
 	}
 
@@ -862,9 +954,37 @@ class WdsNotationConverter {
 			default : {var_dump($keyType);exit;}
 		}
 	}
+
+	static function main($argc, $argv) {
+		for ($i=1; $i<$argc; $i++) {
+			switch ($argv[$i]) {
+				case 'manifest': {
+					static::downloadAddressable();
+					break;
+				}
+				case 'jacket': {
+					static::downloadJackets();
+					break;
+				}
+				case 'dlnote': {
+					static::downloadNotations();
+					break;
+				}
+				case 'svg': {
+					static::convertNotations();
+					break;
+				}
+				case 'music': {
+					static::exportMusics();
+					break;
+				}
+			}
+		}
+	}
 }
 
-WdsNotationConverter::downloadAddressable();
-WdsNotationConverter::exportJackets();
+//WdsNotationConverter::downloadAddressable();
+//WdsNotationConverter::exportJackets();
 //WdsNotationConverter::downloadNotations();
 //WdsNotationConverter::convertNotations();
+WdsNotationConverter::main($argc, $argv);
