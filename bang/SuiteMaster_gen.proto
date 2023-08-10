@@ -3880,6 +3880,7 @@ message MasterMusicVideo3d {
   optional uint32 member4Position = 17; // normal type
   optional uint32 member5Position = 18; // normal type
   optional string backgroundAssetBundleName = 19; // normal type
+  optional uint32 backgroundColorId = 20; // normal type
 }
 message uint_MasterMusicVideo3d {
   optional uint32 uint_MasterMusicVideo3d_key = 1; // normal type
@@ -4703,6 +4704,29 @@ message uint_MasterGachaSealExchangeItem {
 message MasterGachaSealExchangeItemMap {
   repeated uint_MasterGachaSealExchangeItem entries = 1; // dictionary
 }
+message MasterSpecialStoryPageDetail {
+  optional uint32 specialStoryPageId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string transitionMethod = 3; // normal type
+  optional uint32 transitionId = 4; // normal type
+  optional uint64 publishedAt = 5; // normal type
+  optional uint64 closedAt = 6; // normal type
+}
+message MasterSpecialStoryPageDetailList {
+  repeated MasterSpecialStoryPageDetail entries = 1; // array
+}
+message MasterSpecialStoryPage {
+  optional uint32 specialStoryPageId = 1; // normal type
+  optional uint64 publishedAt = 2; // normal type
+  optional uint64 closedAt = 3; // normal type
+  optional string assetBundleName = 4; // normal type
+  optional string bgmAssetBundleName = 5; // normal type
+  optional string bgmFileName = 6; // normal type
+  optional MasterSpecialStoryPageDetailList details = 7; // sub class
+}
+message MasterSpecialStoryPageList {
+  repeated MasterSpecialStoryPage entries = 1; // array
+}
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
   optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
@@ -4967,4 +4991,6 @@ message SuiteMasterGetResponse {
   optional MasterGachaBonusMap masterGachaBonusMap = 2078; // sub class
   optional MasterGachaBonusInformationMap masterGachaBonusInformationMap = 2079; // sub class
   optional MasterGachaSealExchangeItemMap masterGachaSealExchangeItemMap = 2081; // sub class
+  optional MasterSpecialStoryPageList masterSpecialStoryPageList = 2082; // sub class
+  optional MasterGenericStoryMap masterSpecialPageGenericStoryMap = 2083; // sub class
 }
