@@ -49,15 +49,19 @@ class WdsNotationConverter {
 	static function downloadAddressable() {
 		chdir(__DIR__);
 		static::initCurl();
-		if (file_exists('cache_addressable.dat')) {
-			unlink('cache_addressable.dat');
-		}
+		$manifestUpdated = false;
 		foreach (['2d', '3d', 'cri'] as $type) {
 			$path = "$type-assets.json";
-			static::_log($path);
-			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl("catalog_1.0.0.json", "$type-assets"));
+			static::_log('dl '.$path);
+			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl("catalog_1.0.1.json", "$type-assets"));
 			$data = curl_exec(static::$ch);
-			file_put_contents($path, $data);
+			if (!empty($data) && md5($data) !== md5_file($path)) {
+				$manifestUpdated = true;
+				file_put_contents($path, $data);
+			}
+		}
+		if ($manifestUpdated && file_exists('cache_addressable.dat')) {
+			unlink('cache_addressable.dat');
 		}
 	}
 	static $addressable = null;
@@ -80,6 +84,9 @@ class WdsNotationConverter {
 		}
 		file_put_contents('cache_addressable.dat', json_encode(static::$addressable));
 	}
+	static function unloadAddressable() {
+		static::$addressable = null;
+	}
 
 	static function downloadSplitlaneAssets() {
 		chdir(__DIR__);
@@ -89,7 +96,7 @@ class WdsNotationConverter {
 			if (!preg_match('/(game_splitlaneelement_assets_spliteffectelements\/spliteffectelements.+|game_splitlane_assets_spliteffects\/\d+)_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
 			$path = static::getAssetPath($item['primaryKey']);
 			if (file_exists($path)) continue;
-			static::_log($path);
+			static::_log('dl '.$path);
 			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, '3d-assets'));
 			$data = curl_exec(static::$ch);
 			@mkdir(dirname($path), 0777, true);
@@ -106,9 +113,12 @@ class WdsNotationConverter {
 	static function getAssetPath($key) {
 		return preg_replace('/^(.+)_[0-9a-f]+(\..+?)$/', '$1$2', $key);
 	}
+	static function getAssetHash($key) {
+		return preg_replace('/^(.+)_([0-9a-f]+)(\..+?)$/', '$2', $key);
+	}
 	static function getAssetUrl($path, $type) {
 		$base = static::getAssetUrlBase();
-		return "$base/$type/iOS/1.0.0/$path";
+		return "$base/$type/iOS/1.0.1/$path";
 	}
 	static function getNotationConfigUrl($music) {
 		$base = static::getAssetUrlBase();
@@ -128,7 +138,7 @@ class WdsNotationConverter {
 		}
 		static::downloadSplitlaneAssets();
 		foreach (glob('game_splitlaneelement_assets_spliteffectelements/*.bundle') as $elementBundle) {
-			static::_log($elementBundle);
+			static::_log('load '.$elementBundle);
 			$assets = extractBundle(new FileStream($elementBundle));
 			$asset = new AssetFile($assets[0]);
 			foreach ($asset->preloadTable as $item) {
@@ -234,14 +244,42 @@ class WdsNotationConverter {
 		return $boundaries;
 	}
 
+	static $cacheDb;
+	static function initCache() {
+		if (!empty(static::$cacheDb)) return;
+		static::$cacheDb = new PDO('sqlite:'.__DIR__.'/cacheHash.db');
+	}
 	static function getCachedHash($path) {
-		return '';
+		static::initCache();
+		$chkHashStmt = static::$cacheDb->prepare('SELECT hash FROM cacheHash WHERE res=?');
+		$chkHashStmt->execute([$path]);
+		$row = $chkHashStmt->fetch();
+		return empty($row) ? '' : $row['hash'];
 	}
 	static function shouldDownload($path, $hash) {
-		return static::getCachedHash($path) === $hash;
+		return static::getCachedHash($path) !== $hash;
 	}
 	static function setCachedHash($path, $hash) {
-		return;
+		static::initCache();
+		$setHashStmt = static::$cacheDb->prepare('REPLACE INTO cacheHash (res,hash) VALUES (?,?)');
+		$setHashStmt->execute([$path, $hash]);
+	}
+	static function getCachedTextureHash($key) {
+		static::initCache();
+		$chkHashStmt = static::$cacheDb->prepare('SELECT hash FROM textureHash WHERE res=?');
+		$chkHashStmt->execute([$key]);
+		$row = $chkHashStmt->fetch();
+		return empty($row) ? '' : $row['hash'];
+	}
+	static function shouldExportTexture($key, Texture2D &$item) {
+		$hash = crc32($item->imageData);
+		$item->imageDataHash = $hash;
+		return static::getCachedTextureHash($key) !== "$hash";
+	}
+	static function setCachedTextureHash($path, Texture2D &$item) {
+		static::initCache();
+		$setHashStmt = static::$cacheDb->prepare('REPLACE INTO textureHash (res,hash) VALUES (?,?)');
+		$setHashStmt->execute([$path, $item->imageDataHash]);
 	}
 	static function downloadJackets() {
 		chdir(__DIR__);
@@ -251,14 +289,57 @@ class WdsNotationConverter {
 		foreach (static::$addressable['2d'][0] as $item) {
 			if (!preg_match('/jacket_assets_jacket\/.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
 			$path = static::getAssetPath($item['primaryKey']);
-			if (file_exists($path)) continue;
-			static::_log($path);
+			$hash = static::getAssetHash($item['primaryKey']);
+			if (!static::shouldDownload($path, $hash)) continue;
+			static::_log('dl '.$path);
 			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, '2d-assets'));
 			$data = curl_exec(static::$ch);
 			@mkdir(dirname($path), 0777, true);
 			file_put_contents($path, $data);
+			static::setCachedHash($path, $hash);
 			$downloadedBundles[] = $path;
 		}
+		return $downloadedBundles;
+	}
+	static function downloadCardTextures() {
+		chdir(__DIR__);
+		static::loadAddressable();
+		static::initCurl();
+		$downloadedBundles = [];
+		foreach (static::$addressable['2d'][0] as $item) {
+			if (!preg_match('/charactercardtextures_assets_charactercardtextures\/.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
+			$path = static::getAssetPath($item['primaryKey']);
+			$hash = static::getAssetHash($item['primaryKey']);
+			if (!static::shouldDownload($path, $hash)) continue;
+			static::_log('dl '.$path);
+			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, '2d-assets'));
+			$data = curl_exec(static::$ch);
+			@mkdir(dirname($path), 0777, true);
+			file_put_contents($path, $data);
+			static::setCachedHash($path, $hash);
+			$downloadedBundles[] = $path;
+		}
+		return $downloadedBundles;
+	}
+	static function downloadPosterTextures() {
+		chdir(__DIR__);
+		static::loadAddressable();
+		static::initCurl();
+		$downloadedBundles = [];
+		foreach (static::$addressable['2d'][0] as $item) {
+			if (!preg_match('/posters_assets_posters\/.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
+			$path = static::getAssetPath($item['primaryKey']);
+			$hash = static::getAssetHash($item['primaryKey']);
+			if (!static::shouldDownload($path, $hash)) continue;
+			static::_log('dl '.$path);
+			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, '2d-assets'));
+			$data = curl_exec(static::$ch);
+			@mkdir(dirname($path), 0777, true);
+			file_put_contents($path, $data);
+			static::setCachedHash($path, $hash);
+			$downloadedBundles[] = $path;
+		}
+		return $downloadedBundles;
 	}
 	static function downloadMusics() {
 		chdir(__DIR__);
@@ -268,23 +349,27 @@ class WdsNotationConverter {
 		foreach (static::$addressable['cri'][0] as $item) {
 			if (!preg_match('/cridata_remote_assets_criaddressables\/music_.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
 			$path = static::getAssetPath($item['primaryKey']);
-			if (file_exists($path)) continue;
-			static::_log($path);
+			$hash = static::getAssetHash($item['primaryKey']);
+			if (!static::shouldDownload($path, $hash)) continue;
+			static::_log('dl '.$path);
 			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, 'cri-assets'));
 			$data = curl_exec(static::$ch);
 			@mkdir(dirname($path), 0777, true);
 			file_put_contents($path, $data);
+			static::setCachedHash($path, $hash);
 			$downloadedBundles[] = $path;
 		}
 		return $downloadedBundles;
 	}
 	static function downloadNotations() {
 		static::downloadJackets();
+		//foreach (glob('cridata_remote_assets_criaddressables/music_*.bundle') as $jacketBundle) {
 		foreach (glob('jacket_assets_jacket/*.bundle') as $jacketBundle) {
 			$music = pathinfo($jacketBundle, PATHINFO_FILENAME);
+			//$music = substr(pathinfo(pathinfo($jacketBundle, PATHINFO_FILENAME), PATHINFO_FILENAME), 6);
 
 			$path = "Notations/$music/music_config.txt";
-			static::_log($path);
+			static::_log('dl '.$path);
 			curl_setopt(static::$ch, CURLOPT_URL, static::getNotationConfigUrl($music));
 			$data = curl_exec(static::$ch);
 			$httpCode = curl_getinfo(static::$ch, CURLINFO_HTTP_CODE);
@@ -293,7 +378,7 @@ class WdsNotationConverter {
 			checkAndCreateFile($path, static::decryptMusicConfig($data));
 			for ($i=1;$i<6;$i++) {
 				$path = "Notations/$music/$i.txt";
-				static::_log($path);
+				static::_log('dl '.$path);
 				curl_setopt(static::$ch, CURLOPT_URL, static::getNotationUrl($music, $i));
 				$data = curl_exec(static::$ch);
 				checkAndCreateFile($path, static::decryptNotation($data));
@@ -313,11 +398,11 @@ class WdsNotationConverter {
 	}
 
 	static function exportJackets() {
-		static::downloadJackets();
+		$downloadedJackets = static::downloadJackets();
 		$currenttime = time();
-		foreach (glob('jacket_assets_jacket/*.bundle') as $jacketBundle) {
-			static::_log($jacketBundle);
-			$assets = extractBundle(new FileStream($jacketBundle));
+		foreach ($downloadedJackets as $bundle) {
+			static::_log('export '.$bundle);
+			$assets = extractBundle(new FileStream($bundle));
 
 			try{
 			
@@ -331,11 +416,15 @@ class WdsNotationConverter {
 							$item = new Texture2D($item, true);
 						} catch (Exception $e) { continue; }
 						$itemname = $item->name;
+						if (!static::shouldExportTexture("$bundle:$itemname", $item)) {
+							continue;
+						}
 						$saveTo = static::getResourcePathPrefix(). 'jacket/'. $itemname;
 						$param = '-lossless 1';
 						$item->exportTo($saveTo, 'webp', $param);
 						if (filemtime($saveTo. '.webp') > $currenttime)
 						touch($saveTo. '.webp', $currenttime);
+						static::setCachedTextureHash("$bundle:$itemname", $item);
 						unset($item);
 					}
 				}
@@ -355,9 +444,123 @@ class WdsNotationConverter {
 			}
 		}
 	}
+	static function exportCardTextures() {
+		$downloadedTextures = static::downloadCardTextures();
+		//$downloadedTextures = glob('charactercardtextures_assets_charactercardtextures/*.bundle');
+		$currenttime = time();
+		static::unloadAddressable();
+		foreach ($downloadedTextures as $bundle) {
+			static::_log('export '.$bundle);
+			$assets = extractBundle(new FileStream($bundle));
+
+			try{
+			
+			foreach ($assets as $asset) {
+				if (substr($asset, -5,5) == '.resS') continue;
+				$asset = new AssetFile($asset);
+		
+				foreach ($asset->preloadTable as &$item) {
+					// find card sprite
+					if ($item->typeString == 'Sprite') {
+						if (!isset($asset->ClassStructures[$item->type1]) || $item->fullSize > 1000) {
+							continue;
+						}
+						$stream = $asset->stream;
+						$stream->position = $item->offset;
+						$deserializedStruct = ClassStructHelper::DeserializeStruct($stream, $asset->ClassStructures[$item->type1]['members']);
+						$organizedStruct = ClassStructHelper::OrganizeStruct($deserializedStruct);
+						if (!preg_match('/^\d{6}_\d$/', $organizedStruct['m_Name'])) continue;
+						$texturePath = $organizedStruct['m_RD']['texture']['m_PathID'];
+						unset($deserializedStruct, $organizedStruct);
+						if (!isset($asset->preloadTable[$texturePath])) {
+							static::_log("texture path $texturePath not found in $bundle");
+						}
+						$item = $asset->preloadTable[$texturePath];
+						try {
+							$item = new Texture2D($item, true);
+						} catch (Exception $e) { continue; }
+						$itemname = $item->name;
+						if (!static::shouldExportTexture("$bundle:$itemname", $item)) {
+							continue;
+						}
+						$saveTo = static::getResourcePathPrefix(). 'card/'. $itemname;
+						$param = '-lossless 1';
+						$item->exportTo($saveTo, 'webp', $param);
+						if (filemtime($saveTo. '.webp') > $currenttime)
+						touch($saveTo. '.webp', $currenttime);
+						static::setCachedTextureHash("$bundle:$itemname", $item);
+						unset($item);
+					}
+				}
+				$asset->__desctruct();
+				unset($asset);
+				gc_collect_cycles();
+			}
+
+			} catch(Exception $e) {
+				$asset->__desctruct();
+				unset($asset);
+				static::_log('Not supported: '. $e->getMessage());
+			}
+
+			foreach ($assets as $asset) {
+				unlink($asset);
+			}
+		}
+	}
+	static function exportPosterTextures() {
+		$downloadedTextures = static::downloadPosterTextures();
+		//$downloadedTextures = glob('posters_assets_posters/210030.bundle');
+		$currenttime = time();
+		static::unloadAddressable();
+		foreach ($downloadedTextures as $bundle) {
+			static::_log('export '.$bundle);
+			$assets = extractBundle(new FileStream($bundle));
+
+			try{
+			
+			foreach ($assets as $asset) {
+				if (substr($asset, -5,5) == '.resS') continue;
+				$asset = new AssetFile($asset);
+		
+				foreach ($asset->preloadTable as &$item) {
+					if ($item->typeString == 'Texture2D') {
+						try {
+							$item = new Texture2D($item, true);
+						} catch (Exception $e) { continue; }
+						$itemname = $item->name;
+						$saveDir = preg_match('/_0$/', $itemname) ? 'poster/' : 'poster_parts/';
+						if (!static::shouldExportTexture("$bundle:$itemname", $item)) {
+							continue;
+						}
+						$saveTo = static::getResourcePathPrefix(). $saveDir. $itemname;
+						$param = '-lossless 1';
+						$item->exportTo($saveTo, 'webp', $param);
+						if (filemtime($saveTo. '.webp') > $currenttime)
+						touch($saveTo. '.webp', $currenttime);
+						static::setCachedTextureHash("$bundle:$itemname", $item);
+						unset($item);
+					}
+				}
+				$asset->__desctruct();
+				unset($asset);
+				gc_collect_cycles();
+			}
+
+			} catch(Exception $e) {
+				$asset->__desctruct();
+				unset($asset);
+				static::_log('Not supported: '. $e->getMessage());
+			}
+
+			foreach ($assets as $asset) {
+				unlink($asset);
+			}
+		}
+	}
 	static function exportMusics() {
 		$downloadedBundles = static::downloadMusics();
-		$downloadedBundles = glob('cridata_remote_assets_criaddressables/music_*.acb.bundle');
+		//$downloadedBundles = glob('cridata_remote_assets_criaddressables/music_*.acb.bundle');
 		$saveTo = static::getResourcePathPrefix() . 'sound/music';
 		$saveTo = 'sound/music';
 		foreach ($downloadedBundles as $acbName) {
@@ -388,8 +591,8 @@ class WdsNotationConverter {
 				'type'         => intval($parts[2]),
 				'lane'         => intval($parts[3]),
 				'width'        => intval($parts[4]),
-				'gimmickType'  => $parts[5],
-				'gimmickValue' => $parts[6],
+				'gimmickType'  => isset($parts[5]) ? $parts[5] : '0',
+				'gimmickValue' => isset($parts[6]) ? $parts[6] : '0',
 			];
 		}, explode("\n", $text));
 	}
@@ -410,6 +613,7 @@ class WdsNotationConverter {
 		$soundNotes = [];
 		$holdJudgeNotes = [];
 		$splitSections = [];
+		usort($notation, function ($a, $b) { return $a['start'] >= $b['start'] ? $a['start'] > $b['start'] ? 1 : 0 : -1;});
 		foreach ($notation as $note) {
 			$noteEnd = $note['end'] > 0 ? $note['end'] : $note['start'];
 			$endOfChartTs = max($noteEnd, $noteEnd);
@@ -713,7 +917,7 @@ class WdsNotationConverter {
 				],
 				'isFinal' => false,
 			];
-			while (floor($line['start']['t'] / $DurationPerColumn) != floor($line['end']['t'] / $DurationPerColumn)) {
+			while (floor($line['start']['t'] / $DurationPerColumn) != floor($line['fade']['t'] / $DurationPerColumn)) {
 				$insertEndTime = floor($line['start']['t'] / $DurationPerColumn) * $DurationPerColumn + $DurationPerColumn;
 				$insertEnd = [
 					't' => $insertEndTime,
@@ -828,7 +1032,7 @@ class WdsNotationConverter {
 
 	static function convertNotations() {
 		foreach (glob('Notations/*/?.txt') as $f) {
-			static::_log("$f");
+			static::_log("export $f");
 			$notation = static::parseNotation(file_get_contents($f));
 			$svg = static::notationToSvg($notation);
 			$saveTo = dirname($f).'/'.pathinfo($f, PATHINFO_FILENAME).'.svg';
@@ -963,7 +1167,15 @@ class WdsNotationConverter {
 					break;
 				}
 				case 'jacket': {
-					static::downloadJackets();
+					static::exportJackets();
+					break;
+				}
+				case 'card': {
+					static::exportCardTextures();
+					break;
+				}
+				case 'poster': {
+					static::exportPosterTextures();
 					break;
 				}
 				case 'dlnote': {
