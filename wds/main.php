@@ -1484,10 +1484,6 @@ class WdsNotationConverter {
 					break;
 				}
 				case 'master': {
-					// 仅在 05:00 +9 重新登录
-					if (in_array(date('H'), [4])) {
-						static::authenticate();
-					}
 					static::updateMaster();
 					break;
 				}
@@ -1519,11 +1515,12 @@ class WdsNotationConverter {
 			1, null, null,
 			static::$appVersionFull
 		];
-		curl_setopt_array(static::$apiCh, [
+		$ch = curl_copy_handle(static::$apiCh);
+		curl_setopt_array($ch, [
 			CURLOPT_URL=> static::$apiBase . '/api/Account/Authenticate',
 			CURLOPT_POSTFIELDS => msgpack_pack($payload)
 		]);
-		$resp = curl_exec(static::$apiCh);
+		$resp = curl_exec($ch);
 		$resp = MsgPackHelper::parseServerResponse($resp, 'AuthenticateResult');
 		if (empty($resp[1][0]['Token'])) return false;
 		PersistentStorage::set('login_token', $resp[1][0]['Token']);
@@ -1539,6 +1536,11 @@ class WdsNotationConverter {
 			CURLOPT_HTTPHEADER => static::getApiHeaders(["Authorization: Bearer ".$token]),
 		]);
 		$resp = curl_exec($ch);
+		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		if ($httpCode == 403) {
+			static::authenticate();
+			return static::getMasterDataUrl();
+		}
 		$resp = MsgPackHelper::parseServerResponse($resp, 'MasterDataManifest');
 		if (empty($resp[1][0]['Uri'])) return null;
 		return $resp[1][0];
@@ -1550,14 +1552,12 @@ class WdsNotationConverter {
 		if ($lastMasterVersion === $currentMaster['Version']) return;
 
 		static::_log("dumping new master ".$currentMaster['Version']);
-		exit;
 		// download master
-		//static::initCurl();
-		//curl_setopt(static::$ch, CURLOPT_URL, static::$masterUrl.'/'.$currentMaster['Uri']);
-		//$data = curl_exec(static::$ch);
-		//$httpCode = curl_getinfo(static::$ch, CURLINFO_HTTP_CODE);
-		//if ($httpCode != 200) return;
-		$data = file_get_contents($currentMaster['Uri']);
+		static::initCurl();
+		curl_setopt(static::$ch, CURLOPT_URL, static::$masterUrl.'/'.$currentMaster['Uri']);
+		$data = curl_exec(static::$ch);
+		$httpCode = curl_getinfo(static::$ch, CURLINFO_HTTP_CODE);
+		if ($httpCode != 200) return;
 
 		chdir(__DIR__);
 		// delete old entries
@@ -1588,6 +1588,9 @@ class WdsNotationConverter {
 		exec('git push origin master');
 
 		$lastMasterVersion = PersistentStorage::set('master_version', $currentMaster['Version']);
+		chdir('..');
+
+		// export info to web page
 	}
 }
 
