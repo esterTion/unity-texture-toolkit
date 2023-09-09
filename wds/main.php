@@ -1,5 +1,105 @@
 <?php
 
+require 'msgpack.phar';
+
+// mod from https://github.com/rybakit/msgpack.php/blob/master/src/Extension/TimestampExtension.php
+class TimestampExtension implements \MessagePack\Extension
+{
+    private const TYPE = -1;
+    public function getType() : int
+    {
+        return self::TYPE;
+    }
+    public function pack(\MessagePack\Packer $packer, $value) : ?string
+    {
+			throw new Exception('not implemented');
+    }
+
+    public function unpackExt(\MessagePack\BufferUnpacker $unpacker, int $extLength)
+    {
+        if (4 === $extLength) {
+            $data = $unpacker->read(4);
+
+            $sec = \ord($data[0]) << 24
+                | \ord($data[1]) << 16
+                | \ord($data[2]) << 8
+                | \ord($data[3]);
+
+            return gmdate('Y-m-d H:i:s', $sec);
+        }
+        if (8 === $extLength) {
+            $data = $unpacker->read(8);
+
+            $num = \unpack('J', $data)[1];
+            $nsec = $num >> 34;
+            if ($nsec < 0) {
+                $nsec += 0x40000000;
+            }
+
+            return gmdate('Y-m-d H:i:s', $num & 0x3ffffffff);
+            //return new Timestamp($num & 0x3ffffffff, $nsec);
+        }
+
+        $data = $unpacker->read(12);
+
+        $nsec = \ord($data[0]) << 24
+            | \ord($data[1]) << 16
+            | \ord($data[2]) << 8
+            | \ord($data[3]);
+
+        return gmdate('Y-m-d H:i:s', \unpack('J', $data, 4)[1]);
+        //return new Timestamp(\unpack('J', $data, 4)[1], $nsec);
+    }
+}
+class Lz4BlockExtension implements \MessagePack\Extension {
+	private const TYPE = 99;
+	public function getType() : int
+	{
+		return self::TYPE;
+	}
+	public function pack(\MessagePack\Packer $packer, $value) : ?string
+	{
+		throw new Exception('not implemented');
+	}
+
+	public function unpackExt(\MessagePack\BufferUnpacker $unpacker, int $extLength)
+	{
+		$subData = $unpacker->read($extLength);
+		$subData = lz4_uncompress($subData[4].$subData[3].$subData[2].$subData[1].substr($subData, 5));
+		$subUnpacker = $unpacker->withBuffer($subData);
+		return $subUnpacker->reset($subData)->unpack();
+	}
+}
+class Lz4BlockArrayExtension implements \MessagePack\Extension {
+	private const TYPE = 98;
+	public function getType() : int
+	{
+		return self::TYPE;
+	}
+	public function pack(\MessagePack\Packer $packer, $value) : ?string
+	{
+		throw new Exception('not implemented');
+	}
+
+	public function unpackExt(\MessagePack\BufferUnpacker $unpacker, int $extLength)
+	{
+		$lenData = $unpacker->read($extLength);
+		$subUnpacker = $unpacker->withBuffer($lenData);
+		$uncompressedSizes = [];
+		while ($subUnpacker->hasRemaining()) {
+			$uncompressedSizes[] = $subUnpacker->unpack();
+		}
+		$uncompressedDatas = [];
+		foreach ($uncompressedSizes as $uncompressedSize) {
+			$bin = $unpacker->unpack();
+			$uncompressedDatas[] = lz4_uncompress(pack('V', $uncompressedSize) . $bin);
+		}
+		$dataAfter = $unpacker->read($unpacker->getRemainingCount());
+		$unpacker->reset(str_repeat("\xC0", count($uncompressedSizes)). $dataAfter);
+		return $subUnpacker->reset(implode('', $uncompressedDatas))->unpack();
+	}
+}
+
 require 'UnityAsset.php';
 
 class WdsNoteType {
@@ -21,10 +121,133 @@ class WdsNoteType {
 	const HoldEighth = 900;
 }
 
-class WdsNotationConverter {
+class PersistentStorage {
+	static $data = null;
+	static function init() {
+		if (empty(static::$data)) {
+			static::$data = json_decode(file_get_contents(__DIR__.'/storages.json'), true);
+		}
+	}
+	static function get($key, $default = '') {
+		static::init();
+		return empty(static::$data[$key]) ? $default : static::$data[$key];
+	}
+	static function set($key, $val) {
+		static::$data = json_decode(file_get_contents(__DIR__.'/storages.json'), true);
+		static::$data[$key] = $val;
+		file_put_contents(__DIR__.'/storages.json', json_encode(static::$data));
+		return $val;
+	}
+}
+class MsgPackHelper {
+	static $typesDb = null;
+	static $getTypeByTypeStmt;
+	static $getTypeByTableNameStmt;
+	static function loadTypes() {
+		if (!static::$typesDb) {
+			static::$typesDb = new PDO('sqlite:'.__DIR__.'/types.db');
+			static::$getTypeByTypeStmt = static::$typesDb->prepare('SELECT keys FROM types WHERE class = ?');
+			static::$getTypeByTableNameStmt = static::$typesDb->prepare('SELECT keys FROM types WHERE table_name = ?');
+		}
+	}
+	static function applyTypeName(&$data, $keys) {
+		$count = count($data);
+		for ($i = 0; $i < $count; $i++) {
+			if ($data[$i] === null) {
+				unset($data[$i]);
+				continue;
+			}
+			if (empty($keys[$i])) continue;
+			if (is_array($data[$i])) {
+				static::applyTypeNameByType($data[$i], $keys[$i]['type']);
+			}
 
-	static function _log($s) {
+			$data[$keys[$i]['name']] = $data[$i];
+			unset($data[$i]);
+		}
+	}
+	static function applyTypeNameByType(&$data, $name) {
+		static::loadTypes();
+
+		$name = preg_replace('(^Nullable<(.+)>$)', '$1', $name);
+		$isArray = substr($name, -2, 2) === '[]';
+		if ($isArray) $name = substr($name, 0, -2);
+
+		static::$getTypeByTypeStmt->execute([$name]);
+		$row = static::$getTypeByTypeStmt->fetch(PDO::FETCH_NUM);
+		if (empty($row)) return;
+		$keys = json_decode($row[0], true);
+		if ($isArray) {
+			for ($i=0; $i<count($data); $i++) {
+				static::applyTypeName($data[$i], $keys);
+			}
+		} else {
+			static::applyTypeName($data, $keys);
+		}
+	}
+	static function applyTypeNameByTableName(&$data, $name) {
+		static::loadTypes();
+		static::$getTypeByTableNameStmt->execute([$name]);
+		$row = static::$getTypeByTableNameStmt->fetch(PDO::FETCH_NUM);
+		if (empty($row)) return;
+		$keys = json_decode($row[0], true);
+
+		for ($i=0; $i<count($data); $i++) {
+			static::applyTypeName($data[$i], $keys);
+		}
+	}
+	static function parseServerResponse(string $resp, string $resultType = '') {
+		$timestampExtension = new TimestampExtension;
+		$lz4BlockArrayExtension = new Lz4BlockArrayExtension;
+		$unpacker = new \MessagePack\BufferUnpacker;
+		$unpacker = $unpacker->extendWith($timestampExtension)->extendWith($lz4BlockArrayExtension);
+		$unpacker->reset($resp);
+		$responseBlocks = [];
+		while ($unpacker->hasRemaining()) {
+			$responseBlocks[] = $unpacker->unpack();
+		}
+		if (!empty($resultType) && !empty($responseBlocks[1][0])) {
+			static::applyTypeNameByType($responseBlocks[1][0], $resultType);
+		}
+		return $responseBlocks;
+	}
+	static function prettifyJSON($in) {
+		$a = $in;
+		if (!is_array($a)) $a = json_decode($a);
+		$a = json_encode($a, JSON_UNESCAPED_UNICODE+JSON_UNESCAPED_SLASHES+JSON_PRETTY_PRINT);
+		$a = preg_replace("/([^\]\}]),\n +/", "$1, ", $a);
+		$a = preg_replace('/("[^"]+?":) /', '$1', $a);
+		$a = preg_replace_callback("/\n +/", function ($m) { return "\n".str_repeat(' ', (strlen($m[0])-1) / 2); }, $a);
+		return $a;
+	}
+}
+
+class WdsNotationConverter {
+	static $assetUrl;
+	static $apiBase;
+	static $assetVersion;
+	static $appVersion;
+	static $appVersionFull;
+	static $masterUrl;
+
+	static function init() {
+		static::$assetUrl = PersistentStorage::get('assetUrl', 'https://assets.wds-stellarium.com/production');
+		static::$apiBase = PersistentStorage::get('apiBase', 'https://ag-api.wds-stellarium.com');
+		static::$assetVersion = PersistentStorage::get('assetVersion', '1.1.0');
+		static::$appVersion = PersistentStorage::get('appVersion', '1.4.0');
+		static::$appVersionFull = PersistentStorage::get('appVersionFull', '1.4.0.79');
+		static::$masterUrl = PersistentStorage::get('masterUrl', 'https://assets.wds-stellarium.com/master-data/production');
+	}
+
+	static $logFile = null;
+	static function _log($s, $logFile = true) {
 		echo date('[Y/m/d H:i:s] ')."$s\n";
+		if (!static::$logFile) {
+			static::$logFile = fopen(__DIR__.'/wds.log', 'a');
+		}
+		if ($logFile) {
+			fwrite(static::$logFile, date('[Y/m/d H:i:s] ')."$s\n");
+		}
 	}
 	static function delTree($dir) {
 		$files = array_diff(scandir($dir), array('.','..'));
@@ -45,22 +268,45 @@ class WdsNotationConverter {
 			CURLOPT_ENCODING=>'',
 			//CURLOPT_PROXY=>'127.0.0.1:50000',
 		]);
+		if (file_exists(__DIR__.'/useproxy.txt')) {
+			curl_setopt(static::$ch, CURLOPT_PROXY, file_get_contents(__DIR__.'/useproxy.txt'));
+		}
+	}
+	static $apiCh = null;
+	static function getApiHeaders($append = []) {
+		return array_merge(['Content-Type: application/vnd.msgpack', 'X-Platform: app-store', 'X-FM: 0', 'Accept: application/vnd.msgpack'], $append);
+	}
+	static function initApiCurl() {
+		if (static::$apiCh !== null) return;
+		static::initCurl();
+		static::$apiCh = curl_copy_handle(static::$ch);
+		curl_setopt_array(static::$apiCh, [
+			CURLOPT_USERAGENT=>'BestHTTP/2 v2.8.3',
+			CURLOPT_HTTPHEADER=>static::getApiHeaders(),
+		]);
 	}
 	static function downloadAddressable() {
 		chdir(__DIR__);
 		static::initCurl();
+		static::initCache();
 		$manifestUpdated = false;
+		$ver = static::$assetVersion;
+		static::_log('check addressable');
 		foreach (['2d', '3d', 'cri'] as $type) {
 			$path = "$type-assets.json";
+			static::_log('check '.$path, false);
+			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl("catalog_$ver.hash", "$type-assets"));
+			$hash = curl_exec(static::$ch);
+			if (!static::shouldDownload($path, $hash)) continue;
 			static::_log('dl '.$path);
-			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl("catalog_1.0.1.json", "$type-assets"));
-			$data = curl_exec(static::$ch);
-			if (!empty($data) && md5($data) !== md5_file($path)) {
-				$manifestUpdated = true;
-				file_put_contents($path, $data);
-			}
+			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl("catalog_$ver.json.br", "$type-assets"));
+			$data = brotli_uncompress(curl_exec(static::$ch));
+			$manifestUpdated = true;
+			checkAndCreateFile("manifest/$path", $data);
+			static::setCachedHash($path, $hash);
 		}
 		if ($manifestUpdated && file_exists('cache_addressable.dat')) {
+			static::_log('found update, clearing cache');
 			unlink('cache_addressable.dat');
 		}
 	}
@@ -74,13 +320,14 @@ class WdsNotationConverter {
 		static::$addressable = [];
 		foreach (['2d', '3d', 'cri'] as $type) {
 			static::_log("load $type");
-			$path = __DIR__."/$type-assets.json";
+			$path = __DIR__."/manifest/$type-assets.json";
 			if (!file_exists($path)) {
 				throw new Exception("$path not found");
 			}
 			$data = json_decode(file_get_contents($path), true);
 			$parsed = static::parseAddressable($data);
 			static::$addressable[$type] = $parsed;
+			unset($data);
 		}
 		file_put_contents('cache_addressable.dat', json_encode(static::$addressable));
 	}
@@ -92,6 +339,7 @@ class WdsNotationConverter {
 		chdir(__DIR__);
 		static::loadAddressable();
 		static::initCurl();
+		$splitlaneUpdated = false;
 		foreach (static::$addressable['3d'][0] as $item) {
 			if (!preg_match('/(game_splitlaneelement_assets_spliteffectelements\/spliteffectelements.+|game_splitlane_assets_spliteffects\/\d+)_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
 			$path = static::getAssetPath($item['primaryKey']);
@@ -101,6 +349,11 @@ class WdsNotationConverter {
 			$data = curl_exec(static::$ch);
 			@mkdir(dirname($path), 0777, true);
 			file_put_contents($path, $data);
+			$splitlaneUpdated = true;
+		}
+		if ($splitlaneUpdated && file_exists('cache_spliteffectelements.dat')) {
+			static::_log('found update, clearing cache');
+			unlink('cache_spliteffectelements.dat');
 		}
 	}
 
@@ -108,7 +361,7 @@ class WdsNotationConverter {
 		return '/data/home/web/_redive/wds/';
 	}
 	static function getAssetUrlBase() {
-		return 'https://assets.wds-stellarium.com/production';
+		return static::$assetUrl;
 	}
 	static function getAssetPath($key) {
 		return preg_replace('/^(.+)_[0-9a-f]+(\..+?)$/', '$1$2', $key);
@@ -118,7 +371,8 @@ class WdsNotationConverter {
 	}
 	static function getAssetUrl($path, $type) {
 		$base = static::getAssetUrlBase();
-		return "$base/$type/iOS/1.0.1/$path";
+		$ver = static::$assetVersion;
+		return "$base/$type/iOS/$ver/$path";
 	}
 	static function getNotationConfigUrl($music) {
 		$base = static::getAssetUrlBase();
@@ -132,13 +386,13 @@ class WdsNotationConverter {
 	static $splitEffectElements = null;
 	static function loadAllSplitEffectElements() {
 		if (!empty(static::$splitEffectElements)) return;
+		static::downloadSplitlaneAssets();
 		if (file_exists('cache_spliteffectelements.dat')){
 			static::$splitEffectElements = json_decode(file_get_contents('cache_spliteffectelements.dat'), true);
 			return;
 		}
-		static::downloadSplitlaneAssets();
 		foreach (glob('game_splitlaneelement_assets_spliteffectelements/*.bundle') as $elementBundle) {
-			static::_log('load '.$elementBundle);
+			static::_log('load '.$elementBundle, false);
 			$assets = extractBundle(new FileStream($elementBundle));
 			$asset = new AssetFile($assets[0]);
 			foreach ($asset->preloadTable as $item) {
@@ -369,19 +623,21 @@ class WdsNotationConverter {
 			//$music = substr(pathinfo(pathinfo($jacketBundle, PATHINFO_FILENAME), PATHINFO_FILENAME), 6);
 
 			$path = "Notations/$music/music_config.txt";
-			static::_log('dl '.$path);
+			static::_log('check '.$path, false);
 			curl_setopt(static::$ch, CURLOPT_URL, static::getNotationConfigUrl($music));
 			$data = curl_exec(static::$ch);
 			$httpCode = curl_getinfo(static::$ch, CURLINFO_HTTP_CODE);
 			if ($httpCode != 200) continue;
 			@mkdir(dirname($path), 0777, true);
-			checkAndCreateFile($path, static::decryptMusicConfig($data));
+			$hasNewMusicConfig = checkAndCreateFile($path, static::decryptMusicConfig($data));
+			if ($hasNewMusicConfig) static::_log('save '.$path);
 			for ($i=1;$i<6;$i++) {
 				$path = "Notations/$music/$i.txt";
-				static::_log('dl '.$path);
+				static::_log('check '.$path, false);
 				curl_setopt(static::$ch, CURLOPT_URL, static::getNotationUrl($music, $i));
 				$data = curl_exec(static::$ch);
-				checkAndCreateFile($path, static::decryptNotation($data));
+				$hasNewNotation = checkAndCreateFile($path, static::decryptNotation($data));
+				if ($hasNewNotation) static::_log('save '.$path);
 			}
 		}
 	}
@@ -616,7 +872,7 @@ class WdsNotationConverter {
 		usort($notation, function ($a, $b) { return $a['start'] >= $b['start'] ? $a['start'] > $b['start'] ? 1 : 0 : -1;});
 		foreach ($notation as $note) {
 			$noteEnd = $note['end'] > 0 ? $note['end'] : $note['start'];
-			$endOfChartTs = max($noteEnd, $noteEnd);
+			$endOfChartTs = max($noteEnd, $endOfChartTs);
 			switch ($note['type']) {
 				case WdsNoteType::Normal:
 				case WdsNoteType::Critical:
@@ -645,7 +901,7 @@ class WdsNotationConverter {
 				case '13':
 				case '14':
 				case '15':
-				case '16': { $splitSections[] = $note; $endOfChartTs = max($noteEnd + 1, $noteEnd); break;}
+				case '16': { $splitSections[] = $note; $endOfChartTs = max($noteEnd + 1, $endOfChartTs); break;}
 				default: {
 					print_r($note);//break;
 				}
@@ -796,7 +1052,7 @@ class WdsNotationConverter {
 			if (!isset($syncPoints[$noteTimeS])) {
 				$syncPoints[$noteTimeS] = [$x + $width, $x, $y + 4];
 			}
-			$syncPoints[$noteTimeS][0] = min($syncPoints[$noteTimeS][0], $x + 20);
+			$syncPoints[$noteTimeS][0] = min($syncPoints[$noteTimeS][0], $x + $width);
 			$syncPoints[$noteTimeS][1] = max($syncPoints[$noteTimeS][1], $x);
 			switch ($note['type']) {
 				case WdsNoteType::Normal:
@@ -864,7 +1120,7 @@ class WdsNotationConverter {
 			if (!isset($syncPoints[$noteTimeS])) {
 				$syncPoints[$noteTimeS] = [$x + $width, $x, $y + 4];
 			}
-			$syncPoints[$noteTimeS][0] = min($syncPoints[$noteTimeS][0], $x + 20);
+			$syncPoints[$noteTimeS][0] = min($syncPoints[$noteTimeS][0], $x + $width);
 			$syncPoints[$noteTimeS][1] = max($syncPoints[$noteTimeS][1], $x);
 			$noteType = 'scratch';
 			$transformScaleX = static::roundReal($width / 20);
@@ -970,10 +1226,10 @@ class WdsNotationConverter {
 					if ($y1 < 50) {
 						$h1 = 50 - $y1;
 						$h2 = $HeightPerSecond - $h1;
-						$svgParts[] = "<path d=\"M${x1},${y1}v${HeightPerSecond}h3v-${HeightPerSecond}z\" fill=\"url(#split_fadeout_$fadeOutId)\" clip-path=\"path('M${x1},${y1}m0,${h1}v${h2}h3v-${h2}')\" />";
+						$svgParts[] = "<path d=\"M${x1},${y1}v${HeightPerSecond}h3v-${HeightPerSecond}z\" fill=\"url(#split_fadeout_$fadeOutId)\" clip-path=\"url(#split_fadeout_clip)\" />";
 						$x2 = $x1 + 200;
 						$y2 = $y1 + 800;
-						$svgParts[] = "<path d=\"M${x2},${y2}v${HeightPerSecond}h3v-${HeightPerSecond}z\" fill=\"url(#split_fadeout_$fadeOutId)\" clip-path=\"path('M${x2},${y2}v${h1}h3v-${h1}')\" />";
+						$svgParts[] = "<path d=\"M${x2},${y2}v${HeightPerSecond}h3v-${HeightPerSecond}z\" fill=\"url(#split_fadeout_$fadeOutId)\" clip-path=\"url(#split_fadeout_clip)\" />";
 					} else {
 						$svgParts[] = "<path d=\"M${x1},${y1}v${HeightPerSecond}h3v-${HeightPerSecond}z\" fill=\"url(#split_fadeout_$fadeOutId)\" />";
 					}
@@ -984,6 +1240,7 @@ class WdsNotationConverter {
 		foreach ($fadeOutGradients as $color=>$id) {
 			$svgParts[] = "<linearGradient id=\"split_fadeout_$id\" x2=\"0\" y2=\"100%\">$color</linearGradient>";
 		}
+		$svgParts[] = '<clipPath id="split_fadeout_clip"><rect x="50" y="50" width="'.($svgWidth - 100).'" height="800" /></clipPath>';
 		$svgParts[] = '</defs>';
 		$svgParts[] = '</g>';
 
@@ -998,12 +1255,22 @@ class WdsNotationConverter {
 				$x1 += 200;
 				$x2 += 200;
 				$y += 800;
-				$svgParts[] = "<path d=\"M$x1,$y H$x2\" stroke=\"#B4B4B4\" />";
+				$syncLayerParts[] = "<path d=\"M$x1,$y H$x2\" stroke=\"#B4B4B4\" />";
 			} else if ($t > 1 && $t - floor($t / $DurationPerColumn) * $DurationPerColumn < $DurationPerColumn * 0.01) {
 				$x1 -= 200;
 				$x2 -= 200;
 				$y -= 800;
-				$svgParts[] = "<path d=\"M$x1,$y H$x2\" stroke=\"#B4B4B4\" />";
+				$syncLayerParts[] = "<path d=\"M$x1,$y H$x2\" stroke=\"#B4B4B4\" />";
+			}
+		}
+		foreach ($splitSections as $note) {
+			list($x1, $y1) = static::getNotePos($note['start'], 1);
+			list($x2, $y2) = static::getNotePos($note['end'], 1);
+			if ($note['start'] >= $note['end']) {
+				$syncLayerParts[] = "<path d=\"M$x1,${y1}h120\" stroke=\"#606060\" />";
+			} else {
+				$syncLayerParts[] = "<path d=\"M$x1,${y1}h120\" stroke=\"#606060\" />";
+				$syncLayerParts[] = "<path d=\"M$x2,${y2}h120\" stroke=\"#606060\" />";
 			}
 		}
 		$syncLayerParts[] = '</g>';
@@ -1014,7 +1281,18 @@ class WdsNotationConverter {
 			$column = floor($i / $DurationPerColumn);
 			$x = 200 * $column + 175;
 			$y = 850 - $HeightPerSecond * ($i - $column * $DurationPerColumn);
-			$svgParts[] = '<text class="section_mark" x="'.$x.'" y="'.$y.'">'.($i).'</text>';
+			$svgParts[] = '<text class="second_mark" x="'.$x.'" y="'.$y.'">'.($i ?: 'seconds').'</text>';
+		}
+		foreach ($splitSections as $note) {
+			$startPos = static::getNotePos($note['start'], 1);
+			$endPos = static::getNotePos($note['end'], 1);
+			if ($note['start'] >= $note['end']) {
+				$svgParts[] = '<text class="split_mark" text-anchor="end" x="'.($startPos[0] - 2).'" y="'.($startPos[1] - 2).'">split '.$note['gimmickValue'].'</text>';
+				$svgParts[] = '<text class="split_mark" text-anchor="end" x="'.($startPos[0] - 2).'" y="'.($startPos[1] + 10).'">no length</text>';
+			} else {
+				$svgParts[] = '<text class="split_mark" text-anchor="end" x="'.($startPos[0] - 2).'" y="'.($startPos[1] + 4).'">split '.$note['gimmickValue'].'</text>';
+				$svgParts[] = '<text class="split_mark" text-anchor="end" x="'.($endPos[0] - 2).'" y="'.($endPos[1] + 4).'">split end</text>';
+			}
 		}
 		$svgParts[] = '</g>';
 
@@ -1032,9 +1310,10 @@ class WdsNotationConverter {
 
 	static function convertNotations() {
 		foreach (glob('Notations/*/?.txt') as $f) {
-			static::_log("export $f");
+			static::_log("export $f", false);
 			$notation = static::parseNotation(file_get_contents($f));
 			$svg = static::notationToSvg($notation);
+			if (empty($svg)) continue;
 			$saveTo = dirname($f).'/'.pathinfo($f, PATHINFO_FILENAME).'.svg';
 			checkAndCreateFile($saveTo, $svg);
 		}
@@ -1103,11 +1382,11 @@ class WdsNotationConverter {
 		$map = [];
 		$dlToClass = [];
 		foreach ($locations as $i) {
-			if (!empty($i['dependencyKey'])) {
-				if (empty($dlToClass[$i['dependencyKey']])) $dlToClass[$i['dependencyKey']] = ['class'=>[],'key'=>''];
-				$dlToClass[$i['dependencyKey']]['class'][] = $i['type']['m_ClassName'];
-				$dlToClass[$i['dependencyKey']]['key'] = $i['primaryKey'];
-			}
+			#if (!empty($i['dependencyKey'])) {
+				#if (empty($dlToClass[$i['dependencyKey']])) $dlToClass[$i['dependencyKey']] = ['class'=>[],'key'=>''];
+				#$dlToClass[$i['dependencyKey']]['class'][] = $i['type']['m_ClassName'];
+				#$dlToClass[$i['dependencyKey']]['key'] = $i['primaryKey'];
+			#}
 			$map[$i['type']['m_ClassName'].'-'.$i['primaryKey']] = $i;
 			unset($i['type']);
 			unset($i['primaryKey']);
@@ -1160,6 +1439,7 @@ class WdsNotationConverter {
 	}
 
 	static function main($argc, $argv) {
+		$isCron = false;
 		for ($i=1; $i<$argc; $i++) {
 			switch ($argv[$i]) {
 				case 'manifest': {
@@ -1179,10 +1459,14 @@ class WdsNotationConverter {
 					break;
 				}
 				case 'dlnote': {
+					// 仅在 12:00 & 17:00 +9 自动刷新谱面
+					if ($isCron && !in_array(date('H'), [11, 16])) break;
 					static::downloadNotations();
 					break;
 				}
 				case 'svg': {
+					// 仅在 12:00 & 17:00 +9 自动刷新谱面
+					if ($isCron && !in_array(date('H'), [11, 16])) break;
 					static::convertNotations();
 					break;
 				}
@@ -1190,13 +1474,124 @@ class WdsNotationConverter {
 					static::exportMusics();
 					break;
 				}
+				case 'cron': {
+					$isCron = true;
+					$cronTime = $argv[++$i];
+					break;
+				}
+				case 'getConfig': {
+					static::getConfig();
+					break;
+				}
+				case 'master': {
+					// 仅在 05:00 +9 重新登录
+					if (in_array(date('H'), [4])) {
+						static::authenticate();
+					}
+					static::updateMaster();
+					break;
+				}
 			}
 		}
 	}
+
+	static function getConfig() {
+		static::initApiCurl();
+		$appVer = static::$appVersion;
+		curl_setopt(static::$apiCh, CURLOPT_URL, "https://api.wds-stellarium.com/api/Environment?applicationVersion=$appVer&gameVersion=1");
+		curl_setopt(static::$apiCh, CURLOPT_POSTFIELDS, "");
+		$resp = curl_exec(static::$apiCh);
+		$resp = MsgPackHelper::parseServerResponse($resp, 'EnvironmentResult');
+		if (!empty($resp[1][0]['AssetVersion'])) {
+			$appEnvironmentConfig = $resp[1][0];
+			static::$assetVersion = PersistentStorage::set('assetVersion', $appEnvironmentConfig['AssetVersion']);
+			static::$apiBase = PersistentStorage::set('apiBase', $appEnvironmentConfig['ApiEndpoint']);
+			static::$assetUrl = PersistentStorage::set('assetUrl', $appEnvironmentConfig['AssetUrl']);
+			static::$masterUrl = PersistentStorage::set('masterUrl', $appEnvironmentConfig['MasterDataUrl']);
+		}
+	}
+	static function authenticate() {
+		static::initApiCurl();
+		$acctoken = PersistentStorage::get('account_token');
+		if (empty($acctoken)) return false;
+		$payload = [
+			$acctoken,
+			1, null, null,
+			static::$appVersionFull
+		];
+		curl_setopt_array(static::$apiCh, [
+			CURLOPT_URL=> static::$apiBase . '/api/Account/Authenticate',
+			CURLOPT_POSTFIELDS => msgpack_pack($payload)
+		]);
+		$resp = curl_exec(static::$apiCh);
+		$resp = MsgPackHelper::parseServerResponse($resp, 'AuthenticateResult');
+		if (empty($resp[1][0]['Token'])) return false;
+		PersistentStorage::set('login_token', $resp[1][0]['Token']);
+		return true;
+	}
+	static function getMasterDataUrl() {
+		static::initApiCurl();
+		$token = PersistentStorage::get('login_token');
+		if (empty($token)) return false;
+		$ch = curl_copy_handle(static::$apiCh);
+		curl_setopt_array($ch, [
+			CURLOPT_URL=> static::$apiBase . '/api/data/master',
+			CURLOPT_HTTPHEADER => static::getApiHeaders(["Authorization: Bearer ".$token]),
+		]);
+		$resp = curl_exec($ch);
+		$resp = MsgPackHelper::parseServerResponse($resp, 'MasterDataManifest');
+		if (empty($resp[1][0]['Uri'])) return null;
+		return $resp[1][0];
+	}
+	static function updateMaster() {
+		$lastMasterVersion = PersistentStorage::get('master_version', '');
+		$currentMaster = static::getMasterDataUrl();
+		if (!$currentMaster) return;
+		if ($lastMasterVersion === $currentMaster['Version']) return;
+
+		static::_log("dumping new master ".$currentMaster['Version']);
+		exit;
+		// download master
+		//static::initCurl();
+		//curl_setopt(static::$ch, CURLOPT_URL, static::$masterUrl.'/'.$currentMaster['Uri']);
+		//$data = curl_exec(static::$ch);
+		//$httpCode = curl_getinfo(static::$ch, CURLINFO_HTTP_CODE);
+		//if ($httpCode != 200) return;
+		$data = file_get_contents($currentMaster['Uri']);
+
+		chdir(__DIR__);
+		// delete old entries
+		chdir('master');
+		exec('git rm *.json');
+
+		// dump master
+		$timestampExtension = new TimestampExtension;
+		$lz4BlockExtension = new Lz4BlockExtension;
+		$unpacker = new \MessagePack\BufferUnpacker;
+		$unpacker = $unpacker->extendWith($timestampExtension)->extendWith($lz4BlockExtension);
+		$unpacker->reset($data);
+
+		$tableInfo = $unpacker->unpack();
+		$totalDataLen = array_reduce($tableInfo, function ($s, $i){ return max($i[0]+$i[1], $s); }, 0);
+		$dataOffset = strlen($data) - $totalDataLen;
+
+		foreach ($tableInfo as $name=>$info) {
+			$unpacker->seek($dataOffset + $info[0]);
+			$table = $unpacker->unpack();
+			MsgPackHelper::applyTypeNameByTableName($table, $name);
+			file_put_contents("$name.json", MsgPackHelper::prettifyJSON($table));
+		}
+
+		// add new entries
+		exec('git add *.json');
+		exec('git commit -m "'.$currentMaster['Version'].'"');
+		exec('git push origin master');
+
+		$lastMasterVersion = PersistentStorage::set('master_version', $currentMaster['Version']);
+	}
 }
 
-//WdsNotationConverter::downloadAddressable();
-//WdsNotationConverter::exportJackets();
-//WdsNotationConverter::downloadNotations();
-//WdsNotationConverter::convertNotations();
+WdsNotationConverter::init();
 WdsNotationConverter::main($argc, $argv);
+//WdsNotationConverter::authenticate();
+//WdsNotationConverter::test();
