@@ -4990,6 +4990,7 @@ message SuiteMasterGetResponse {
   optional MasterCostume3dShopBannerList masterCostume3dShopBannerList = 2077; // sub class
   optional MasterGachaBonusMap masterGachaBonusMap = 2078; // sub class
   optional MasterGachaBonusInformationMap masterGachaBonusInformationMap = 2079; // sub class
+  optional MasterBandStoryMap masterMyGoStoryMap = 2080; // sub class
   optional MasterGachaSealExchangeItemMap masterGachaSealExchangeItemMap = 2081; // sub class
   optional MasterSpecialStoryPageList masterSpecialStoryPageList = 2082; // sub class
   optional MasterGenericStoryMap masterSpecialPageGenericStoryMap = 2083; // sub class
