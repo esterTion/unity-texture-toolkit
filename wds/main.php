@@ -221,6 +221,56 @@ class MsgPackHelper {
 		return $a;
 	}
 }
+class CurlMultiHelper {
+	// function (CurlHandle|null) -> CurlHandle|null
+	public $setupCb;
+	// function (CurlHandle) -> void
+	public $finishCb;
+	public $baseCurl;
+	public $maxParallel = 5;
+	private $currentParallel = 0;
+	private $mh;
+	function __construct() {
+		$this->mh = curl_multi_init();
+	}
+	function run() {
+		while ($this->currentParallel < $this->maxParallel) {
+			if (!$this->add()) {
+				break;
+			}
+		}
+		while ($this->currentParallel > 0) {
+			$finishedHandle = $this->anyFinished();
+			curl_multi_remove_handle($this->mh, $finishedHandle);
+			call_user_func($this->finishCb, $finishedHandle);
+			$this->currentParallel--;
+			$this->add($finishedHandle);
+		}
+	}
+	function add($handle = null) {
+		$nextHandle = call_user_func($this->setupCb, $handle);
+		if ($nextHandle) {
+			$this->currentParallel++;
+			curl_multi_add_handle($this->mh, $nextHandle);
+			return true;
+		}
+		return false;
+	}
+	function anyFinished() {
+		do {
+			while (($code = curl_multi_exec($this->mh, $active)) == CURLM_CALL_MULTI_PERFORM) ;
+			if ($code != CURLM_OK) {
+				break;
+			}
+			usleep(1000);
+			if ($done = curl_multi_info_read($this->mh)) {
+				return $done['handle'];
+			}
+			//var_dump($active, $done);
+		} while ($active);
+		throw new Exception("curl multi error: ".curl_multi_strerror($code));
+	}
+}
 
 class WdsNotationConverter {
 	static $assetUrl;
@@ -326,6 +376,7 @@ class WdsNotationConverter {
 			}
 			$data = json_decode(file_get_contents($path), true);
 			$parsed = static::parseAddressable($data);
+			foreach ($parsed[0] as $i=>$item) $parsed[0][$i] = ['primaryKey' => $item['primaryKey']];
 			static::$addressable[$type] = $parsed;
 			unset($data);
 		}
@@ -358,7 +409,7 @@ class WdsNotationConverter {
 	}
 
 	static function getResourcePathPrefix() {
-		return '/data/home/web/_redive/wds/';
+		return PersistentStorage::get('resource_path', '/data/home/web/_redive/wds/');
 	}
 	static function getAssetUrlBase() {
 		return static::$assetUrl;
@@ -381,6 +432,10 @@ class WdsNotationConverter {
 	static function getNotationUrl($music, $level) {
 		$base = static::getAssetUrlBase();
 		return "$base/Notations/$music/$level.enc";
+	}
+	static function getSceneUrl($id) {
+		$base = static::$masterUrl;
+		return "$base/scenes/$id.bin";
 	}
 
 	static $splitEffectElements = null;
@@ -616,30 +671,92 @@ class WdsNotationConverter {
 		return $downloadedBundles;
 	}
 	static function downloadNotations() {
-		static::downloadJackets();
-		//foreach (glob('cridata_remote_assets_criaddressables/music_*.bundle') as $jacketBundle) {
-		foreach (glob('jacket_assets_jacket/*.bundle') as $jacketBundle) {
-			$music = pathinfo($jacketBundle, PATHINFO_FILENAME);
-			//$music = substr(pathinfo(pathinfo($jacketBundle, PATHINFO_FILENAME), PATHINFO_FILENAME), 6);
-
+		static::loadAddressable();
+		static::initCurl();
+		$curlId = 0;
+		$curlInfo = [];
+		$downloadQueue = [];
+		$multiHelper = new CurlMultiHelper;
+		$multiHelper->maxParallel = 10;
+		$multiHelper->setupCb = function ($ch) use (&$downloadQueue, &$curlId, &$curlInfo) {
+			if (empty($downloadQueue)) return null;
+			if ($ch == null) {
+				$ch = curl_copy_handle(static::$ch);
+			}
+			$nextItem = array_shift($downloadQueue);
+			switch ($nextItem['type']) {
+				case 'config': {
+					curl_setopt($ch, CURLOPT_URL, static::getNotationConfigUrl($nextItem['music']));
+					curl_setopt($ch, CURLOPT_PRIVATE, $curlId);
+					$curlInfo[$curlId] = $nextItem;
+					$curlId++;
+					break;
+				}
+				case 'notation': {
+					curl_setopt($ch, CURLOPT_URL, static::getNotationUrl($nextItem['music'], $nextItem['i']));
+					curl_setopt($ch, CURLOPT_PRIVATE, $curlId);
+					$curlInfo[$curlId] = $nextItem;
+					$curlId++;
+					break;
+				}
+			}
+			return $ch;
+		};
+		$multiHelper->finishCb = function ($ch) use (&$downloadQueue, &$curlInfo) {
+			$curlId = curl_getinfo($ch, CURLINFO_PRIVATE);
+			$item = $curlInfo[$curlId];
+			$data = curl_multi_getcontent($ch);
+			$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+			switch ($item['type']) {
+				case 'config': {
+					if ($httpCode != 200) return;
+					$path = $item['path'];
+					$music = $item['music'];
+					@mkdir(dirname($path), 0777, true);
+					$hasNewMusicConfig = checkAndCreateFile($path, static::decryptMusicConfig($data));
+					if ($hasNewMusicConfig) static::_log('save '.$path);
+					for ($i=1;$i<6;$i++) {
+						$path = "Notations/$music/$i.txt";
+						static::_log('check '.$path, false);
+						$downloadQueue[] = [
+							'type' => 'notation',
+							'path' => $path,
+							'music' => $music,
+							'i' => $i,
+						];
+					}
+					break;
+				}
+				case 'notation': {
+					if ($httpCode != 200) return;
+					$path = $item['path'];
+					$hasNewNotation = checkAndCreateFile($path, static::decryptNotation($data));
+					if ($hasNewNotation) static::_log('save '.$path);
+					break;
+				}
+			}
+		};
+		$musics = [];
+		foreach (static::$addressable['2d'][0] as $item) {
+			if (!preg_match('/jacket_assets_jacket\/.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
+			$path = static::getAssetPath($item['primaryKey']);
+			$musics[pathinfo($path, PATHINFO_FILENAME)] = 1;
+		}
+		foreach (static::$addressable['cri'][0] as $item) {
+			if (!preg_match('/cridata_remote_assets_criaddressables\/music_.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
+			$path = static::getAssetPath($item['primaryKey']);
+			$musics[substr(pathinfo(pathinfo($path, PATHINFO_FILENAME), PATHINFO_FILENAME), 6)] = 1;
+		}
+		foreach ($musics as $music => $_) {
 			$path = "Notations/$music/music_config.txt";
 			static::_log('check '.$path, false);
-			curl_setopt(static::$ch, CURLOPT_URL, static::getNotationConfigUrl($music));
-			$data = curl_exec(static::$ch);
-			$httpCode = curl_getinfo(static::$ch, CURLINFO_HTTP_CODE);
-			if ($httpCode != 200) continue;
-			@mkdir(dirname($path), 0777, true);
-			$hasNewMusicConfig = checkAndCreateFile($path, static::decryptMusicConfig($data));
-			if ($hasNewMusicConfig) static::_log('save '.$path);
-			for ($i=1;$i<6;$i++) {
-				$path = "Notations/$music/$i.txt";
-				static::_log('check '.$path, false);
-				curl_setopt(static::$ch, CURLOPT_URL, static::getNotationUrl($music, $i));
-				$data = curl_exec(static::$ch);
-				$hasNewNotation = checkAndCreateFile($path, static::decryptNotation($data));
-				if ($hasNewNotation) static::_log('save '.$path);
-			}
+			$downloadQueue[] = [
+				'type' => 'config',
+				'path' => $path,
+				'music' => $music,
+			];
 		}
+		$multiHelper->run();
 	}
 	static function decryptMusicConfig($data) {
 		return static::decrypt($data, 'X)|9Vs+&AB5qKBrzqWq)quqEjFug8LaK');
@@ -818,7 +935,6 @@ class WdsNotationConverter {
 		$downloadedBundles = static::downloadMusics();
 		//$downloadedBundles = glob('cridata_remote_assets_criaddressables/music_*.acb.bundle');
 		$saveTo = static::getResourcePathPrefix() . 'sound/music';
-		$saveTo = 'sound/music';
 		foreach ($downloadedBundles as $acbName) {
 			static::_log('exporting '. $acbName);
 			$nullptr = NULL;
@@ -1487,6 +1603,16 @@ class WdsNotationConverter {
 					static::updateMaster();
 					break;
 				}
+				case 'scene': {
+					// 仅在 12:00 & 17:00 +9 自动刷新剧情
+					if ($isCron && !in_array(date('H'), [11, 16])) break;
+					static::downloadScenes();
+					static::convertScenes();
+					break;
+				}
+				case 'scene_voice': {
+					static::exportSceneVoice();
+				}
 			}
 		}
 	}
@@ -1494,7 +1620,8 @@ class WdsNotationConverter {
 	static function getConfig() {
 		static::initApiCurl();
 		$appVer = static::$appVersion;
-		curl_setopt(static::$apiCh, CURLOPT_URL, "https://api.wds-stellarium.com/api/Environment?applicationVersion=$appVer&gameVersion=1");
+		$apiEndpoint = PersistentStorage::get('api_endpoint', 'https://api.wds-stellarium.com');
+		curl_setopt(static::$apiCh, CURLOPT_URL, "$apiEndpoint/api/Environment?applicationVersion=$appVer&gameVersion=1");
 		curl_setopt(static::$apiCh, CURLOPT_POSTFIELDS, "");
 		$resp = curl_exec(static::$apiCh);
 		$resp = MsgPackHelper::parseServerResponse($resp, 'EnvironmentResult');
@@ -1526,20 +1653,25 @@ class WdsNotationConverter {
 		PersistentStorage::set('login_token', $resp[1][0]['Token']);
 		return true;
 	}
-	static function getMasterDataUrl() {
+	static function getMasterDataUrl($retry = false) {
 		static::initApiCurl();
 		$token = PersistentStorage::get('login_token');
-		if (empty($token)) return false;
+		if (empty($token)) {
+			static::authenticate();
+			return static::getMasterDataUrl(true);
+		}
 		$ch = curl_copy_handle(static::$apiCh);
 		curl_setopt_array($ch, [
+			CURLOPT_CUSTOMREQUEST => 'GET',
 			CURLOPT_URL=> static::$apiBase . '/api/data/master',
 			CURLOPT_HTTPHEADER => static::getApiHeaders(["Authorization: Bearer ".$token]),
 		]);
 		$resp = curl_exec($ch);
 		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
-		if ($httpCode == 403) {
+		if ($httpCode == 403 || $httpCode == 440) {
+			if ($retry) return;
 			static::authenticate();
-			return static::getMasterDataUrl();
+			return static::getMasterDataUrl(true);
 		}
 		$resp = MsgPackHelper::parseServerResponse($resp, 'MasterDataManifest');
 		if (empty($resp[1][0]['Uri'])) return null;
@@ -1548,8 +1680,9 @@ class WdsNotationConverter {
 	static function updateMaster() {
 		$lastMasterVersion = PersistentStorage::get('master_version', '');
 		$currentMaster = static::getMasterDataUrl();
+		static::_log("server master data version: ".$currentMaster['Version'], false);
 		if (!$currentMaster) return;
-		if ($lastMasterVersion === $currentMaster['Version']) return;
+		if ($lastMasterVersion >= $currentMaster['Version']) return;
 
 		static::_log("dumping new master ".$currentMaster['Version']);
 		// download master
@@ -1582,15 +1715,304 @@ class WdsNotationConverter {
 			file_put_contents("$name.json", MsgPackHelper::prettifyJSON($table));
 		}
 
+		file_put_contents("!version.txt", $currentMaster['Version']);
+
 		// add new entries
-		exec('git add *.json');
+		exec('git add *.json !version.txt');
 		exec('git commit -m "'.$currentMaster['Version'].'"');
 		exec('git push origin master');
 
 		$lastMasterVersion = PersistentStorage::set('master_version', $currentMaster['Version']);
 		chdir('..');
 
-		// export info to web page
+		static::updateWebpageIndex();
+	}
+	static function loadKeyedMaster($table, $key = 'Id') {
+		return array_reduce(json_decode(file_get_contents("master/$table.json"), true), function ($s, $i) use ($key) { $s[$i[$key]] = $i; return $s; }, []);
+	}
+	static function updateWebpageIndex() {
+		chdir(__DIR__);
+		// jacket
+		$musics = static::loadKeyedMaster('MusicVocalVersionMaster');
+		$musicIndex = [];
+		foreach ($musics as $m) {
+			$k = $m['MusicMasterId'] . ($m['VocalVersion'] > 1 ? '_'.$m['VocalVersion'] : '');
+			$musicIndex[$k] = $m['Name'];
+		}
+		file_put_contents(static::getResourcePathPrefix().'jacket/index.json', json_encode($musicIndex));
+
+		// notation level
+		$levels = static::loadKeyedMaster('LiveMaster');
+		$musicLevelIndex = [];
+		foreach ($levels as $l) {
+			$m = $l['MusicMasterId'];
+			if (!isset($musicLevelIndex[$m])) $musicLevelIndex[$m] = [0];
+			$musicLevelIndex[$m][$l['Difficulty']] = $l['Level'] > 100 ? [
+				'I', 'II', 'III', 'IV', 'V',
+				'VI', 'VII', 'VIII', 'IX', 'X'
+			][$l['Level'] - 101] : $l['Level'];
+		}
+		file_put_contents(static::getResourcePathPrefix().'jacket/index-level.json', json_encode($musicLevelIndex));
+
+		// card
+		$cards = static::loadKeyedMaster('CharacterMaster');
+		$charas = static::loadKeyedMaster('CharacterBaseMaster');
+		$cardIndex = [];
+		foreach ($cards as $c) {
+			$cardIndex[$c['Id']] = str_repeat('★', $c['Rarity']).'【'.$c['Name'].'】'.$charas[$c['CharacterBaseMasterId']]['Name'];
+		}
+		file_put_contents(static::getResourcePathPrefix().'card/index.json', json_encode($cardIndex));
+
+		// poster
+		$posters = static::loadKeyedMaster('PosterMaster');
+		$posterIndex = [];
+		foreach ($posters as $p) {
+			$posterIndex[$p['Id']] = ['', 'R', 'SR', 'SSR'][$p['Rarity']].' '.$p['Name'];
+		}
+		file_put_contents(static::getResourcePathPrefix().'poster/index.json', json_encode($posterIndex));
+
+		// scene
+		$spotConversations = static::loadKeyedMaster('SpotConversationMaster');
+		$sceneIndexPage = fopen(static::getResourcePathPrefix().'scenes/index.htm', 'w');
+		fwrite($sceneIndexPage, '<!DOCTYPE HTML><html><head><meta name="format-detection" content="telephone=no"><meta charset=utf8><meta name=viewport content="width=devide-width,initial-scale=1.0,user-scalable=0"><style>html{-webkit-text-size-adjust:none;font-family:Arial,Meiryo}h1{font-size:22px}li{font-size:16px}a:link,a:visited,a:active{text-decoration:none;color:#1E90FF}a:hover{color:#555}</style><title>ユメステ シナリオ</title></head><body><h1>ユメステ シナリオ</h1><h4><label style="display:none"><input type="checkbox" id="show-name" checked>Show name</label><div><input type="text" placeholder="search id/name" id="searchinput"></div></h4>');
+		fwrite($sceneIndexPage, "\n<base href=\"script/\" />\n");
+		$spotConversationGroups = array_reduce($spotConversations, function ($s, $i){
+			if (!isset($s[$i['Spot']])) $s[$i['Spot']] = [];
+			$c = [$i['Id']];
+			for ($j=1; $j<6; $j++) {
+				if (isset($i["CharacterId$j"])) {
+					$c[] = $i["CharacterId$j"];
+				}
+			}
+			$s[$i['Spot']][] = $c;
+			return $s;
+		}, []);
+		$spotNames = [0,'歌川高等学校','東上野高校','公園','カフェ','電気街','テーマパーク',7,8,9,10];
+		foreach ($spotConversationGroups as $spot=>$conversations) {
+			if (empty($conversations)) continue;
+			fwrite($sceneIndexPage, '<details><summary>'.$spotNames[$spot].'</summary><ul>');
+			foreach ($conversations as $c) {
+				$id = array_shift($c);
+				$charaNames = array_map(function ($i)use($charas) { return $charas[$i]['Name']; }, $c);
+				fwrite($sceneIndexPage, '<div data-search="'.implode(',', array_merge([$id], $charaNames)).'"><li><a href="'.$id.'.htm">'.$id.'</a> '.implode(' & ', $charaNames).'</li></div>');
+				fwrite($sceneIndexPage, "\n");
+			}
+			fwrite($sceneIndexPage, "</ul></details>\n");
+		}
+		fwrite($sceneIndexPage, "<hr>\n");
+
+		$episodes = static::loadKeyedMaster('EpisodeMaster');
+		$stories = static::loadKeyedMaster('StoryMaster');
+		$companies = static::loadKeyedMaster('CompanyMaster');
+		$storyGroups = array_reduce($episodes, function ($s, $i){
+			if (!isset($s[$i['StoryMasterId']])) $s[$i['StoryMasterId']] = [];
+			$s[$i['StoryMasterId']][] = [$i['Id'], $i['Title']];
+			return $s;
+		}, []);
+		foreach ($storyGroups as $story=>$eps) {
+			if (empty($eps)) continue;
+			@fwrite($sceneIndexPage, '<details><summary>'.$companies[$stories[$story]['CompanyMasterId']]['Name'].' 第'.$stories[$story]['ChapterOrder'].'章</summary><ul>');
+			foreach ($eps as $c) {
+				list($id, $title) = $c;
+				fwrite($sceneIndexPage, '<div data-search="'.implode(',', $c).'"><li><a href="'.$id.'.htm">'.$id.'</a> '.$title.'</li></div>');
+				fwrite($sceneIndexPage, "\n");
+			}
+			fwrite($sceneIndexPage, "</ul></details>\n");
+		}
+		fwrite($sceneIndexPage, "<hr>\n");
+
+		$eventEpisodes = static::loadKeyedMaster('StoryEventEpisodeMaster');
+		$events = static::loadKeyedMaster('StoryEventMaster');
+		$eventGroups = array_reduce($eventEpisodes, function ($s, $i){
+			if (!isset($s[$i['StoryMasterId']])) $s[$i['StoryMasterId']] = [];
+			$s[$i['StoryMasterId']][] = [$i['Id'], $i['Title']];
+			return $s;
+		}, []);
+		foreach ($eventGroups as $story=>$eps) {
+			if (empty($eps)) continue;
+			@fwrite($sceneIndexPage, '<details><summary>'.$events[$stories[$story]['EventMasterId']]['Title'].'</summary><ul>');
+			foreach ($eps as $c) {
+				list($id, $title) = $c;
+				fwrite($sceneIndexPage, '<div data-search="'.implode(',', $c).'"><li><a href="'.$id.'.htm">'.$id.'</a> '.$title.'</li></div>');
+				fwrite($sceneIndexPage, "\n");
+			}
+			fwrite($sceneIndexPage, "</ul></details>\n");
+		}
+		fwrite($sceneIndexPage, "<hr>\n");
+
+		$cardEpisodes = static::loadKeyedMaster('CharacterEpisodeMaster');
+		$cardEpisodeGroups = array_reduce($cardEpisodes, function ($s, $i){
+			if (!isset($s[$i['CharacterMasterId']])) $s[$i['CharacterMasterId']] = [];
+			$s[$i['CharacterMasterId']][$i['EpisodeOrder']] = $i['Id'];
+			return $s;
+		}, []);
+		fwrite($sceneIndexPage, "<ul>\n");
+		foreach ($cardEpisodeGroups as $card=>$eps) {
+			if (empty($eps)) continue;
+			@fwrite($sceneIndexPage, '<div data-search="'.implode(',', [$card, $cardIndex[$card]]).'"><li>');
+			fwrite($sceneIndexPage, '<a href="'.$eps[1].'.htm">前編</a> | ');
+			fwrite($sceneIndexPage, '<a href="'.$eps[2].'.htm">後編</a> ');
+			fwrite($sceneIndexPage, $cardIndex[$card]);
+			fwrite($sceneIndexPage, "</li></div>\n");
+		}
+		fwrite($sceneIndexPage, "</ul>\n");
+
+		fwrite($sceneIndexPage, '<script src="https://redive.estertion.win/static/common_listpage.min.js"></script></body></html>');
+	}
+
+	static function downloadScenes() {
+		chdir(__DIR__);
+		static::initCurl();
+		$sceneIds = [];
+
+		$spotConversations = static::loadKeyedMaster('SpotConversationMaster');
+		foreach ($spotConversations as $c) {
+			$sceneIds[] = $c['Id'];
+		}
+
+		$episodes = static::loadKeyedMaster('EpisodeMaster');
+		foreach ($episodes as $e) {
+			$sceneIds[] = $e['Id'];
+		}
+
+		$eventEpisodes = static::loadKeyedMaster('StoryEventEpisodeMaster');
+		foreach ($eventEpisodes as $e) {
+			$sceneIds[] = $e['Id'];
+		}
+
+		$cardEpisodes = static::loadKeyedMaster('CharacterEpisodeMaster');
+		foreach ($cardEpisodes as $e) {
+			$sceneIds[] = $e['Id'];
+		}
+
+		$timestampExtension = new TimestampExtension;
+		$lz4BlockArrayExtension = new Lz4BlockArrayExtension;
+		$unpacker = new \MessagePack\BufferUnpacker;
+		$unpacker = $unpacker->extendWith($timestampExtension)->extendWith($lz4BlockArrayExtension);
+
+		$curlId = 0;
+		$curlInfo = [];
+		$multiHelper = new CurlMultiHelper;
+		$multiHelper->maxParallel = 20;
+		$multiHelper->setupCb = function ($ch) use (&$sceneIds, &$curlId, &$curlInfo) {
+			if (empty($sceneIds)) return null;
+			if ($ch == null) {
+				$ch = curl_copy_handle(static::$ch);
+			}
+			$nextItem = array_shift($sceneIds);
+			curl_setopt($ch, CURLOPT_URL, static::getSceneUrl($nextItem));
+			curl_setopt($ch, CURLOPT_PRIVATE, $curlId);
+			$curlInfo[$curlId] = $nextItem;
+			$curlId++;
+			return $ch;
+		};
+		$multiHelper->finishCb = function ($ch) use (&$curlInfo, &$unpacker) {
+			$curlId = curl_getinfo($ch, CURLINFO_PRIVATE);
+			$id = $curlInfo[$curlId];
+			$data = curl_multi_getcontent($ch);
+			$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+			if ($httpCode != 200) {
+				static::_log("$id $httpCode");
+				return;
+			}
+			$path = "scenes/$id.json";
+			$unpacker->reset($data);
+			$data = $unpacker->unpack();
+			$data = $data[0];
+			MsgPackHelper::applyTypeNameByType($data, 'EpisodeDetailResult[]');
+			$hasNewScene = checkAndCreateFile($path, MsgPackHelper::prettifyJSON($data));
+			if ($hasNewScene) static::_log('save '.$path);
+		};
+		$multiHelper->run();
+	}
+	static function convertScenes() {
+		foreach (glob('scenes/*.json') as $f) {
+			static::_log("export $f", false);
+			$page = static::sceneToHtml(file_get_contents($f));
+			if (empty($page)) continue;
+			$saveTo = dirname($f).'/'.pathinfo($f, PATHINFO_FILENAME).'.htm';
+			file_put_contents($saveTo, $page);
+			//checkAndCreateFile($saveTo, $page);
+		}
+	}
+	static function sceneToHtml($data) {
+		$data = json_decode($data, true);
+		usort($data, function ($a, $b) {
+			return ($a['GroupOrder'] * 10 + $a['Order']) - ($b['GroupOrder'] * 10 + $b['Order']);
+		});
+		$output = [
+			'<!DOCTYPE HTML><html><head><title>ユメステ '.$data[0]['EpisodeMasterId'].'</title><meta name="format-detection" content="telephone=no"><meta charset="UTF-8" name="viewport" content="width=device-width"><style>.cmd{color:#DDD;font-size:12px;cursor:pointer}.line{white-space:pre-wrap}.voice,.speaker,.line{display:block}.highlight{background:#ccc;color:#000}</style></head><body style="background:#444;color:#FFF;font-family:Meiryo;-webkit-text-size-adjust:none;cursor:default">'
+		];
+		$group = [];
+		$groupNumber = 0;
+		$voice = [];
+		foreach ($data as $line) {
+			if ($groupNumber !== $line['GroupOrder']) {
+				if (!empty($group)) {
+					$group = array_merge(['<p>'], $voice, $group, ['</p>']);
+					$output[] = implode("\n", $group);
+					$group = [];
+					$voice = [];
+				}
+				$groupNumber = $line['GroupOrder'];
+			}
+			if (!empty($line['VoiceFileName'])) {
+				$voice[] = '<span class="voice cmd" data-voice-path="'.$line['VoiceFileName'].'">voice: '.$line['VoiceFileName'].'</span>';
+			}
+			if ($line['Order'] == 1 && !empty($line['SpeakerName'])) {
+				$group[] = '<span class="speaker">'.$line['SpeakerName'].'</span>';
+			}
+			if (!empty($line['Phrase'])) {
+				$group[] = '<span class="line">'.str_replace('/n', "\n", $line['Phrase']).'</span>';
+			}
+		}
+		if (!empty($group)) {
+			$group = array_merge(['<p>'], $voice, $group, ['</p>']);
+			$output[] = implode("\n", $group);
+		}
+		$output[] = '<script src="/wds/story_data.min.js"></script></body></html>';
+		return implode("\n", $output);
+	}
+	static function downloadSceneVoice() {
+		chdir(__DIR__);
+		static::loadAddressable();
+		static::initCurl();
+		$downloadedBundles = [];
+		foreach (static::$addressable['cri'][0] as $item) {
+			if (!preg_match('/cridata_remote_assets_criaddressables\/(\d{4}|1[1234]\d{4}|[12]\d{6})\.acb_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
+			$path = static::getAssetPath($item['primaryKey']);
+			$hash = static::getAssetHash($item['primaryKey']);
+			if (!static::shouldDownload($path, $hash)) continue;
+			static::_log('dl '.$path);
+			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, 'cri-assets'));
+			$data = curl_exec(static::$ch);
+			@mkdir(dirname($path), 0777, true);
+			file_put_contents($path, $data);
+			static::setCachedHash($path, $hash);
+			$downloadedBundles[] = $path;
+		}
+		return $downloadedBundles;
+	}
+	static function exportSceneVoice() {
+		$downloadedBundles = static::downloadSceneVoice();
+		$saveTo = static::getResourcePathPrefix() . 'sound/scene';
+		foreach ($downloadedBundles as $acbName) {
+			static::_log('exporting '. $acbName);
+			$nullptr = NULL;
+			exec('acb2wavs '.$acbName.' -b 0 -a 0 -n', $nullptr);
+			$acbUnpackDir = dirname($acbName).'/_acb_'.pathinfo($acbName, PATHINFO_BASENAME);
+			foreach (['internal', 'external'] as $awbFolder) {
+				if (file_exists($acbUnpackDir .'/'. $awbFolder)) {
+					foreach (glob($acbUnpackDir .'/'. $awbFolder.'/*.wav') as $waveFile) {
+						$m4aFile = substr($waveFile, 0, -3).'m4a';
+						$finalPath = $saveTo.'/'.pathinfo($m4aFile, PATHINFO_BASENAME);
+						exec('ffmpeg -hide_banner -loglevel quiet -y -i '.$waveFile.' -vbr 5 -movflags faststart '.$m4aFile, $nullptr);
+						checkAndMoveFile($m4aFile, $finalPath);
+					}
+				}
+			}
+			static::delTree($acbUnpackDir);
+		}
 	}
 }
 
