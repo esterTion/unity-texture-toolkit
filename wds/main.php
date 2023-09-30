@@ -2,6 +2,9 @@
 
 require 'msgpack.phar';
 
+ini_set('precision', 7);
+ini_set('serialize_precision', 7);
+
 // mod from https://github.com/rybakit/msgpack.php/blob/master/src/Extension/TimestampExtension.php
 class TimestampExtension implements \MessagePack\Extension
 {
@@ -143,12 +146,22 @@ class MsgPackHelper {
 	static $typesDb = null;
 	static $getTypeByTypeStmt;
 	static $getTypeByTableNameStmt;
+	static $enumTables = [];
 	static function loadTypes() {
 		if (!static::$typesDb) {
 			static::$typesDb = new PDO('sqlite:'.__DIR__.'/types.db');
 			static::$getTypeByTypeStmt = static::$typesDb->prepare('SELECT keys FROM types WHERE class = ?');
 			static::$getTypeByTableNameStmt = static::$typesDb->prepare('SELECT keys FROM types WHERE table_name = ?');
+			$enumTables = static::$typesDb->query('SELECT `enum`,`table` FROM enums')->fetchAll(PDO::FETCH_NUM);
+			foreach ($enumTables as $row) {
+				static::$enumTables[$row[0]] = json_decode($row[1], true);
+			}
 		}
+	}
+	static function toEnumName($type, $value) {
+		if (!isset(static::$enumTables[$type])) return $value;
+		if (!isset(static::$enumTables[$type][$value])) return $value;
+		return static::$enumTables[$type][$value];
 	}
 	static function applyTypeName(&$data, $keys) {
 		$count = count($data);
@@ -162,7 +175,7 @@ class MsgPackHelper {
 				static::applyTypeNameByType($data[$i], $keys[$i]['type']);
 			}
 
-			$data[$keys[$i]['name']] = $data[$i];
+			$data[$keys[$i]['name']] = static::toEnumName($keys[$i]['type'], $data[$i]);
 			unset($data[$i]);
 		}
 	}
@@ -1603,6 +1616,10 @@ class WdsNotationConverter {
 					static::updateMaster();
 					break;
 				}
+				case 'reexport_master': {
+					static::reexportMaster();
+					break;
+				}
 				case 'scene': {
 					// 仅在 12:00 & 17:00 +9 自动刷新剧情
 					if ($isCron && !in_array(date('H'), [11, 16])) break;
@@ -1693,6 +1710,16 @@ class WdsNotationConverter {
 		if ($httpCode != 200) return;
 
 		chdir(__DIR__);
+		file_put_contents('mastermemory.dat', $data);
+		$lastMasterVersion = PersistentStorage::set('master_version', $currentMaster['Version']);
+
+		file_put_contents("master/!version.txt", $currentMaster['Version']);
+		static::exportMaster($currentMaster['Version'], $data);
+
+		static::updateWebpageIndex();
+	}
+	static function exportMaster($commit, $data) {
+		chdir(__DIR__);
 		// delete old entries
 		chdir('master');
 		exec('git rm *.json');
@@ -1715,17 +1742,18 @@ class WdsNotationConverter {
 			file_put_contents("$name.json", MsgPackHelper::prettifyJSON($table));
 		}
 
-		file_put_contents("!version.txt", $currentMaster['Version']);
-
 		// add new entries
 		exec('git add *.json !version.txt');
-		exec('git commit -m "'.$currentMaster['Version'].'"');
-		exec('git push origin master');
-
-		$lastMasterVersion = PersistentStorage::set('master_version', $currentMaster['Version']);
+		exec('git commit -m "'.$commit.'"');
+		//exec('git push origin master');
 		chdir('..');
-
-		static::updateWebpageIndex();
+	}
+	static function reexportMaster() {
+		chdir(__DIR__);
+		if (!file_exists('mastermemory.dat')) return;
+		$data = file_get_contents('mastermemory.dat');
+		$masterVersion = PersistentStorage::get('master_version');
+		static::exportMaster("$masterVersion (re-export)", $data);
 	}
 	static function loadKeyedMaster($table, $key = 'Id') {
 		return array_reduce(json_decode(file_get_contents("master/$table.json"), true), function ($s, $i) use ($key) { $s[$i[$key]] = $i; return $s; }, []);
