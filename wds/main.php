@@ -159,9 +159,17 @@ class MsgPackHelper {
 		}
 	}
 	static function toEnumName($type, $value) {
+		$type = preg_replace('(^Nullable<(.+)>$)', '$1', $type);
 		if (!isset(static::$enumTables[$type])) return $value;
 		if (!isset(static::$enumTables[$type][$value])) return $value;
 		return static::$enumTables[$type][$value];
+	}
+	static function fromEnumName($type, $value) {
+		$type = preg_replace('(^Nullable<(.+)>$)', '$1', $type);
+		static::loadTypes();
+		if (!isset(static::$enumTables[$type])) return $value;
+		$key = array_search($value, static::$enumTables[$type]);
+		return $key === false ? $value : $key;
 	}
 	static function applyTypeName(&$data, $keys) {
 		$count = count($data);
@@ -440,14 +448,17 @@ class WdsNotationConverter {
 	}
 	static function getNotationConfigUrl($music) {
 		$base = static::getAssetUrlBase();
+		$base = PersistentStorage::get('assetUrlOverride', $base);
 		return "$base/Notations/$music/music_config.enc";
 	}
 	static function getNotationUrl($music, $level) {
 		$base = static::getAssetUrlBase();
+		$base = PersistentStorage::get('assetUrlOverride', $base);
 		return "$base/Notations/$music/$level.enc";
 	}
 	static function getSceneUrl($id) {
 		$base = static::$masterUrl;
+		$base = PersistentStorage::get('masterUrlOverride', $base);
 		return "$base/scenes/$id.bin";
 	}
 
@@ -1076,6 +1087,9 @@ class WdsNotationConverter {
 
 		$lines = [];
 		foreach ($holdNotes as $note) {
+			if ($note['start'] > $note['end']) {
+				print_r($note);continue;
+			}
 			$startPos = static::getNotePos($note['start'], $note['lane']);
 			$endPos = static::getNotePos($note['end'], $note['lane']);
 			$line = [
@@ -1567,10 +1581,40 @@ class WdsNotationConverter {
 		}
 	}
 
+	static function downloadCustom() {
+		chdir(__DIR__);
+		static::loadAddressable();
+		static::initCurl();
+		$downloadedBundles = [];
+		$cat = "cri";
+		foreach (static::$addressable[$cat][0] as $item) {
+			//if (!preg_match('/gamehints_assets_gamehints\/.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
+			//if (!preg_match('/stamps_assets_stamp\/.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
+			if (!preg_match('/cridata_remote_assets_criaddressables\/.+\.usm_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
+			//if (!preg_match('/cridata_remote_assets_criaddressables\/\d+\.acb_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
+			$path = static::getAssetPath($item['primaryKey']);
+			$hash = static::getAssetHash($item['primaryKey']);
+			if (!static::shouldDownload($path, $hash)) continue;
+			static::_log('dl '.$path);
+			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, $cat.'-assets'));
+			@mkdir(dirname($path), 0777, true);
+			$fhandle = fopen($path, 'wb');
+			curl_setopt(static::$ch, CURLOPT_FILE, $fhandle);
+			curl_exec(static::$ch);
+			fclose($fhandle);
+			static::setCachedHash($path, $hash);
+			$downloadedBundles[] = $path;
+		}
+		return $downloadedBundles;
+	}
 	static function main($argc, $argv) {
 		$isCron = false;
 		for ($i=1; $i<$argc; $i++) {
 			switch ($argv[$i]) {
+				case 'dl': {
+					static::downloadCustom();
+					break;
+				}
 				case 'manifest': {
 					static::downloadAddressable();
 					break;
@@ -1745,7 +1789,7 @@ class WdsNotationConverter {
 		// add new entries
 		exec('git add *.json !version.txt');
 		exec('git commit -m "'.$commit.'"');
-		//exec('git push origin master');
+		exec('git push origin master');
 		chdir('..');
 	}
 	static function reexportMaster() {
@@ -1775,7 +1819,7 @@ class WdsNotationConverter {
 		foreach ($levels as $l) {
 			$m = $l['MusicMasterId'];
 			if (!isset($musicLevelIndex[$m])) $musicLevelIndex[$m] = [0];
-			$musicLevelIndex[$m][$l['Difficulty']] = $l['Level'] > 100 ? [
+			$musicLevelIndex[$m][MsgPackHelper::fromEnumName('MusicDifficulties', $l['Difficulty'])] = $l['Level'] > 100 ? [
 				'I', 'II', 'III', 'IV', 'V',
 				'VI', 'VII', 'VIII', 'IX', 'X'
 			][$l['Level'] - 101] : $l['Level'];
@@ -1787,7 +1831,7 @@ class WdsNotationConverter {
 		$charas = static::loadKeyedMaster('CharacterBaseMaster');
 		$cardIndex = [];
 		foreach ($cards as $c) {
-			$cardIndex[$c['Id']] = str_repeat('★', $c['Rarity']).'【'.$c['Name'].'】'.$charas[$c['CharacterBaseMasterId']]['Name'];
+			$cardIndex[$c['Id']] = str_repeat('★', MsgPackHelper::fromEnumName('CharacterRarities', $c['Rarity'])).'【'.$c['Name'].'】'.$charas[$c['CharacterBaseMasterId']]['Name'];
 		}
 		file_put_contents(static::getResourcePathPrefix().'card/index.json', json_encode($cardIndex));
 
@@ -1795,7 +1839,7 @@ class WdsNotationConverter {
 		$posters = static::loadKeyedMaster('PosterMaster');
 		$posterIndex = [];
 		foreach ($posters as $p) {
-			$posterIndex[$p['Id']] = ['', 'R', 'SR', 'SSR'][$p['Rarity']].' '.$p['Name'];
+			$posterIndex[$p['Id']] = $p['Rarity'].' '.$p['Name'];
 		}
 		file_put_contents(static::getResourcePathPrefix().'poster/index.json', json_encode($posterIndex));
 
@@ -1815,10 +1859,17 @@ class WdsNotationConverter {
 			$s[$i['Spot']][] = $c;
 			return $s;
 		}, []);
-		$spotNames = [0,'歌川高等学校','東上野高校','公園','カフェ','電気街','テーマパーク',7,8,9,10];
+		$spotNames = [
+			'UtagawaHighSchool'=>'歌川高等学校',
+			'HigashiUenoHighSchool'=>'東上野高校',
+			'Park'=>'公園',
+			'Cafe'=>'カフェ',
+			'ElectricTown'=>'電気街',
+			'ThemePark'=>'テーマパーク',
+		];
 		foreach ($spotConversationGroups as $spot=>$conversations) {
 			if (empty($conversations)) continue;
-			fwrite($sceneIndexPage, '<details><summary>'.$spotNames[$spot].'</summary><ul>');
+			fwrite($sceneIndexPage, '<details><summary>'.(isset($spotNames[$spot]) ? $spotNames[$spot] : $spot).'</summary><ul>');
 			foreach ($conversations as $c) {
 				$id = array_shift($c);
 				$charaNames = array_map(function ($i)use($charas) { return $charas[$i]['Name']; }, $c);
@@ -1878,8 +1929,8 @@ class WdsNotationConverter {
 		foreach ($cardEpisodeGroups as $card=>$eps) {
 			if (empty($eps)) continue;
 			@fwrite($sceneIndexPage, '<div data-search="'.implode(',', [$card, $cardIndex[$card]]).'"><li>');
-			fwrite($sceneIndexPage, '<a href="'.$eps[1].'.htm">前編</a> | ');
-			fwrite($sceneIndexPage, '<a href="'.$eps[2].'.htm">後編</a> ');
+			fwrite($sceneIndexPage, '<a href="'.$eps['First'].'.htm">前編</a> | ');
+			fwrite($sceneIndexPage, '<a href="'.$eps['Second'].'.htm">後編</a> ');
 			fwrite($sceneIndexPage, $cardIndex[$card]);
 			fwrite($sceneIndexPage, "</li></div>\n");
 		}

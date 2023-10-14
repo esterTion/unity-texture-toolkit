@@ -6,13 +6,15 @@ if ($argc < 2) {
 }
 $dumpcs = file_get_contents($argv[1]);
 
-preg_match_all("((\[MemoryTable\(\"[^\)]]+\"\)\]\n)?(\[.+\]\n)*public class [^{}]*?\{[^{}]+\[Key\(\d+\)\](((?>[^{}]+)|{(?-2)})*)\})", $dumpcs, $classes);
+/*preg_match_all("((\[MemoryTable\(\"[^\)]]+\"\)\]\n)?(\[.+\]\n)*public class [^{}]*?\{[^{}]+\[Key\(\d+\)\](((?>[^{}]+)|{(?-2)})*)\})", $dumpcs, $classes);*/
+preg_match_all("(// Namespace: ([^\n]*)\n(\[.+\]\n)*(\[MemoryTable\(\"[^\)]]+\"\)\]\n)?(\[.+\]\n)*public class [^{}]*?\{[^{}]+\[Key\(\d+\)\](((?>[^{}]+)|{(?-2)})*)\})", $dumpcs, $classes);
 
 $types = [];
 $typesDb = new PDO('sqlite:'.__DIR__.'/types.db');
 $typesDb->beginTransaction();
 $typesDb->query('DELETE FROM types');
 $insert = $typesDb->prepare('INSERT INTO types VALUES (?,?,?)');
+$rename = $typesDb->prepare('UPDATE types SET class=? WHERE class=?');
 
 $f = fopen(__DIR__.'/tables.cs', 'w');
 
@@ -39,7 +41,9 @@ foreach ($enums[0] as $i=>$enum) {
 }
 $usedEnumTables = [];
 
-foreach ($classes[0] as $class) {
+$seenTypes = [];
+
+foreach ($classes[0] as $i=>$class) {
   $class = preg_replace('(\[CompilerGenerated\][\w\W]+?\n\n)', "\n", $class);
   $class = preg_replace('(public void .ctor\(\) \{ \})', "\n", $class);
   $class = preg_replace('(//.+)', "", $class);
@@ -47,9 +51,19 @@ foreach ($classes[0] as $class) {
   $class = preg_replace('((?<=\n)	*\n)', "", $class);
   fwrite($f, $class."\n\n");
 
+  $namespace = $classes[1][$i];
   $type = [];
-  preg_match('(class (\w+))', $class, $className);
+  preg_match('(class ([\w\.]+))', $class, $className);
   $className = $className[1];
+  if (isset($seenTypes[$className])) {
+    $prev = $seenTypes[$className];
+    echo "Duplicate class $className $prev $namespace\n";
+    if ($namespace === 'SiriusApi.Shared') {
+      $rename->execute([$prev.'.'.$className, $className]);
+    } else {
+      $className = $prev.'.'.$className;
+    }
+  }
   $type['class'] = $className;
   preg_match('(\[MemoryTable\(\"([\w]+)\"\)\])', $class, $tableName);
   $type['tableName'] = empty($tableName[1]) ? null : $tableName[1];
@@ -64,6 +78,10 @@ foreach ($classes[0] as $class) {
     if (isset($enumTables[$typeName]) && !isset($usedEnumTables[$typeName])) {
       $usedEnumTables[$typeName] = $enumTables[$typeName];
     }
+		$typeName = preg_replace('(^Nullable<(.+)>$)', '$1', $typeName);
+    if (isset($enumTables[$typeName]) && !isset($usedEnumTables[$typeName])) {
+      $usedEnumTables[$typeName] = $enumTables[$typeName];
+    }
   }
   $type['keys'] = $type['keys'] + array_fill(0, max(array_keys($type['keys'])), 0);
   ksort($type['keys']);
@@ -71,6 +89,7 @@ foreach ($classes[0] as $class) {
 
   $type['keys'] = json_encode($type['keys'], JSON_PRETTY_PRINT);
   $insert->execute(array_values($type));
+  $seenTypes[$type['class']] = $namespace;
 }
 foreach ($usedEnumTables as $enumName=>$enumTable) {
   $enumInsert->execute([
