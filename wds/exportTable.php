@@ -42,6 +42,7 @@ foreach ($enums[0] as $i=>$enum) {
 $usedEnumTables = [];
 
 $seenTypes = [];
+$typesIdx = [];
 
 foreach ($classes[0] as $i=>$class) {
   $class = preg_replace('(\[CompilerGenerated\][\w\W]+?\n\n)', "\n", $class);
@@ -60,15 +61,27 @@ foreach ($classes[0] as $i=>$class) {
     echo "Duplicate class $className $prev $namespace\n";
     if ($namespace === 'SiriusApi.Shared') {
       $rename->execute([$prev.'.'.$className, $className]);
+      $typesIdx[$prev.'.'.$className] = $typesIdx[$className];
+      unset($typesIdx[$className]);
     } else {
       $className = $prev.'.'.$className;
     }
   }
+  $typesIdx[$className] = count($types);
   $type['class'] = $className;
   preg_match('(\[MemoryTable\(\"([\w]+)\"\)\])', $class, $tableName);
   $type['tableName'] = empty($tableName[1]) ? null : $tableName[1];
   preg_match_all('(\[Key\((\d+)\)\](\n	\[[^\]]+?\])*\n	[^{\n]*? ([^{]+) ([^ {]+) )', $class, $keys);
   $type['keys'] = [];
+
+  preg_match('(class [\w\.]+ : ([\w\.]+))', $class, $classInherit);
+  $inherit = empty($classInherit[1]) ? null : $classInherit[1];
+  if ($inherit !== null) {
+    if (isset($typesIdx[$inherit])) {
+      $type['keys'] = array_merge($type['keys'], $types[$typesIdx[$inherit]]['keys']);
+    }
+  }
+
   for ($i=0; $i < count($keys[1]); $i++) {
     $typeName = $keys[3][$i];
     $type['keys'][$keys[1][$i]] = [
