@@ -4,6 +4,7 @@ require 'msgpack.phar';
 
 ini_set('precision', 7);
 ini_set('serialize_precision', 7);
+ini_set('memory_limit', '256M');
 
 // mod from https://github.com/rybakit/msgpack.php/blob/master/src/Extension/TimestampExtension.php
 class TimestampExtension implements \MessagePack\Extension
@@ -415,12 +416,14 @@ class WdsNotationConverter {
 		foreach (static::$addressable['3d'][0] as $item) {
 			if (!preg_match('/(game_splitlaneelement_assets_spliteffectelements\/spliteffectelements.+|game_splitlane_assets_spliteffects\/\d+)_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
 			$path = static::getAssetPath($item['primaryKey']);
-			if (file_exists($path)) continue;
+			$hash = static::getAssetHash($item['primaryKey']);
+			if (!static::shouldDownload($path, $hash)) continue;
 			static::_log('dl '.$path);
 			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, '3d-assets'));
 			$data = curl_exec(static::$ch);
 			@mkdir(dirname($path), 0777, true);
 			file_put_contents($path, $data);
+			static::setCachedHash($path, $hash);
 			$splitlaneUpdated = true;
 		}
 		if ($splitlaneUpdated && file_exists('cache_spliteffectelements.dat')) {
@@ -537,7 +540,7 @@ class WdsNotationConverter {
 	}
 	static function getSplitBoundaries($type, $effectId) {
 		$colors = static::getSplitColors($effectId);
-		$boundariesCount = $type - 9;
+		$boundariesCount = ($type % 10) + 1;
 		$bgWidth = 120;
 		$stepOffsets = [
 			2 => [$bgWidth, 0],
@@ -979,6 +982,7 @@ class WdsNotationConverter {
 	}
 
 	static function parseNotation($text) {
+		if (empty(trim($text))) return [];
 		return array_map(function ($line) {
 			$parts = str_getcsv(trim($line));
 			return [
@@ -1036,12 +1040,12 @@ class WdsNotationConverter {
 				case 'JumpScratch':
 				case '2':
 				case 'OneDirection': {break;}
-				case '11':
-				case '12':
-				case '13':
-				case '14':
-				case '15':
-				case '16': { $splitSections[] = $note; $endOfChartTs = max($noteEnd + 1, $endOfChartTs); break;}
+				case '11': case '31': case '51': case '71':
+				case '12': case '32': case '52': case '72':
+				case '13': case '33': case '53': case '73':
+				case '14': case '34': case '54': case '74':
+				case '15': case '35': case '55': case '75':
+				case '16': case '36': case '56': case '76': { $splitSections[] = $note; $endOfChartTs = max($noteEnd + 1, $endOfChartTs); break;}
 				default: {
 					print_r($note);//break;
 				}
@@ -1295,10 +1299,16 @@ class WdsNotationConverter {
 			$startPos = static::getNotePos($note['start'], 1);
 			$endFadeTime = max($note['start'], $note['end'] - 1);
 			$fadeStartPos = static::getNotePos($note['end'] - 1, 1);
+			$fadeInStartPos = static::getNotePos($note['start'] - 1, 1);
 			$endPos = static::getNotePos($endFadeTime, 1);
 			$line = [
 				'type' => $note['gimmickType'],
 				'effect' => $note['gimmickValue'],
+				'fadein' => [
+					't' => $note['start'] - 1,
+					'x' => $fadeInStartPos[0],
+					'y' => $fadeInStartPos[1],
+				],
 				'start' => [
 					't' => $note['start'],
 					'x' => $startPos[0],
@@ -1314,8 +1324,10 @@ class WdsNotationConverter {
 					'x' => $endPos[0],
 					'y' => $endPos[1],
 				],
+				'isFirst' => true,
 				'isFinal' => false,
 			];
+			if ($note['start'] >= $note['end']) $line['isFirst'] = false;
 			while (floor($line['start']['t'] / $DurationPerColumn) != floor($line['fade']['t'] / $DurationPerColumn)) {
 				$insertEndTime = floor($line['start']['t'] / $DurationPerColumn) * $DurationPerColumn + $DurationPerColumn;
 				$insertEnd = [
@@ -1333,6 +1345,7 @@ class WdsNotationConverter {
 						'x' => $insertEnd['x'] - 200,
 						'y' => $insertEnd['y'] - 800,
 					],
+					'isFirst' => false,
 					'isFinal' => false,
 				];
 				$line['start'] = $insertEnd;
@@ -1341,7 +1354,9 @@ class WdsNotationConverter {
 			$lines[] = $line;
 		}
 		$svgParts[] = '<g class="split_layer">';
+		$fadeInGradients = [];
 		$fadeOutGradients = [];
+		$lines = array_reverse($lines);
 		foreach ($lines as $line) {
 			$x = $line['end']['x'];
 			$y1 = $line['start']['y'];
@@ -1353,6 +1368,29 @@ class WdsNotationConverter {
 					$x1 = $x + $boundary['x'];
 					$color = $boundary['color'];
 					$svgParts[] = "<path d=\"M$x1,$y1 V$y2\" stroke=\"$color\" stroke-width=\"3\" />";
+				}
+			}
+
+			if ($line['isFirst']) {
+				$x = $line['fadein']['x'];
+				$y1 = $line['fadein']['y'] - $HeightPerSecond;
+				foreach ($splitBoundaries as $boundary) {
+					$x1 = $x + $boundary['x'] - 1.5;
+					$color = $boundary['colorFadeout'];
+					if (isset($fadeInGradients[$color])) {
+						$fadeInId = $fadeInGradients[$color];
+					}
+					$fadeInId = isset($fadeInGradients[$color]) ? $fadeInGradients[$color] : ($fadeInGradients[$color] = count($fadeInGradients));
+					if ($y1 < 50) {
+						$h1 = 50 - $y1;
+						$h2 = $HeightPerSecond - $h1;
+						$svgParts[] = "<path d=\"M${x1},${y1}v${HeightPerSecond}h3v-${HeightPerSecond}z\" fill=\"url(#split_fadein_$fadeInId)\" clip-path=\"url(#split_fadeout_clip)\" />";
+						$x2 = $x1 + 200;
+						$y2 = $y1 + 800;
+						$svgParts[] = "<path d=\"M${x2},${y2}v${HeightPerSecond}h3v-${HeightPerSecond}z\" fill=\"url(#split_fadein_$fadeInId)\" clip-path=\"url(#split_fadeout_clip)\" />";
+					} else {
+						$svgParts[] = "<path d=\"M${x1},${y1}v${HeightPerSecond}h3v-${HeightPerSecond}z\" fill=\"url(#split_fadein_$fadeInId)\" />";
+					}
 				}
 			}
 
@@ -1380,6 +1418,9 @@ class WdsNotationConverter {
 			}
 		}
 		$svgParts[] = '<defs>';
+		foreach ($fadeInGradients as $color=>$id) {
+			$svgParts[] = "<linearGradient id=\"split_fadein_$id\" x2=\"0\" y1=\"100%\" y2=\"0\">$color</linearGradient>";
+		}
 		foreach ($fadeOutGradients as $color=>$id) {
 			$svgParts[] = "<linearGradient id=\"split_fadeout_$id\" x2=\"0\" y2=\"100%\">$color</linearGradient>";
 		}
@@ -1455,6 +1496,7 @@ class WdsNotationConverter {
 		foreach (glob('Notations/*/?.txt') as $f) {
 			static::_log("export $f", false);
 			$notation = static::parseNotation(file_get_contents($f));
+			if (empty($notation)) continue;
 			$svg = static::notationToSvg($notation);
 			if (empty($svg)) continue;
 			$saveTo = dirname($f).'/'.pathinfo($f, PATHINFO_FILENAME).'.svg';
@@ -1513,11 +1555,11 @@ class WdsNotationConverter {
 			$resourceType = $s->long;
 			$data = $dataIndex < 0 ? null : static::ReadObjectFromStream($es, $dataIndex);
 			$locations[] = [
-				'internalId' => $list['m_InternalIds'][$internalId],
-				'providerId' => $list['m_ProviderIds'][$providerIndex],
-				'dependencyKey' => $dependencyKeyIndex < 0 ? null : $keys[$dependencyKeyIndex],
-				'data'=> $data,
-				'depHash'=> $depHash,
+				//'internalId' => $list['m_InternalIds'][$internalId],
+				//'providerId' => $list['m_ProviderIds'][$providerIndex],
+				//'dependencyKey' => $dependencyKeyIndex < 0 ? null : $keys[$dependencyKeyIndex],
+				//'data'=> $data,
+				//'depHash'=> $depHash,
 				'primaryKey'=> $keys[$primaryKey],
 				'type'=> $list['m_resourceTypes'][$resourceType],
 			];
@@ -1586,12 +1628,29 @@ class WdsNotationConverter {
 		static::loadAddressable();
 		static::initCurl();
 		$downloadedBundles = [];
+		$dlMatches = [
+			'2d' => [
+				'/gamehints_assets_gamehints\/.+_[0-9a-f]+\.bundle/',
+				'/stamps_assets_stamp\/.+_[0-9a-f]+\.bundle/',
+				'/spriteatlases_assets_spriteatlases\/.+_[0-9a-f]+\.bundle/',
+				'/loginbonusbackground_assets_loginbonus\/.+_[0-9a-f]+\.bundle/',
+			],
+			'cri' => [
+				'/cridata_remote_assets_criaddressables\/.+\.usm_[0-9a-f]+\.bundle/',
+				//'/cridata_remote_assets_criaddressables\/\d+\.acb_[0-9a-f]+\.bundle/',
+			],
+		];
 		$cat = "cri";
+		foreach ($dlMatches as $cat=>$rules) {
 		foreach (static::$addressable[$cat][0] as $item) {
-			//if (!preg_match('/gamehints_assets_gamehints\/.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
-			//if (!preg_match('/stamps_assets_stamp\/.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
-			if (!preg_match('/cridata_remote_assets_criaddressables\/.+\.usm_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
-			//if (!preg_match('/cridata_remote_assets_criaddressables\/\d+\.acb_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
+			$shouldDl = false;
+			foreach ($rules as $rule) {
+				if (preg_match($rule, $item['primaryKey'])) {
+					$shouldDl = true;
+					break;
+				}
+			}
+			if (!$shouldDl) continue;
 			$path = static::getAssetPath($item['primaryKey']);
 			$hash = static::getAssetHash($item['primaryKey']);
 			if (!static::shouldDownload($path, $hash)) continue;
@@ -1604,6 +1663,7 @@ class WdsNotationConverter {
 			fclose($fhandle);
 			static::setCachedHash($path, $hash);
 			$downloadedBundles[] = $path;
+		}
 		}
 		return $downloadedBundles;
 	}
@@ -1673,11 +1733,24 @@ class WdsNotationConverter {
 				}
 				case 'scene_voice': {
 					static::exportSceneVoice();
+					break;
+				}
+				case 'league_info': {
+					// 仅在 每周二 05:00 +9 自动刷新剧情
+					if ($isCron && date('DH') !== "Tue04") break;
+					$info = static::getLeagueInfo();
+					if ($info) {
+						$leagueInfo = json_encode($info, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+						$now = date('Ymd-His');
+						file_put_contents(__DIR__."/league/league_info-$now.json", $leagueInfo);
+					}
+					break;
 				}
 			}
 		}
 	}
 
+	// api access /api/Environment
 	static function getConfig() {
 		static::initApiCurl();
 		$appVer = static::$appVersion;
@@ -1694,6 +1767,7 @@ class WdsNotationConverter {
 			static::$masterUrl = PersistentStorage::set('masterUrl', $appEnvironmentConfig['MasterDataUrl']);
 		}
 	}
+	// api access /api/Account/Authenticate
 	static function authenticate() {
 		static::initApiCurl();
 		$acctoken = PersistentStorage::get('account_token');
@@ -1714,6 +1788,8 @@ class WdsNotationConverter {
 		PersistentStorage::set('login_token', $resp[1][0]['Token']);
 		return true;
 	}
+	// api access /api/data/master
+	// auto reload token
 	static function getMasterDataUrl($retry = false) {
 		static::initApiCurl();
 		$token = PersistentStorage::get('login_token');
@@ -1737,6 +1813,31 @@ class WdsNotationConverter {
 		$resp = MsgPackHelper::parseServerResponse($resp, 'MasterDataManifest');
 		if (empty($resp[1][0]['Uri'])) return null;
 		return $resp[1][0];
+	}
+	// api access /api/Leagues/TopMenuInformation
+	static function getLeagueInfo() {
+		static::initApiCurl();
+		$token = PersistentStorage::get('login_token');
+		if (empty($token)) {
+			return;
+		}
+		$ch = curl_copy_handle(static::$apiCh);
+		curl_setopt_array($ch, [
+			CURLOPT_URL=> static::$apiBase . '/api/Leagues/TopMenuInformation',
+			CURLOPT_HTTPHEADER => static::getApiHeaders([
+				"Authorization: Bearer ".$token,
+				"X-MasterData-Version: ".file_get_contents("master/!version.txt"),
+			]),
+			CURLOPT_POSTFIELDS => "",
+		]);
+		$resp = curl_exec($ch);
+		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		if ($httpCode == 403 || $httpCode == 440) {
+			return;
+		}
+		$resp = MsgPackHelper::parseServerResponse($resp, 'LeagueTopMenuInformationResult');
+		if (empty($resp[1][0]['EnrolledGroupNumber'])) return null;
+		return $resp;
 	}
 	static function updateMaster() {
 		$lastMasterVersion = PersistentStorage::get('master_version', '');
@@ -1784,6 +1885,7 @@ class WdsNotationConverter {
 			$table = $unpacker->unpack();
 			MsgPackHelper::applyTypeNameByTableName($table, $name);
 			file_put_contents("$name.json", MsgPackHelper::prettifyJSON($table));
+			file_put_contents("$name.json", "\n", FILE_APPEND);
 		}
 
 		// add new entries
