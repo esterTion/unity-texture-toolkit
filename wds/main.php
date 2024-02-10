@@ -1855,8 +1855,12 @@ class WdsNotationConverter {
 		if ($httpCode != 200) return;
 
 		chdir(__DIR__);
-		file_put_contents('mastermemory.dat', $data);
 		$lastMasterVersion = PersistentStorage::set('master_version', $currentMaster['Version']);
+		if (md5($data) == md5_file('mastermemory.dat')) {
+			static::_log("master data not changed");
+			return;
+		}
+		file_put_contents('mastermemory.dat', $data);
 
 		file_put_contents("master/!version.txt", $currentMaster['Version']);
 		static::exportMaster($currentMaster['Version'], $data);
