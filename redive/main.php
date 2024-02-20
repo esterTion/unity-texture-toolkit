@@ -14,6 +14,27 @@ function _log($s) {
   fwrite($logFile, date('[m/d H:i] ').$s."\n");
   echo $s."\n";
 }
+class PrcnDbQueryProcessor {
+  static $nameMap;
+  static function load() {
+    if (static::$nameMap === NULL) {
+      static::$nameMap = json_decode(file_get_contents('nameMap.json'), true);
+    }
+  }
+  static function processQuery($query) {
+    static::load();
+    $nameMap = static::$nameMap[$query[1]];
+    if (empty($nameMap)) {
+      throw new Exception('Table not found: '.$query[1]);
+    }
+    $finalQuery = str_replace('{tbl}', $nameMap['table'], $query[0]);
+    $finalQuery = str_replace('{col}', implode(',', array_map(function ($i) use ($nameMap) {
+      return '`'. $nameMap['column'][$i] . '` AS '. $i;
+    }, $query[2])), $finalQuery);
+    return $finalQuery;
+  }
+}
+
 function execQuery($db, $query) {
   $returnVal = [];
   /*if ($stmt = $db->prepare($query)) {
@@ -22,6 +43,9 @@ function execQuery($db, $query) {
       $returnVal = $result->fetchArray(SQLITE3_ASSOC);
     }
   }*/
+  if (is_array($query)) {
+    $query = PrcnDbQueryProcessor::processQuery($query);
+  }
   if (!$db) {
     throw new Exception('Invalid db handle');
   }
@@ -84,11 +108,16 @@ function autoProxy() {
 function encodeValue($value) {
   $arr = [];
   foreach ($value as $key=>$val) {
-    $arr[] = '/*'.$key.'*/' . (is_numeric($val) ? $val : ('"'.str_replace('"','\\"',$val).'"'));
+    //$arr[] = '/*'.$key.'*/' . (is_numeric($val) ? $val : ('"'.str_replace('"','\\"',$val).'"'));
+    $arr[] = (is_numeric($val) ? $val : ('"'.str_replace('"','\\"',$val).'"'));
   }
   return implode(", ", $arr);
 }
 function do_commit($TruthVersion, $db = NULL, $extraMsg = '') {
+  exec('git commit -m "'.$TruthVersion.'"');
+  exec('git push origin master');
+  return;
+
   exec('git diff --cached | sed -e "s/@@ -1 +1 @@/@@ -1,1 +1,1 @@/g" >a.diff');
   $versionDiff = parse_db_diff('a.diff', $db, [
     'clan_battle_period.sql' => 'diff_clan_battle', // clan_battle
@@ -494,6 +523,9 @@ $db = new PDO('sqlite:redive.db');
 
 $tables = execQuery($db, 'SELECT * FROM sqlite_master');
 
+chdir('data');
+exec('git rm *.sql');
+chdir('..');
 foreach (glob('data/*.sql') as $file) {unlink($file);}
 
 foreach ($tables as $entry) {
@@ -513,30 +545,30 @@ foreach ($tables as $entry) {
   }
 }
 $name = [];
-foreach(execQuery($db, 'SELECT unit_id,unit_name FROM unit_data WHERE unit_id > 100000 AND unit_id < 200000') as $row) {
+foreach(execQuery($db, ['SELECT {col} FROM {tbl} WHERE unit_id > 100000 AND unit_id < 200000', 'unit_data', ['unit_id','unit_name']]) as $row) {
   $name[$row['unit_id']+30] = $row['unit_name'];
 }
 file_put_contents(RESOURCE_PATH_PREFIX.'card/full/index.json', json_encode($name, JSON_UNESCAPED_SLASHES));
 $storyStillName = [];
-foreach(execQuery($db, 'SELECT story_group_id,title FROM story_data') as $row) {
+foreach(execQuery($db, ['SELECT {col} FROM {tbl}', 'story_data', ['story_group_id','title']]) as $row) {
   $storyStillName[$row['story_group_id']] = $row['title'];
 }
-foreach(execQuery($db, 'SELECT story_group_id,title FROM event_story_data') as $row) {
+foreach(execQuery($db, ['SELECT {col} FROM {tbl}', 'event_story_data', ['story_group_id','title']]) as $row) {
   $storyStillName[$row['story_group_id']] = $row['title'];
 }
-foreach(execQuery($db, 'SELECT story_group_id,title FROM tower_story_data') as $row) {
+foreach(execQuery($db, ['SELECT {col} FROM {tbl}', 'tower_story_data', ['story_group_id','title']]) as $row) {
   $storyStillName[$row['story_group_id']] = $row['title'];
 }
 file_put_contents(RESOURCE_PATH_PREFIX.'card/story/index.json', json_encode($storyStillName, JSON_UNESCAPED_SLASHES));
 $info = [];
-foreach (execQuery($db, 'SELECT unit_id,motion_type,unit_name FROM unit_data WHERE unit_id > 100000 AND unit_id < 200000') as $row) {
+foreach (execQuery($db, ['SELECT {col} FROM {tbl} WHERE unit_id > 100000 AND unit_id < 200000', 'unit_data', ['unit_id','motion_type','unit_name']]) as $row) {
   $info[$row['unit_id']] = [
     'name' => $row['unit_name'],
     'type'=>$row['motion_type'],
     'hasRarity6' => false
   ];
 }
-foreach (execQuery($db, 'SELECT unit_id FROM unit_rarity WHERE rarity=6') as $row) {
+foreach (execQuery($db, ['SELECT {col} FROM {tbl} WHERE rarity=6', 'unit_rarity', ['unit_id', 'rarity']]) as $row) {
   $info[$row['unit_id']]['hasRarity6'] = true;
 }
 $spineManifest = file_get_contents('data/+manifest_spine2.txt');
@@ -559,12 +591,12 @@ if (file_exists(__DIR__.'/action_after_update.php')) require_once __DIR__.'/acti
 
 checkAndUpdateResource($TruthVersion);
 
-file_put_contents(RESOURCE_PATH_PREFIX.'spine/still/index.json', json_encode(
-  array_map(function ($i){
-    return substr($i, -10, -4);
-  },
-  glob(RESOURCE_PATH_PREFIX.'spine/still/unit/*.png'))
-));
+#file_put_contents(RESOURCE_PATH_PREFIX.'spine/still/index.json', json_encode(
+#  array_map(function ($i){
+#    return substr($i, -10, -4);
+#  },
+#  glob(RESOURCE_PATH_PREFIX.'spine/still/unit/*.png'))
+#));
 
 }
 
