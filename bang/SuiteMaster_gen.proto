@@ -1833,13 +1833,15 @@ message MasterSingleFrameCartoon {
   optional string assetBundleName = 3; // normal type
   optional uint32 seq = 4; // normal type
   optional string subTitle = 5; // normal type
+  optional bool isLoadingScreen = 6; // normal type
 }
 message uint_MasterSingleFrameCartoon {
   optional uint32 uint_MasterSingleFrameCartoon_key = 1; // normal type
   optional MasterSingleFrameCartoon uint_MasterSingleFrameCartoon_value = 2; // sub class
 }
 message MasterSingleFrameCartoonMap {
-  repeated uint_MasterSingleFrameCartoon entries = 1; // dictionary
+  repeated uint_MasterSingleFrameCartoon loading = 1; // dictionary
+  repeated uint_MasterSingleFrameCartoon history = 2; // dictionary
 }
 message SingleFrameCartoonIdList {
   repeated uint32 entries = 1; // array
