@@ -1727,6 +1727,7 @@ class WdsNotationConverter {
 				case 'scene': {
 					// 仅在 12:00 & 17:00 +9 自动刷新剧情
 					if ($isCron && !in_array(date('H'), [11, 16])) break;
+					static::fetchEpisodeTitles();
 					static::downloadScenes();
 					static::convertScenes();
 					break;
@@ -1839,6 +1840,68 @@ class WdsNotationConverter {
 		if (empty($resp[1][0]['EnrolledGroupNumber'])) return null;
 		return $resp;
 	}
+	// api access /api/Episodes/{episodeId}/GetDetails?episodeMasterId={episodeId}
+	static function getEpisodeTitle($episodeId) {
+		static::initApiCurl();
+		$token = PersistentStorage::get('login_token');
+		if (empty($token)) {
+			return false;
+		}
+		$ch = curl_copy_handle(static::$apiCh);
+		curl_setopt_array($ch, [
+			CURLOPT_URL=> static::$apiBase . "/api/Episodes/${episodeId}/GetDetails?episodeMasterId=${episodeId}",
+			CURLOPT_HTTPHEADER => static::getApiHeaders([
+				"Authorization: Bearer ".$token,
+				"X-MasterData-Version: ".file_get_contents("master/!version.txt"),
+			]),
+			CURLOPT_POSTFIELDS => "",
+		]);
+		$resp = curl_exec($ch);
+		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+		if ($httpCode == 403 || $httpCode == 440) {
+			return false;
+		}
+		$resp = MsgPackHelper::parseServerResponse($resp, 'EpisodeResult');
+		if (empty($resp[1][0]['EpisodeTitle'])) return null;
+		return $resp[1][0]['EpisodeTitle'];
+	}
+	static function fetchEpisodeTitles() {
+		/*
+		// ??? 【エピソード:110011の閲覧条件を満たしていません。】
+		$cardEpisodes = static::loadKeyedMaster('CharacterEpisodeMaster');
+		foreach ($cardEpisodes as $e) {
+			$sceneIds[] = $e['Id'];
+		}
+		*/
+
+		$bootSplashScreens = static::loadKeyedMaster('SplashMaster');
+		foreach ($bootSplashScreens as $s) {
+			if ($s['SplashType'] !== 'Episode') continue;
+			$sceneIds[] = $s['SplashValue'];
+		}
+
+		static::initCache();
+		$stmt = static::$cacheDb->prepare('SELECT episode_title FROM episode_titles WHERE episode_id = ?');
+		$insert = static::$cacheDb->prepare('INSERT INTO episode_titles (episode_id, episode_title) VALUES (?, ?)');
+		foreach ($sceneIds as $sceneId) {
+			$stmt->execute([$sceneId]);
+			$result = $stmt->fetch(PDO::FETCH_NUM);
+			if ($result) continue;
+			$title = static::getEpisodeTitle($sceneId);
+			if ($title) {
+				$insert->execute([$sceneId, $title]);
+			}
+			break;
+		}
+	}
+	static function getCachedEpisodeTitle($episodeId) {
+		static::initCache();
+		$stmt = static::$cacheDb->prepare('SELECT episode_title FROM episode_titles WHERE episode_id = ?');
+		$stmt->execute([$episodeId]);
+		$result = $stmt->fetch(PDO::FETCH_NUM);
+		return $result ? $result[0] : '';
+	}
+
 	static function updateMaster() {
 		$lastMasterVersion = PersistentStorage::get('master_version', '');
 		$currentMaster = static::getMasterDataUrl();
@@ -1936,8 +1999,12 @@ class WdsNotationConverter {
 		$cards = static::loadKeyedMaster('CharacterMaster');
 		$charas = static::loadKeyedMaster('CharacterBaseMaster');
 		$cardIndex = [];
+		$cardReleaseTime = [];
 		foreach ($cards as $c) {
 			$cardIndex[$c['Id']] = str_repeat('★', MsgPackHelper::fromEnumName('CharacterRarities', $c['Rarity'])).'【'.$c['Name'].'】'.$charas[$c['CharacterBaseMasterId']]['Name'];
+			$releaseTime = $c['DisplayStartAt'];
+			if (!isset($cardReleaseTime[$releaseTime])) $cardReleaseTime[$releaseTime] = [];
+			$cardReleaseTime[$releaseTime][] = $c['Id'];
 		}
 		file_put_contents(static::getResourcePathPrefix().'card/index.json', json_encode($cardIndex));
 
@@ -1949,7 +2016,7 @@ class WdsNotationConverter {
 		}
 		file_put_contents(static::getResourcePathPrefix().'poster/index.json', json_encode($posterIndex));
 
-		// scene
+		// scene spot story
 		$spotConversations = static::loadKeyedMaster('SpotConversationMaster');
 		$sceneIndexPage = fopen(static::getResourcePathPrefix().'scenes/index.htm', 'w');
 		fwrite($sceneIndexPage, '<!DOCTYPE HTML><html><head><meta name="format-detection" content="telephone=no"><meta charset=utf8><meta name=viewport content="width=devide-width,initial-scale=1.0,user-scalable=0"><style>html{-webkit-text-size-adjust:none;font-family:Arial,Meiryo}h1{font-size:22px}li{font-size:16px}a:link,a:visited,a:active{text-decoration:none;color:#1E90FF}a:hover{color:#555}</style><title>ユメステ シナリオ</title></head><body><h1>ユメステ シナリオ</h1><h4><label style="display:none"><input type="checkbox" id="show-name" checked>Show name</label><div><input type="text" placeholder="search id/name" id="searchinput"></div></h4>');
@@ -1986,6 +2053,7 @@ class WdsNotationConverter {
 		}
 		fwrite($sceneIndexPage, "<hr>\n");
 
+		// scene main story
 		$episodes = static::loadKeyedMaster('EpisodeMaster');
 		$stories = static::loadKeyedMaster('StoryMaster');
 		$companies = static::loadKeyedMaster('CompanyMaster');
@@ -2006,6 +2074,7 @@ class WdsNotationConverter {
 		}
 		fwrite($sceneIndexPage, "<hr>\n");
 
+		// scene event story
 		$eventEpisodes = static::loadKeyedMaster('StoryEventEpisodeMaster');
 		$events = static::loadKeyedMaster('StoryEventMaster');
 		$eventGroups = array_reduce($eventEpisodes, function ($s, $i){
@@ -2013,9 +2082,16 @@ class WdsNotationConverter {
 			$s[$i['StoryMasterId']][] = [$i['Id'], $i['Title']];
 			return $s;
 		}, []);
-		foreach ($eventGroups as $story=>$eps) {
+		$eventIds = array_keys($eventGroups);
+		usort($eventIds, function ($a, $b) use($events) {
+			return $events[$a]['StartDate'] <=> $events[$b]['StartDate'];
+		});
+		foreach ($eventIds as $story) {
+		//foreach ($eventGroups as $story=>$eps) {
+			$eps = $eventGroups[$story];
 			if (empty($eps)) continue;
-			@fwrite($sceneIndexPage, '<details><summary>'.$events[$stories[$story]['EventMasterId']]['Title'].'</summary><ul>');
+			$startDate = explode(' ', $events[$stories[$story]['EventMasterId']]['StartDate'])[0];
+			@fwrite($sceneIndexPage, '<details><summary>'.$startDate.' '.$events[$stories[$story]['EventMasterId']]['Title'].'</summary><ul>');
 			foreach ($eps as $c) {
 				list($id, $title) = $c;
 				fwrite($sceneIndexPage, '<div data-search="'.implode(',', $c).'"><li><a href="'.$id.'.htm">'.$id.'</a> '.$title.'</li></div>');
@@ -2025,6 +2101,20 @@ class WdsNotationConverter {
 		}
 		fwrite($sceneIndexPage, "<hr>\n");
 
+		// scene splash story
+		$bootSplashScreens = static::loadKeyedMaster('SplashMaster');
+		@fwrite($sceneIndexPage, '<ul>');
+		foreach ($bootSplashScreens as $s) {
+			if ($s['SplashType'] !== 'Episode') continue;
+			$episodeId = $s['SplashValue'];
+			$epTitle = static::getCachedEpisodeTitle($episodeId);
+			$shownPeriod = explode(' ', $s['StartDate'])[0].' ~ '.explode(' ', $s['EndDate'])[0];
+			fwrite($sceneIndexPage, '<div data-search="'.implode(',', [$episodeId, $epTitle]).'"><li>'.$shownPeriod.' <a href="'.$episodeId.'.htm">'.$episodeId.'</a> '.$epTitle.'</li></div>');
+		}
+		fwrite($sceneIndexPage, "</ul>\n");
+		fwrite($sceneIndexPage, "<hr>\n");
+
+		// scene card story
 		$cardEpisodes = static::loadKeyedMaster('CharacterEpisodeMaster');
 		$cardEpisodeGroups = array_reduce($cardEpisodes, function ($s, $i){
 			if (!isset($s[$i['CharacterMasterId']])) $s[$i['CharacterMasterId']] = [];
@@ -2032,13 +2122,32 @@ class WdsNotationConverter {
 			return $s;
 		}, []);
 		fwrite($sceneIndexPage, "<ul>\n");
-		foreach ($cardEpisodeGroups as $card=>$eps) {
-			if (empty($eps)) continue;
-			@fwrite($sceneIndexPage, '<div data-search="'.implode(',', [$card, $cardIndex[$card]]).'"><li>');
-			fwrite($sceneIndexPage, '<a href="'.$eps['First'].'.htm">前編</a> | ');
-			fwrite($sceneIndexPage, '<a href="'.$eps['Second'].'.htm">後編</a> ');
-			fwrite($sceneIndexPage, $cardIndex[$card]);
-			fwrite($sceneIndexPage, "</li></div>\n");
+		uksort($cardReleaseTime, function ($a, $b) { return $a <=> $b; });
+		foreach ($cardReleaseTime as $releaseTime=>$cards) {
+			foreach ($cards as $card) {
+				if (empty($cardEpisodeGroups[$card])) continue;
+				$eps = $cardEpisodeGroups[$card];
+				/*
+				$searchTerms = @[$card, $cardIndex[$card]];
+				$epTitle = [];
+				foreach ($eps as $key=>$ep) {
+					$title = static::getCachedEpisodeTitle($ep);
+					$epTitle[$key] = $title;
+					$searchTerms[] = $title;
+				}
+				fwrite($sceneIndexPage, '<div data-search="'.implode(',', [$card, $cardIndex[$card]]).'"><li>');
+				fwrite($sceneIndexPage, '<div>'. $cardIndex[$card] .'</div>');
+				@fwrite($sceneIndexPage, '<div>　　<a href="'.$eps['First'].'.htm">前編</a> '.$epTitle['First'].'</div>');
+				@fwrite($sceneIndexPage, '<div>　　<a href="'.$eps['Second'].'.htm">後編</a> '.$epTitle['Second'].'</div>');
+				fwrite($sceneIndexPage, "</li></div>\n");
+				*/
+
+				@fwrite($sceneIndexPage, '<div data-search="'.implode(',', [$card, $cardIndex[$card]]).'"><li>');
+				fwrite($sceneIndexPage, '<a href="'.$eps['First'].'.htm">前編</a> | ');
+				fwrite($sceneIndexPage, '<a href="'.$eps['Second'].'.htm">後編</a> ');
+				fwrite($sceneIndexPage, $cardIndex[$card]);
+				fwrite($sceneIndexPage, "</li></div>\n");
+			}
 		}
 		fwrite($sceneIndexPage, "</ul>\n");
 
@@ -2068,6 +2177,12 @@ class WdsNotationConverter {
 		$cardEpisodes = static::loadKeyedMaster('CharacterEpisodeMaster');
 		foreach ($cardEpisodes as $e) {
 			$sceneIds[] = $e['Id'];
+		}
+
+		$bootSplashScreens = static::loadKeyedMaster('SplashMaster');
+		foreach ($bootSplashScreens as $s) {
+			if ($s['SplashType'] !== 'Episode') continue;
+			$sceneIds[] = $s['SplashValue'];
 		}
 
 		$timestampExtension = new TimestampExtension;
@@ -2122,6 +2237,7 @@ class WdsNotationConverter {
 	}
 	static function sceneToHtml($data) {
 		$data = json_decode($data, true);
+		if (empty($data)) return '';
 		usort($data, function ($a, $b) {
 			return ($a['GroupOrder'] * 10 + $a['Order']) - ($b['GroupOrder'] * 10 + $b['Order']);
 		});
@@ -2164,7 +2280,7 @@ class WdsNotationConverter {
 		static::initCurl();
 		$downloadedBundles = [];
 		foreach (static::$addressable['cri'][0] as $item) {
-			if (!preg_match('/cridata_remote_assets_criaddressables\/(\d{4}|1[1234]\d{4}|[12]\d{6})\.acb_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
+			if (!preg_match('/cridata_remote_assets_criaddressables\/(\d{4}|1[1234]\d{4}|[123]\d{6})\.acb_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
 			$path = static::getAssetPath($item['primaryKey']);
 			$hash = static::getAssetHash($item['primaryKey']);
 			if (!static::shouldDownload($path, $hash)) continue;
