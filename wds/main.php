@@ -703,6 +703,7 @@ class WdsNotationConverter {
 		$curlId = 0;
 		$curlInfo = [];
 		$downloadQueue = [];
+		$anotherIds = [];
 		$multiHelper = new CurlMultiHelper;
 		$multiHelper->maxParallel = 10;
 		$multiHelper->setupCb = function ($ch) use (&$downloadQueue, &$curlId, &$curlInfo) {
@@ -729,7 +730,7 @@ class WdsNotationConverter {
 			}
 			return $ch;
 		};
-		$multiHelper->finishCb = function ($ch) use (&$downloadQueue, &$curlInfo) {
+		$multiHelper->finishCb = function ($ch) use (&$downloadQueue, &$curlInfo, &$anotherIds) {
 			$curlId = curl_getinfo($ch, CURLINFO_PRIVATE);
 			$item = $curlInfo[$curlId];
 			$data = curl_multi_getcontent($ch);
@@ -742,6 +743,19 @@ class WdsNotationConverter {
 					@mkdir(dirname($path), 0777, true);
 					$hasNewMusicConfig = checkAndCreateFile($path, static::decryptMusicConfig($data));
 					if ($hasNewMusicConfig) static::_log('save '.$path);
+					if (isset($anotherIds[$music])) {
+						foreach ($anotherIds[$music] as $i) {
+							$path = "Notations/$music/$i.txt";
+							static::_log('check '.$path, false);
+							$downloadQueue[] = [
+								'type' => 'notation',
+								'path' => $path,
+								'music' => $music,
+								'i' => $i,
+							];
+						}
+						break;
+					}
 					for ($i=1;$i<6;$i++) {
 						$path = "Notations/$music/$i.txt";
 						static::_log('check '.$path, false);
@@ -781,6 +795,19 @@ class WdsNotationConverter {
 				'type' => 'config',
 				'path' => $path,
 				'music' => $music,
+			];
+		}
+		$levels = static::loadKeyedMaster('AnotherNotationMaster');
+		foreach ($levels as $music=>$l) {
+			$noteId = $l['NotationPath'];
+			$path = "Notations/$noteId/music_config.txt";
+			static::_log('check '.$path, false);
+			if (!isset($anotherIds[$noteId])) $anotherIds[$noteId] = [];
+			$anotherIds[$noteId][] = MsgPackHelper::fromEnumName('MusicDifficulties', $l['Difficulty']);
+			$downloadQueue[] = [
+				'type' => 'config',
+				'path' => $path,
+				'music' => $noteId,
 			];
 		}
 		$multiHelper->run();
@@ -1994,6 +2021,19 @@ class WdsNotationConverter {
 			][$l['Level'] - 101] : $l['Level'];
 		}
 		file_put_contents(static::getResourcePathPrefix().'jacket/index-level.json', json_encode($musicLevelIndex));
+
+		// another notation level
+		$levels = static::loadKeyedMaster('AnotherNotationMaster');
+		$musicLevelIndex = [];
+		foreach ($levels as $l) {
+			$m = $l['MusicMasterId'];
+			if (!isset($musicLevelIndex[$m])) $musicLevelIndex[$m] = [];
+			$musicLevelIndex[$m][] = [MsgPackHelper::fromEnumName('MusicDifficulties', $l['Difficulty']), $l['Level'] > 100 ? [
+				'I', 'II', 'III', 'IV', 'V',
+				'VI', 'VII', 'VIII', 'IX', 'X'
+			][$l['Level'] - 101] : $l['Level'], $l['AnotherNotationType'], $l['NotationPath']];
+		}
+		file_put_contents(static::getResourcePathPrefix().'jacket/index-level-another.json', json_encode($musicLevelIndex));
 
 		// card
 		$cards = static::loadKeyedMaster('CharacterMaster');
