@@ -1650,134 +1650,6 @@ class WdsNotationConverter {
 		}
 	}
 
-	static function downloadCustom() {
-		chdir(__DIR__);
-		static::loadAddressable();
-		static::initCurl();
-		$downloadedBundles = [];
-		$dlMatches = [
-			'2d' => [
-				'/gamehints_assets_gamehints\/.+_[0-9a-f]+\.bundle/',
-				'/stamps_assets_stamp\/.+_[0-9a-f]+\.bundle/',
-				'/spriteatlases_assets_spriteatlases\/.+_[0-9a-f]+\.bundle/',
-				'/loginbonusbackground_assets_loginbonus\/.+_[0-9a-f]+\.bundle/',
-			],
-			'cri' => [
-				'/cridata_remote_assets_criaddressables\/.+\.usm_[0-9a-f]+\.bundle/',
-				//'/cridata_remote_assets_criaddressables\/\d+\.acb_[0-9a-f]+\.bundle/',
-			],
-		];
-		$cat = "cri";
-		foreach ($dlMatches as $cat=>$rules) {
-		foreach (static::$addressable[$cat][0] as $item) {
-			$shouldDl = false;
-			foreach ($rules as $rule) {
-				if (preg_match($rule, $item['primaryKey'])) {
-					$shouldDl = true;
-					break;
-				}
-			}
-			if (!$shouldDl) continue;
-			$path = static::getAssetPath($item['primaryKey']);
-			$hash = static::getAssetHash($item['primaryKey']);
-			if (!static::shouldDownload($path, $hash)) continue;
-			static::_log('dl '.$path);
-			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, $cat.'-assets'));
-			@mkdir(dirname($path), 0777, true);
-			$fhandle = fopen($path, 'wb');
-			curl_setopt(static::$ch, CURLOPT_FILE, $fhandle);
-			curl_exec(static::$ch);
-			fclose($fhandle);
-			static::setCachedHash($path, $hash);
-			$downloadedBundles[] = $path;
-		}
-		}
-		return $downloadedBundles;
-	}
-	static function main($argc, $argv) {
-		$isCron = false;
-		for ($i=1; $i<$argc; $i++) {
-			switch ($argv[$i]) {
-				case 'dl': {
-					static::downloadCustom();
-					break;
-				}
-				case 'manifest': {
-					static::downloadAddressable();
-					break;
-				}
-				case 'jacket': {
-					static::exportJackets();
-					break;
-				}
-				case 'card': {
-					static::exportCardTextures();
-					break;
-				}
-				case 'poster': {
-					static::exportPosterTextures();
-					break;
-				}
-				case 'dlnote': {
-					// 仅在 12:00 & 17:00 +9 自动刷新谱面
-					if ($isCron && !in_array(date('H'), [11, 16])) break;
-					static::downloadNotations();
-					break;
-				}
-				case 'svg': {
-					// 仅在 12:00 & 17:00 +9 自动刷新谱面
-					if ($isCron && !in_array(date('H'), [11, 16])) break;
-					static::convertNotations();
-					break;
-				}
-				case 'music': {
-					static::exportMusics();
-					break;
-				}
-				case 'cron': {
-					$isCron = true;
-					$cronTime = $argv[++$i];
-					break;
-				}
-				case 'getConfig': {
-					static::getConfig();
-					break;
-				}
-				case 'master': {
-					static::updateMaster();
-					break;
-				}
-				case 'reexport_master': {
-					static::reexportMaster();
-					break;
-				}
-				case 'scene': {
-					// 仅在 12:00 & 17:00 +9 自动刷新剧情
-					if ($isCron && !in_array(date('H'), [11, 16])) break;
-					static::fetchEpisodeTitles();
-					static::downloadScenes();
-					static::convertScenes();
-					break;
-				}
-				case 'scene_voice': {
-					static::exportSceneVoice();
-					break;
-				}
-				case 'league_info': {
-					// 仅在 每周二 05:00 +9 自动刷新剧情
-					if ($isCron && date('DH') !== "Tue04") break;
-					$info = static::getLeagueInfo();
-					if ($info) {
-						$leagueInfo = json_encode($info, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
-						$now = date('Ymd-His');
-						file_put_contents(__DIR__."/league/league_info-$now.json", $leagueInfo);
-					}
-					break;
-				}
-			}
-		}
-	}
-
 	// api access /api/Environment
 	static function getConfig() {
 		static::initApiCurl();
@@ -2353,6 +2225,255 @@ class WdsNotationConverter {
 				}
 			}
 			static::delTree($acbUnpackDir);
+		}
+	}
+
+	static function downloadSpriteatlases() {
+		chdir(__DIR__);
+		static::loadAddressable();
+		static::initCurl();
+		$downloadedBundles = [];
+		foreach (static::$addressable['2d'][0] as $item) {
+			if (!preg_match('/spriteatlases_assets_spriteatlases\/.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
+			$path = static::getAssetPath($item['primaryKey']);
+			$hash = static::getAssetHash($item['primaryKey']);
+			if (!static::shouldDownload($path, $hash)) continue;
+			static::_log('dl '.$path);
+			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, '2d-assets'));
+			$data = curl_exec(static::$ch);
+			@mkdir(dirname($path), 0777, true);
+			file_put_contents($path, $data);
+			static::setCachedHash($path, $hash);
+			$downloadedBundles[] = $path;
+		}
+		return $downloadedBundles;
+	}
+	static function exportSpriteatlases() {
+		$downloadedSpriteatlases = static::downloadSpriteatlases();
+		$downloadedSpriteatlases = glob('spriteatlases_assets_spriteatlases/*.bundle');
+		$currenttime = time();
+		foreach ($downloadedSpriteatlases as $bundle) {
+			static::_log('export '.$bundle);
+			$assets = extractBundle(new FileStream($bundle));
+
+			$spriteAtlasName = pathinfo($bundle, PATHINFO_FILENAME);
+			$itemMap = [
+				'texture' => [],
+				'atlas' => [],
+				'sprite' => [],
+			];
+
+			try{
+
+			foreach ($assets as $asset) {
+				if (substr($asset, -5,5) == '.resS') continue;
+				$asset = new AssetFile($asset);
+
+				foreach ($asset->preloadTable as &$item) {
+					if ($item->typeString == 'Texture2D') {
+						$pathId = $item->m_PathID;
+						$itemMap['texture'][$pathId] = $item;
+					} else if ($item->typeString == 'SpriteAtlas') {
+						$itemMap['atlas'][] = $item;
+					} else if ($item->typeString == 'Sprite') {
+						$asset->stream->position = $item->offset;
+						$item = ClassStructHelper::OrganizeStruct(ClassStructHelper::DeserializeStruct($asset->stream, $asset->ClassStructures[213]['members']));
+						$key = $item['m_RenderDataKey']['first'];
+						$key = implode('.', $key);
+						$itemMap['sprite'][$key] = $item['m_Name'];
+					}
+				}
+				unset($item);
+				if (empty($itemMap['texture'])) break;
+				if (empty($itemMap['atlas'])) break;
+				if (empty($itemMap['sprite'])) break;
+				foreach ($itemMap['texture'] as $item) {
+					$pathId = $item->m_PathID;
+					try {
+						$item = new Texture2D($item, true);
+					} catch (Exception $e) { continue; }
+					$hash = dechex(crc32($item->imageData));
+					// 64 signed int to hex
+					$uniqueName = bin2hex(pack('q', $pathId)).'.'.$hash;
+					$item->uniqueName = $uniqueName;
+					$saveTo = static::getResourcePathPrefix(). "sprite/texture/$spriteAtlasName-$uniqueName";
+					$item->exportTo($saveTo, 'png');
+					if (filemtime($saveTo. '.png') > $currenttime)
+					touch($saveTo. '.png', $currenttime);
+					$itemMap['texture'][$pathId] = $item;
+				}
+				$css = fopen(static::getResourcePathPrefix(). "sprite/$spriteAtlasName.css", 'w');
+				$cssClass = "spriteatlas-$spriteAtlasName";
+				if (count($itemMap['texture']) == 1) {
+					fwrite($css, ".$cssClass { background-image: url('./texture/".pathinfo($saveTo, PATHINFO_BASENAME).".png');background-repeat: no-repeat;display: inline-block;--atlas-width: 2048px;--atlas-height: 4096px;background-size: calc(var(--atlas-width) / var(--sprite-scale)) calc(var(--atlas-height) / var(--sprite-scale));background-position: calc((0px - var(--sprite-x)) / var(--sprite-scale)) calc((var(--sprite-height) + var(--sprite-y) - var(--atlas-height)) / var(--sprite-scale));width:calc(var(--sprite-width) / var(--sprite-scale));height:calc(var(--sprite-height) / var(--sprite-scale))}\n");
+				}
+				foreach ($itemMap['atlas'] as $item) {
+					$asset->stream->position = $item->offset;
+					$item = ClassStructHelper::OrganizeStruct(ClassStructHelper::DeserializeStruct($asset->stream, $asset->ClassStructures[687078895]['members']));
+					foreach ($item['m_RenderDataMap'] as $render) {
+						$key = $render['data']['first']['first'];
+						$key = implode('.', $key);
+						$name = $itemMap['sprite'][$key];
+						$render = $render['data']['second'];
+						fwrite($css, ".${cssClass}[data-id=\"$name\"] {");
+						if (count($itemMap['texture']) > 1) {
+							fwrite($css, "background-image: url('./texture/".$itemMap['texture'][$render['texture']['m_PathID']]->uniqueName.".png');");
+						}
+						fwrite($css, "--sprite-x: ".$render['textureRect']['x']."px;");
+						fwrite($css, "--sprite-y: ".$render['textureRect']['y']."px;");
+						fwrite($css, "--sprite-width: ".$render['textureRect']['width']."px;");
+						fwrite($css, "--sprite-height: ".$render['textureRect']['height']."px;");
+						fwrite($css, "--sprite-scale: ".(max($render['textureRect']['width'], $render['textureRect']['height']) / 64).";");
+						fwrite($css, "}\n");
+					}
+				}
+				fclose($css);
+				$asset->__desctruct();
+				unset($asset);
+				gc_collect_cycles();
+			}
+
+			} catch(Exception $e) {
+				$asset->__desctruct();
+				unset($asset);
+				_log('Not supported: '. $e->getMessage());
+			}
+
+			foreach ($assets as $asset) {
+				unlink($asset);
+			}
+		}
+	}
+
+	static function downloadCustom() {
+		chdir(__DIR__);
+		static::loadAddressable();
+		static::initCurl();
+		$downloadedBundles = [];
+		$dlMatches = [
+			'2d' => [
+				'/gamehints_assets_gamehints\/.+_[0-9a-f]+\.bundle/',
+				'/stamps_assets_stamp\/.+_[0-9a-f]+\.bundle/',
+				'/spriteatlases_assets_spriteatlases\/.+_[0-9a-f]+\.bundle/',
+				'/loginbonusbackground_assets_loginbonus\/.+_[0-9a-f]+\.bundle/',
+			],
+			'cri' => [
+				'/cridata_remote_assets_criaddressables\/.+\.usm_[0-9a-f]+\.bundle/',
+				//'/cridata_remote_assets_criaddressables\/\d+\.acb_[0-9a-f]+\.bundle/',
+			],
+		];
+		$cat = "cri";
+		foreach ($dlMatches as $cat=>$rules) {
+		foreach (static::$addressable[$cat][0] as $item) {
+			$shouldDl = false;
+			foreach ($rules as $rule) {
+				if (preg_match($rule, $item['primaryKey'])) {
+					$shouldDl = true;
+					break;
+				}
+			}
+			if (!$shouldDl) continue;
+			$path = static::getAssetPath($item['primaryKey']);
+			$hash = static::getAssetHash($item['primaryKey']);
+			if (!static::shouldDownload($path, $hash)) continue;
+			static::_log('dl '.$path);
+			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, $cat.'-assets'));
+			@mkdir(dirname($path), 0777, true);
+			$fhandle = fopen($path, 'wb');
+			curl_setopt(static::$ch, CURLOPT_FILE, $fhandle);
+			curl_exec(static::$ch);
+			fclose($fhandle);
+			static::setCachedHash($path, $hash);
+			$downloadedBundles[] = $path;
+		}
+		}
+		return $downloadedBundles;
+	}
+	static function main($argc, $argv) {
+		$isCron = false;
+		for ($i=1; $i<$argc; $i++) {
+			switch ($argv[$i]) {
+				case 'dl': {
+					static::downloadCustom();
+					break;
+				}
+				case 'manifest': {
+					static::downloadAddressable();
+					break;
+				}
+				case 'jacket': {
+					static::exportJackets();
+					break;
+				}
+				case 'card': {
+					static::exportCardTextures();
+					break;
+				}
+				case 'poster': {
+					static::exportPosterTextures();
+					break;
+				}
+				case 'dlnote': {
+					// 仅在 12:00 & 17:00 +9 自动刷新谱面
+					if ($isCron && !in_array(date('H'), [11, 16])) break;
+					static::downloadNotations();
+					break;
+				}
+				case 'svg': {
+					// 仅在 12:00 & 17:00 +9 自动刷新谱面
+					if ($isCron && !in_array(date('H'), [11, 16])) break;
+					static::convertNotations();
+					break;
+				}
+				case 'music': {
+					static::exportMusics();
+					break;
+				}
+				case 'cron': {
+					$isCron = true;
+					$cronTime = $argv[++$i];
+					break;
+				}
+				case 'getConfig': {
+					static::getConfig();
+					break;
+				}
+				case 'master': {
+					static::updateMaster();
+					break;
+				}
+				case 'reexport_master': {
+					static::reexportMaster();
+					break;
+				}
+				case 'scene': {
+					// 仅在 12:00 & 17:00 +9 自动刷新剧情
+					if ($isCron && !in_array(date('H'), [11, 16])) break;
+					static::fetchEpisodeTitles();
+					static::downloadScenes();
+					static::convertScenes();
+					break;
+				}
+				case 'scene_voice': {
+					static::exportSceneVoice();
+					break;
+				}
+				case 'league_info': {
+					// 仅在 每周二 05:00 +9 自动刷新剧情
+					if ($isCron && date('DH') !== "Tue04") break;
+					$info = static::getLeagueInfo();
+					if ($info) {
+						$leagueInfo = json_encode($info, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+						$now = date('Ymd-His');
+						file_put_contents(__DIR__."/league/league_info-$now.json", $leagueInfo);
+					}
+					break;
+				}
+				case 'sprite': {
+					static::exportSpriteatlases();
+					break;
+				}
+			}
 		}
 	}
 }

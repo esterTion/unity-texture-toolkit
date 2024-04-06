@@ -783,7 +783,7 @@ class Texture2D {
       $astc->write(hex2bin('010000'));
       $astc->write($this->imageData);
       unset($astc);
-      exec('astcenc -d output.astc output.tga -silentmode');
+      exec('astcenc-4.5 -dl output.astc output.tga -yflip -silent');
       unlink('output.astc');
       $transcodeFile = 'output.tga';
     } else if ($this->outputMethod == 'bmp') {
@@ -1052,6 +1052,8 @@ class ClassStructHelper {
           for ($j=0; $j<$value['size']; $j++) {
             $dataArr[] = ClassStructHelper::DeserializeStruct($stream, $arr);
           }
+          $alignAfterArray = ($member['flag'] & 16384) != 0;
+          if ($alignAfterArray) $stream->alignStream(4);
           $i += count($arr) + 1;
           $value['value'] = $dataArr;
           break;
