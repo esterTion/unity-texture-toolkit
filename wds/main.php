@@ -226,7 +226,12 @@ class MsgPackHelper {
 		$unpacker->reset($resp);
 		$responseBlocks = [];
 		while ($unpacker->hasRemaining()) {
-			$responseBlocks[] = $unpacker->unpack();
+			$block = $unpacker->unpack();
+			if (isset($block[1]) && $block[1] !== null && isset($block[0]) && !is_array($block[0])) {
+				// block not lz4 compressed
+				$block = [$block];
+			}
+			$responseBlocks[] = $block;
 		}
 		if (!empty($resultType) && !empty($responseBlocks[1][0])) {
 			static::applyTypeNameByType($responseBlocks[1][0], $resultType);
@@ -251,9 +256,11 @@ class CurlMultiHelper {
 	public $baseCurl;
 	public $maxParallel = 5;
 	private $currentParallel = 0;
-	private $mh;
+	private static $mh;
 	function __construct() {
-		$this->mh = curl_multi_init();
+		if (static::$mh === null) {
+			static::$mh = curl_multi_init();
+		}
 	}
 	function run() {
 		while ($this->currentParallel < $this->maxParallel) {
@@ -263,34 +270,53 @@ class CurlMultiHelper {
 		}
 		while ($this->currentParallel > 0) {
 			$finishedHandle = $this->anyFinished();
-			curl_multi_remove_handle($this->mh, $finishedHandle);
 			call_user_func($this->finishCb, $finishedHandle);
+			curl_multi_remove_handle(static::$mh, $finishedHandle);
 			$this->currentParallel--;
-			$this->add($finishedHandle);
+			curl_close($finishedHandle);
+			$this->add();
 		}
 	}
 	function add($handle = null) {
 		$nextHandle = call_user_func($this->setupCb, $handle);
 		if ($nextHandle) {
 			$this->currentParallel++;
-			curl_multi_add_handle($this->mh, $nextHandle);
+			curl_multi_add_handle(static::$mh, $nextHandle);
 			return true;
 		}
 		return false;
 	}
 	function anyFinished() {
 		do {
-			while (($code = curl_multi_exec($this->mh, $active)) == CURLM_CALL_MULTI_PERFORM) ;
+			while (($code = curl_multi_exec(static::$mh, $active)) == CURLM_CALL_MULTI_PERFORM) ;
 			if ($code != CURLM_OK) {
 				break;
 			}
 			usleep(1000);
-			if ($done = curl_multi_info_read($this->mh)) {
+			if ($done = curl_multi_info_read(static::$mh)) {
 				return $done['handle'];
 			}
 			//var_dump($active, $done);
 		} while ($active);
 		throw new Exception("curl multi error: ".curl_multi_strerror($code));
+	}
+	static function execSingleCurl($ch) {
+		if (static::$mh === null) {
+			static::$mh = curl_multi_init();
+		}
+		curl_multi_add_handle(static::$mh, $ch);
+		// execute the handle, sleep until done, return result
+		do {
+			while (($code = curl_multi_exec(static::$mh, $active)) == CURLM_CALL_MULTI_PERFORM) ;
+			if ($code != CURLM_OK) {
+				break;
+			}
+			usleep(1000);
+			if ($done = curl_multi_info_read(static::$mh)) {
+				curl_multi_remove_handle(static::$mh, $done['handle']);
+				return curl_multi_getcontent($done['handle']);
+			}
+		} while ($active);
 	}
 }
 
@@ -368,11 +394,11 @@ class WdsNotationConverter {
 			$path = "$type-assets.json";
 			static::_log('check '.$path, false);
 			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl("catalog_$ver.hash", "$type-assets"));
-			$hash = curl_exec(static::$ch);
+			$hash = CurlMultiHelper::execSingleCurl(static::$ch);
 			if (!static::shouldDownload($path, $hash)) continue;
 			static::_log('dl '.$path);
 			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl("catalog_$ver.json.br", "$type-assets"));
-			$data = brotli_uncompress(curl_exec(static::$ch));
+			$data = brotli_uncompress(CurlMultiHelper::execSingleCurl(static::$ch));
 			$manifestUpdated = true;
 			checkAndCreateFile("manifest/$path", $data);
 			static::setCachedHash($path, $hash);
@@ -420,7 +446,7 @@ class WdsNotationConverter {
 			if (!static::shouldDownload($path, $hash)) continue;
 			static::_log('dl '.$path);
 			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, '3d-assets'));
-			$data = curl_exec(static::$ch);
+			$data = CurlMultiHelper::execSingleCurl(static::$ch);
 			@mkdir(dirname($path), 0777, true);
 			file_put_contents($path, $data);
 			static::setCachedHash($path, $hash);
@@ -629,7 +655,7 @@ class WdsNotationConverter {
 			if (!static::shouldDownload($path, $hash)) continue;
 			static::_log('dl '.$path);
 			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, '2d-assets'));
-			$data = curl_exec(static::$ch);
+			$data = CurlMultiHelper::execSingleCurl(static::$ch);
 			@mkdir(dirname($path), 0777, true);
 			file_put_contents($path, $data);
 			static::setCachedHash($path, $hash);
@@ -649,7 +675,7 @@ class WdsNotationConverter {
 			if (!static::shouldDownload($path, $hash)) continue;
 			static::_log('dl '.$path);
 			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, '2d-assets'));
-			$data = curl_exec(static::$ch);
+			$data = CurlMultiHelper::execSingleCurl(static::$ch);
 			@mkdir(dirname($path), 0777, true);
 			file_put_contents($path, $data);
 			static::setCachedHash($path, $hash);
@@ -669,7 +695,7 @@ class WdsNotationConverter {
 			if (!static::shouldDownload($path, $hash)) continue;
 			static::_log('dl '.$path);
 			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, '2d-assets'));
-			$data = curl_exec(static::$ch);
+			$data = CurlMultiHelper::execSingleCurl(static::$ch);
 			@mkdir(dirname($path), 0777, true);
 			file_put_contents($path, $data);
 			static::setCachedHash($path, $hash);
@@ -689,7 +715,7 @@ class WdsNotationConverter {
 			if (!static::shouldDownload($path, $hash)) continue;
 			static::_log('dl '.$path);
 			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, 'cri-assets'));
-			$data = curl_exec(static::$ch);
+			$data = CurlMultiHelper::execSingleCurl(static::$ch);
 			@mkdir(dirname($path), 0777, true);
 			file_put_contents($path, $data);
 			static::setCachedHash($path, $hash);
@@ -1092,6 +1118,7 @@ class WdsNotationConverter {
 		$svgParts[] = '  <g width="20" height="8" id="critical"><path d="M0,2v4a2,2,90,0,0,2,2h16a2,-2,90,0,0,2,-2v-4a-2,-2,90,0,0,-2,-2h-16a-2,2,90,0,0,-2,2" fill="rgb(254,166,43)" /><path d="M1,3v2a2,2,90,0,0,2,2h14a2,-2,90,0,0,2,-2v-2a-2,-2,90,0,0,-2,-2h-14a-2,2,90,0,0,-2,2" stroke="rgb(255,225,104)" fill="transparent" /></g>';
 		$svgParts[] = '  <g width="20" height="8" id="hold"    ><path d="M0,2v4a2,2,90,0,0,2,2h16a2,-2,90,0,0,2,-2v-4a-2,-2,90,0,0,-2,-2h-16a-2,2,90,0,0,-2,2" fill="rgb(18,155,250)" /><path d="M1,3v2a2,2,90,0,0,2,2h14a2,-2,90,0,0,2,-2v-2a-2,-2,90,0,0,-2,-2h-14a-2,2,90,0,0,-2,2" stroke="rgb(255,225,104)" fill="transparent" /></g>';
 		$svgParts[] = '  <g width="20" height="8" id="scratch" ><path d="M0,2v4a2,2,90,0,0,2,2h16a2,-2,90,0,0,2,-2v-4a-2,-2,90,0,0,-2,-2h-16a-2,2,90,0,0,-2,2" fill="rgb(129,59,236)" /><path d="M1,3v2a2,2,90,0,0,2,2h14a2,-2,90,0,0,2,-2v-2a-2,-2,90,0,0,-2,-2h-14a-2,2,90,0,0,-2,2" stroke="rgb(255,225,104)" fill="transparent" /></g>';
+		$svgParts[] = '  <g width="20" height="8" id="flick"   ><path d="M0,2v4a2,2,90,0,0,2,2h16a2,-2,90,0,0,2,-2v-4a-2,-2,90,0,0,-2,-2h-16a-2,2,90,0,0,-2,2" fill="rgb(129,59,236)" /><path d="M1,3v2a2,2,90,0,0,2,2h14a2,-2,90,0,0,2,-2v-2a-2,-2,90,0,0,-2,-2h-14a-2,2,90,0,0,-2,2" stroke="rgb(255,225,104)" fill="transparent" /><path d="M5,4h10" stroke="rgb(255,225,104)" /></g>';
 		$svgParts[] = '  <g width="20" height="12" id="scratch_arrow_left"><path d="M5,1l-4,6l4,6h3l-4,-6l4,-6zM11,1l-4,6l4,6h3l-4,-6l4,-6z" stroke="rgb(123,81,251)" fill="rgb(244,237,255)" /></g>';
 		$svgParts[] = '  <g width="20" height="12" id="scratch_arrow_right"><path d="M9,1l4,6l-4,6h-3l4,-6l-4,-6zM15,1l4,6l-4,6h-3l4,-6l-4,-6z" stroke="rgb(123,81,251)" fill="rgb(244,237,255)" /></g>';
 		$svgParts[] = '  <g width="20" height="12" id="scratch_arrow_both"><path d="M6,1l-4,6l4,6h3l-4,-6l4,-6zM14,1l4,6l-4,6h-3l4,-6l-4,-6z" stroke="rgb(123,81,251)" fill="rgb(244,237,255)" /></g>';
@@ -1296,7 +1323,7 @@ class WdsNotationConverter {
 			}
 			$syncPoints[$noteTimeS][0] = min($syncPoints[$noteTimeS][0], $x + $width);
 			$syncPoints[$noteTimeS][1] = max($syncPoints[$noteTimeS][1], $x);
-			$noteType = 'scratch';
+			$noteType = $note['type'] === WdsNoteType::Scratch ? 'scratch' : 'flick';
 			$transformScaleX = static::roundReal($width / 20);
 			$transform = [];
 			if ($transformScaleX != 1) $transform[] = "scaleX(${transformScaleX})";
@@ -1657,7 +1684,7 @@ class WdsNotationConverter {
 		$apiEndpoint = PersistentStorage::get('api_endpoint', 'https://api.wds-stellarium.com');
 		curl_setopt(static::$apiCh, CURLOPT_URL, "$apiEndpoint/api/Environment?applicationVersion=$appVer&gameVersion=1");
 		curl_setopt(static::$apiCh, CURLOPT_POSTFIELDS, "");
-		$resp = curl_exec(static::$apiCh);
+		$resp = CurlMultiHelper::execSingleCurl(static::$apiCh);
 		$resp = MsgPackHelper::parseServerResponse($resp, 'EnvironmentResult');
 		if (!empty($resp[1][0]['AssetVersion'])) {
 			$appEnvironmentConfig = $resp[1][0];
@@ -1682,7 +1709,7 @@ class WdsNotationConverter {
 			CURLOPT_URL=> static::$apiBase . '/api/Account/Authenticate',
 			CURLOPT_POSTFIELDS => msgpack_pack($payload)
 		]);
-		$resp = curl_exec($ch);
+		$resp = CurlMultiHelper::execSingleCurl($ch);
 		$resp = MsgPackHelper::parseServerResponse($resp, 'AuthenticateResult');
 		if (empty($resp[1][0]['Token'])) return false;
 		PersistentStorage::set('login_token', $resp[1][0]['Token']);
@@ -1703,7 +1730,7 @@ class WdsNotationConverter {
 			CURLOPT_URL=> static::$apiBase . '/api/data/master',
 			CURLOPT_HTTPHEADER => static::getApiHeaders(["Authorization: Bearer ".$token]),
 		]);
-		$resp = curl_exec($ch);
+		$resp = CurlMultiHelper::execSingleCurl($ch);
 		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 		if ($httpCode == 403 || $httpCode == 440) {
 			if ($retry) return;
@@ -1730,7 +1757,7 @@ class WdsNotationConverter {
 			]),
 			CURLOPT_POSTFIELDS => "",
 		]);
-		$resp = curl_exec($ch);
+		$resp = CurlMultiHelper::execSingleCurl($ch);
 		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 		if ($httpCode == 403 || $httpCode == 440) {
 			return;
@@ -1755,7 +1782,7 @@ class WdsNotationConverter {
 			]),
 			CURLOPT_POSTFIELDS => "",
 		]);
-		$resp = curl_exec($ch);
+		$resp = CurlMultiHelper::execSingleCurl($ch);
 		$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 		if ($httpCode == 403 || $httpCode == 440) {
 			return false;
@@ -1812,7 +1839,7 @@ class WdsNotationConverter {
 		// download master
 		static::initCurl();
 		curl_setopt(static::$ch, CURLOPT_URL, static::$masterUrl.'/'.$currentMaster['Uri']);
-		$data = curl_exec(static::$ch);
+		$data = CurlMultiHelper::execSingleCurl(static::$ch);
 		$httpCode = curl_getinfo(static::$ch, CURLINFO_HTTP_CODE);
 		if ($httpCode != 200) return;
 
@@ -2198,7 +2225,7 @@ class WdsNotationConverter {
 			if (!static::shouldDownload($path, $hash)) continue;
 			static::_log('dl '.$path);
 			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, 'cri-assets'));
-			$data = curl_exec(static::$ch);
+			$data = CurlMultiHelper::execSingleCurl(static::$ch);
 			@mkdir(dirname($path), 0777, true);
 			file_put_contents($path, $data);
 			static::setCachedHash($path, $hash);
@@ -2240,7 +2267,7 @@ class WdsNotationConverter {
 			if (!static::shouldDownload($path, $hash)) continue;
 			static::_log('dl '.$path);
 			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, '2d-assets'));
-			$data = curl_exec(static::$ch);
+			$data = CurlMultiHelper::execSingleCurl(static::$ch);
 			@mkdir(dirname($path), 0777, true);
 			file_put_contents($path, $data);
 			static::setCachedHash($path, $hash);
@@ -2250,7 +2277,6 @@ class WdsNotationConverter {
 	}
 	static function exportSpriteatlases() {
 		$downloadedSpriteatlases = static::downloadSpriteatlases();
-		$downloadedSpriteatlases = glob('spriteatlases_assets_spriteatlases/*.bundle');
 		$currenttime = time();
 		foreach ($downloadedSpriteatlases as $bundle) {
 			static::_log('export '.$bundle);
@@ -2300,13 +2326,21 @@ class WdsNotationConverter {
 					$item->exportTo($saveTo, 'png');
 					if (filemtime($saveTo. '.png') > $currenttime)
 					touch($saveTo. '.png', $currenttime);
+					$item->exportTo($saveTo, 'webp', '-preset drawing');
+					if (filemtime($saveTo. '.webp') > $currenttime)
+					touch($saveTo. '.webp', $currenttime);
 					$itemMap['texture'][$pathId] = $item;
 				}
 				$css = fopen(static::getResourcePathPrefix(). "sprite/$spriteAtlasName.css", 'w');
 				$cssClass = "spriteatlas-$spriteAtlasName";
+				fwrite($css, ".$cssClass {");
 				if (count($itemMap['texture']) == 1) {
-					fwrite($css, ".$cssClass { background-image: url('./texture/".pathinfo($saveTo, PATHINFO_BASENAME).".png');background-repeat: no-repeat;display: inline-block;--atlas-width: 2048px;--atlas-height: 4096px;background-size: calc(var(--atlas-width) / var(--sprite-scale)) calc(var(--atlas-height) / var(--sprite-scale));background-position: calc((0px - var(--sprite-x)) / var(--sprite-scale)) calc((var(--sprite-height) + var(--sprite-y) - var(--atlas-height)) / var(--sprite-scale));width:calc(var(--sprite-width) / var(--sprite-scale));height:calc(var(--sprite-height) / var(--sprite-scale))}\n");
+					$texture = reset($itemMap['texture']);
+					$width = $texture->width;
+					$height = $texture->height;
+					fwrite($css, "background-image: url('./texture/".pathinfo($saveTo, PATHINFO_BASENAME).".png');background-image: url('./texture/".pathinfo($saveTo, PATHINFO_BASENAME).".webp');--atlas-width:${width}px;--atlas-height:${height}px;");
 				}
+				fwrite($css, "background-repeat: no-repeat;display: inline-block;background-size: calc(var(--atlas-width) / var(--sprite-scale) * var(--target-scale)) calc(var(--atlas-height) / var(--sprite-scale) * var(--target-scale));background-position: calc((0px - var(--sprite-x)) / var(--sprite-scale) * var(--target-scale)) calc((var(--sprite-height) + var(--sprite-y) - var(--atlas-height)) / var(--sprite-scale) * var(--target-scale));width:calc(var(--sprite-width) / var(--sprite-scale) * var(--target-scale));height:calc(var(--sprite-height) / var(--sprite-scale) * var(--target-scale));--target-size: 64;--target-scale: calc(var(--target-size) / 64);}\n");
 				foreach ($itemMap['atlas'] as $item) {
 					$asset->stream->position = $item->offset;
 					$item = ClassStructHelper::OrganizeStruct(ClassStructHelper::DeserializeStruct($asset->stream, $asset->ClassStructures[687078895]['members']));
@@ -2317,7 +2351,12 @@ class WdsNotationConverter {
 						$render = $render['data']['second'];
 						fwrite($css, ".${cssClass}[data-id=\"$name\"] {");
 						if (count($itemMap['texture']) > 1) {
-							fwrite($css, "background-image: url('./texture/".$itemMap['texture'][$render['texture']['m_PathID']]->uniqueName.".png');");
+							$texture = $itemMap['texture'][$render['texture']['m_PathID']];
+							$width = $texture->width;
+							$height = $texture->height;
+							fwrite($css, "background-image: url('./texture/$spriteAtlasName-".$texture->uniqueName.".png');");
+							fwrite($css, "background-image: url('./texture/$spriteAtlasName-".$texture->uniqueName.".webp');");
+							fwrite($css, "--atlas-width:${width}px;--atlas-height:${height}px;");
 						}
 						fwrite($css, "--sprite-x: ".$render['textureRect']['x']."px;");
 						fwrite($css, "--sprite-y: ".$render['textureRect']['y']."px;");
@@ -2381,7 +2420,7 @@ class WdsNotationConverter {
 			@mkdir(dirname($path), 0777, true);
 			$fhandle = fopen($path, 'wb');
 			curl_setopt(static::$ch, CURLOPT_FILE, $fhandle);
-			curl_exec(static::$ch);
+			CurlMultiHelper::execSingleCurl(static::$ch);
 			fclose($fhandle);
 			static::setCachedHash($path, $hash);
 			$downloadedBundles[] = $path;
