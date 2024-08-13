@@ -228,7 +228,7 @@ $header = [
 ];
 $curl = curl_init();
 curl_setopt_array($curl, array(
-  CURLOPT_URL=>'https://api.star.craftegg.jp/api/application',
+  CURLOPT_URL=>'https://api.garupa.jp/api/application',
   CURLOPT_SSL_VERIFYPEER=>false,
   CURLOPT_HEADER=>false,
   CURLOPT_RETURNTRANSFER=>true,
@@ -254,7 +254,7 @@ _log('downloading master');
 $header[] = 'X-DataVersion: '.$dataVer;
 $header[] = 'X-MasterDataVersion: '.$masterVer;
 curl_setopt_array($curl, array(
-  CURLOPT_URL => 'https://api.star.craftegg.jp/api/suite/master',
+  CURLOPT_URL => 'https://api.garupa.jp/api/suite/master',
   CURLOPT_HTTPHEADER=>$header
 ));
 file_put_contents('master.dat', bzdecompress(decrypt(curl_exec($curl), 'mikumikulukaluka', 'lukalukamikumiku')));
@@ -308,7 +308,7 @@ $header = [
   'X-Unity-Version: 5.4.1f1'
 ];
 curl_setopt_array($curl, array(
-  CURLOPT_URL => 'https://d2ktlshvcuasnf.cloudfront.net/Release/'.$dataVer.'_'.$verHash.'/iOS/AssetBundleInfo',
+  CURLOPT_URL => 'https://content.garupa.jp/Release/'.$dataVer.'_'.$verHash.'/iOS/AssetBundleInfo',
   CURLOPT_HTTPHEADER=>$header
 ));
 file_put_contents('manifest.dat', curl_exec($curl));

@@ -9,4 +9,5 @@ message AppGetResponse {
   optional string multiLive = 8; // normal type
   optional string starShop = 9; // normal type
   optional string masterDataVersion = 10; // normal type
+  optional string photonAppId = 11; // normal type
 }

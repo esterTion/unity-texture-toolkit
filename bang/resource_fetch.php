@@ -69,7 +69,7 @@ function checkAndUpdateResource($dataVer) {
     if (($rule = findRule($name, $resourceToExport)) !== false && shouldUpdate($name, $info['crc'])) {
       _log('download '. $name);
       curl_setopt_array($curl, array(
-        CURLOPT_URL=>'https://d2ktlshvcuasnf.cloudfront.net/Release/'.$dataVer.'/iOS/'.$info['bundleName'],
+        CURLOPT_URL=>'https://content.garupa.jp/Release/'.$dataVer.'/iOS/'.$info['bundleName'],
       ));
       $bundleData = curl_exec($curl);
       if (strlen($bundleData) != $info['fileSize']) {
@@ -104,6 +104,7 @@ function checkAndUpdateResource($dataVer) {
               if (isset($rule['extraParam'])) $param .= ' '.$rule['extraParam'];
               if (isset($rule['extraParamCb'])) @$param .= ' '.call_user_func($rule['extraParamCb'], $item);
               $item->exportTo($saveTo, 'webp', $param);
+              if (!file_exists($saveTo. '.webp')) throw new Exception('Error exporting');
               if (filemtime($saveTo. '.webp') > $currenttime)
               touch($saveTo. '.webp', $currenttime);
               updateTextureHash("$name:$itemname", $item);
