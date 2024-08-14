@@ -1584,9 +1584,10 @@ class WdsNotationConverter {
 			$index = $s->long;
 			$entryCount = $s->long;
 			$entry = [];
-			for ($c=0; $c<$entryCount; $c++) {
-				$entry[] = $s->long;
-			}
+			$s->position += $entryCount * 4;
+			// for ($c=0; $c<$entryCount; $c++) {
+			// 	$entry[] = $s->long;
+			// }
 			$buckets[] = new class($index, $entry) {
 				public $dataOffset;
 				public $entries;
@@ -1608,25 +1609,27 @@ class WdsNotationConverter {
 			$keys[] = static::ReadObjectFromStream($s, $buckets[$i]->dataOffset);
 		}
 		// expand internal id
-		$list['m_InternalIds'] = array_map(function ($i) use($list) {
-			return preg_replace_callback('/^(\d+)\#/', function ($m) use($list) {
-				return $list['m_InternalIdPrefixes'][$m[1]];
-			}, $i);
-		}, $list['m_InternalIds']);
+		// $list['m_InternalIds'] = array_map(function ($i) use($list) {
+		// 	return preg_replace_callback('/^(\d+)\#/', function ($m) use($list) {
+		// 		return $list['m_InternalIdPrefixes'][$m[1]];
+		// 	}, $i);
+		// }, $list['m_InternalIds']);
 		$s = new MemoryStream(base64_decode($list['m_EntryDataString']));
 		unset($list['m_EntryDataString']);
 		$s->littleEndian = true;
 		$ec = $s->long;
 		$map = [];
 		for ($i=0; $i<$ec; $i++) {
-			$internalId = $s->long;
-			$providerIndex = $s->long;
-			$dependencyKeyIndex = $s->long;
-			$depHash = $s->long;
-			$dataIndex = $s->long;
+			// $internalId = $s->long;
+			// $providerIndex = $s->long;
+			// $dependencyKeyIndex = $s->long;
+			// $depHash = $s->long;
+			// $dataIndex = $s->long;
+			$s->position += 4 * 5;
 			$primaryKey = $s->long;
-			$resourceType = $s->long;
-			$data = $dataIndex < 0 ? null : static::ReadObjectFromStream($es, $dataIndex);
+			// $resourceType = $s->long;
+			$s->position += 4 * 1;
+			// $data = $dataIndex < 0 ? null : static::ReadObjectFromStream($es, $dataIndex);
 			$pk = $keys[$primaryKey];
 			// $className = $list['m_resourceTypes'][$resourceType]['m_ClassName'];
 			$map[$pk] = new class($pk) {
