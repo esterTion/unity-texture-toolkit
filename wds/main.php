@@ -122,6 +122,7 @@ class WdsNoteType {
 	const CriticalHold = 101;
 	const ScratchHold = 110;
 	const ScratchCriticalHold = 111;
+	const BlueTap = 200;
 	const HoldEighth = 900;
 }
 
@@ -424,7 +425,7 @@ class WdsNotationConverter {
 			}
 			$data = json_decode(file_get_contents($path), true);
 			$parsed = static::parseAddressable($data);
-			foreach ($parsed[0] as $i=>$item) $parsed[0][$i] = ['primaryKey' => $item['primaryKey']];
+			foreach ($parsed[0] as $i=>$item) $parsed[0][$i] = ['primaryKey' => $item->pk];
 			static::$addressable[$type] = $parsed;
 			unset($data);
 		}
@@ -703,6 +704,9 @@ class WdsNotationConverter {
 		}
 		return $downloadedBundles;
 	}
+	static function isValidAcb($data) {
+		return substr($data, 0, 4) === '@UTF';
+	}
 	static function downloadMusics() {
 		chdir(__DIR__);
 		static::loadAddressable();
@@ -713,9 +717,13 @@ class WdsNotationConverter {
 			$path = static::getAssetPath($item['primaryKey']);
 			$hash = static::getAssetHash($item['primaryKey']);
 			if (!static::shouldDownload($path, $hash)) continue;
-			static::_log('dl '.$path);
+			static::_log('dl '.$path, false);
 			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, 'cri-assets'));
 			$data = CurlMultiHelper::execSingleCurl(static::$ch);
+			if (!static::isValidAcb($data)) {
+				static::_log('invalid acb', false);
+				continue;
+			}
 			@mkdir(dirname($path), 0777, true);
 			file_put_contents($path, $data);
 			static::setCachedHash($path, $hash);
@@ -1074,6 +1082,7 @@ class WdsNotationConverter {
 				case WdsNoteType::Normal:
 				case WdsNoteType::Critical:
 				case WdsNoteType::HoldStart:
+				case WdsNoteType::BlueTap:
 				case WdsNoteType::CriticalHoldStart:
 				case WdsNoteType::ScratchHoldStart:
 				case WdsNoteType::ScratchCriticalHoldStart: { $normalNotes[] = $note; break; }
@@ -1086,6 +1095,11 @@ class WdsNotationConverter {
 				case WdsNoteType::ScratchHold:
 				case WdsNoteType::ScratchCriticalHold: { $holdNotes[] = $note; break; }
 				case WdsNoteType::HoldEighth: { $holdJudgeNotes[] = $note; break; }
+				case WdsNoteType::None: { break; }
+				default: {
+					print_r($note);
+					return;
+				}
 			}
 			switch ($note['gimmickType']) {
 				case '0':
@@ -1263,6 +1277,7 @@ class WdsNotationConverter {
 				case WdsNoteType::ScratchCriticalHoldStart: { $noteType = 'critical'; break; }
 				case WdsNoteType::Sound: { $noteType = 'sound'; break; }
 				case WdsNoteType::SoundPurple: { $noteType = 'sound_purple'; break; }
+				case WdsNoteType::BlueTap:
 				case WdsNoteType::HoldStart: { $noteType = 'hold'; break; }
 			}
 			$transformScaleX = static::roundReal($width / 20);
@@ -1558,10 +1573,10 @@ class WdsNotationConverter {
 		}
 	}
 
-	static function parseAddressable($list) {
+	static function parseAddressable(&$list) {
 		// ref: https://github.com/needle-mirror/com.unity.addressables/blob/5a722ef6ae2d07e55cba9c07c751d8ce8ccad3c7/Runtime/ResourceLocators/ContentCatalogData.cs#L294
-		$bucketData = base64_decode($list['m_BucketDataString']);
-		$s = new MemoryStream($bucketData);
+		$s = new MemoryStream(base64_decode($list['m_BucketDataString']));
+		unset($list['m_BucketDataString']);
 		$s->littleEndian = true;
 		$bc = $s->long;
 		$buckets = [];
@@ -1572,21 +1587,25 @@ class WdsNotationConverter {
 			for ($c=0; $c<$entryCount; $c++) {
 				$entry[] = $s->long;
 			}
-			$buckets[] = [
-				'dataOffset' => $index,
-				'entries' => $entry,
-			];
+			$buckets[] = new class($index, $entry) {
+				public $dataOffset;
+				public $entries;
+				public function __construct($index, $entry) {
+					$this->dataOffset = $index;
+					//$this->entries = $entry;
+				}
+			};
 		}
-		$extraData = base64_decode($list['m_ExtraDataString']);
-		$es = new MemoryStream($extraData);
+		$es = new MemoryStream(base64_decode($list['m_ExtraDataString']));
+		unset($list['m_ExtraDataString']);
 		$es->littleEndian = true;
-		$keyData = base64_decode($list['m_KeyDataString']);
-		$s = new MemoryStream($keyData);
+		$s = new MemoryStream(base64_decode($list['m_KeyDataString']));
+		unset($list['m_KeyDataString']);
 		$s->littleEndian = true;
 		$kc = $s->long;
 		$keys = [];
 		for ($i=0; $i<$kc; $i++) {
-			$keys[] = static::ReadObjectFromStream($s, $buckets[$i]['dataOffset']);
+			$keys[] = static::ReadObjectFromStream($s, $buckets[$i]->dataOffset);
 		}
 		// expand internal id
 		$list['m_InternalIds'] = array_map(function ($i) use($list) {
@@ -1594,11 +1613,11 @@ class WdsNotationConverter {
 				return $list['m_InternalIdPrefixes'][$m[1]];
 			}, $i);
 		}, $list['m_InternalIds']);
-		$entryData = base64_decode($list['m_EntryDataString']);
-		$s = new MemoryStream($entryData);
+		$s = new MemoryStream(base64_decode($list['m_EntryDataString']));
+		unset($list['m_EntryDataString']);
 		$s->littleEndian = true;
 		$ec = $s->long;
-		$locations = [];
+		$map = [];
 		for ($i=0; $i<$ec; $i++) {
 			$internalId = $s->long;
 			$providerIndex = $s->long;
@@ -1608,34 +1627,19 @@ class WdsNotationConverter {
 			$primaryKey = $s->long;
 			$resourceType = $s->long;
 			$data = $dataIndex < 0 ? null : static::ReadObjectFromStream($es, $dataIndex);
-			$locations[] = [
-				//'internalId' => $list['m_InternalIds'][$internalId],
-				//'providerId' => $list['m_ProviderIds'][$providerIndex],
-				//'dependencyKey' => $dependencyKeyIndex < 0 ? null : $keys[$dependencyKeyIndex],
-				//'data'=> $data,
-				//'depHash'=> $depHash,
-				'primaryKey'=> $keys[$primaryKey],
-				'type'=> $list['m_resourceTypes'][$resourceType],
-			];
-		}
-		$map = [];
-		$dlToClass = [];
-		foreach ($locations as $i) {
-			#if (!empty($i['dependencyKey'])) {
-				#if (empty($dlToClass[$i['dependencyKey']])) $dlToClass[$i['dependencyKey']] = ['class'=>[],'key'=>''];
-				#$dlToClass[$i['dependencyKey']]['class'][] = $i['type']['m_ClassName'];
-				#$dlToClass[$i['dependencyKey']]['key'] = $i['primaryKey'];
-			#}
-			$map[$i['type']['m_ClassName'].'-'.$i['primaryKey']] = $i;
-			unset($i['type']);
-			unset($i['primaryKey']);
+			$pk = $keys[$primaryKey];
+			// $className = $list['m_resourceTypes'][$resourceType]['m_ClassName'];
+			$map[$pk] = new class($pk) {
+				public $pk;
+				public function __construct($pk) {
+					$this->pk = $pk;
+				}
+			};
 		}
 		ksort($map);
-		ksort($dlToClass);
 
 		return [
 			$map,
-			$dlToClass,
 		];
 	}
 
@@ -2223,9 +2227,13 @@ class WdsNotationConverter {
 			$path = static::getAssetPath($item['primaryKey']);
 			$hash = static::getAssetHash($item['primaryKey']);
 			if (!static::shouldDownload($path, $hash)) continue;
-			static::_log('dl '.$path);
+			static::_log('dl '.$path, false);
 			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, 'cri-assets'));
 			$data = CurlMultiHelper::execSingleCurl(static::$ch);
+			if (!static::isValidAcb($data)) {
+				static::_log('invalid acb', false);
+				continue;
+			}
 			@mkdir(dirname($path), 0777, true);
 			file_put_contents($path, $data);
 			static::setCachedHash($path, $hash);
@@ -2289,6 +2297,9 @@ class WdsNotationConverter {
 				'sprite' => [],
 			];
 
+			// clean old texture
+			array_map('unlink', glob(static::getResourcePathPrefix(). "sprite/texture/$spriteAtlasName-*.*"));
+
 			try{
 
 			foreach ($assets as $asset) {
@@ -2322,13 +2333,23 @@ class WdsNotationConverter {
 					// 64 signed int to hex
 					$uniqueName = bin2hex(pack('q', $pathId)).'.'.$hash;
 					$item->uniqueName = $uniqueName;
+					$item->pngFailed = false;
+					$item->webpFailed = false;
 					$saveTo = static::getResourcePathPrefix(). "sprite/texture/$spriteAtlasName-$uniqueName";
 					$item->exportTo($saveTo, 'png');
-					if (filemtime($saveTo. '.png') > $currenttime)
-					touch($saveTo. '.png', $currenttime);
+					if (!file_exists($saveTo. '.png') || filesize($saveTo. '.png') < 1000) {
+						$item->pngFailed = true;
+					} else {
+						if (filemtime($saveTo. '.png') > $currenttime)
+						touch($saveTo. '.png', $currenttime);
+					}
 					$item->exportTo($saveTo, 'webp', '-preset drawing');
-					if (filemtime($saveTo. '.webp') > $currenttime)
-					touch($saveTo. '.webp', $currenttime);
+					if (!file_exists($saveTo. '.webp') || filesize($saveTo. '.webp') < 1000) {
+						$item->webpFailed = true;
+					} else {
+						if (filemtime($saveTo. '.webp') > $currenttime)
+						touch($saveTo. '.webp', $currenttime);
+					}
 					$itemMap['texture'][$pathId] = $item;
 				}
 				$css = fopen(static::getResourcePathPrefix(). "sprite/$spriteAtlasName.css", 'w');
@@ -2338,7 +2359,13 @@ class WdsNotationConverter {
 					$texture = reset($itemMap['texture']);
 					$width = $texture->width;
 					$height = $texture->height;
-					fwrite($css, "background-image: url('./texture/".pathinfo($saveTo, PATHINFO_BASENAME).".png');background-image: url('./texture/".pathinfo($saveTo, PATHINFO_BASENAME).".webp');--atlas-width:${width}px;--atlas-height:${height}px;");
+					if (!$texture->pngFailed) {
+						fwrite($css, "background-image: url('./texture/".pathinfo($saveTo, PATHINFO_BASENAME).".png');");
+					}
+					if (!$texture->webpFailed) {
+						fwrite($css, "background-image: url('./texture/".pathinfo($saveTo, PATHINFO_BASENAME).".webp');");
+					}
+					fwrite($css, "--atlas-width:${width}px;--atlas-height:${height}px;");
 				}
 				fwrite($css, "background-repeat: no-repeat;display: inline-block;background-size: calc(var(--atlas-width) / var(--sprite-scale) * var(--target-scale)) calc(var(--atlas-height) / var(--sprite-scale) * var(--target-scale));background-position: calc((0px - var(--sprite-x)) / var(--sprite-scale) * var(--target-scale)) calc((var(--sprite-height) + var(--sprite-y) - var(--atlas-height)) / var(--sprite-scale) * var(--target-scale));width:calc(var(--sprite-width) / var(--sprite-scale) * var(--target-scale));height:calc(var(--sprite-height) / var(--sprite-scale) * var(--target-scale));--target-size: 64;--target-scale: calc(var(--target-size) / 64);}\n");
 				foreach ($itemMap['atlas'] as $item) {
@@ -2354,8 +2381,12 @@ class WdsNotationConverter {
 							$texture = $itemMap['texture'][$render['texture']['m_PathID']];
 							$width = $texture->width;
 							$height = $texture->height;
-							fwrite($css, "background-image: url('./texture/$spriteAtlasName-".$texture->uniqueName.".png');");
-							fwrite($css, "background-image: url('./texture/$spriteAtlasName-".$texture->uniqueName.".webp');");
+							if (!$texture->pngFailed) {
+								fwrite($css, "background-image: url('./texture/$spriteAtlasName-".$texture->uniqueName.".png');");
+							}
+							if (!$texture->webpFailed) {
+								fwrite($css, "background-image: url('./texture/$spriteAtlasName-".$texture->uniqueName.".webp');");
+							}
 							fwrite($css, "--atlas-width:${width}px;--atlas-height:${height}px;");
 						}
 						fwrite($css, "--sprite-x: ".$render['textureRect']['x']."px;");
