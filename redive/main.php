@@ -451,13 +451,13 @@ foreach (explode("\n", trim($manifest)) as $line) {
     file_put_contents('data/+manifest_'.substr($manifestName, 9, -14).'.txt', $manifest);
   }
 }
-curl_setopt($curl, CURLOPT_URL, 'http://prd-priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Sound/manifest/sound2manifest');
+curl_setopt($curl, CURLOPT_URL, 'http://prd-priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Sound/manifest/soundmanifest');
 $manifest = curl_exec($curl);
 file_put_contents('data/+manifest_sound.txt', $manifest);
-curl_setopt($curl, CURLOPT_URL, 'http://prd-priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Movie/SP/High/manifest/moviemanifest');
+curl_setopt($curl, CURLOPT_URL, 'http://prd-priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Movie/SP/High/manifest/movie2manifest');
 $manifest = curl_exec($curl);
 file_put_contents('data/+manifest_movie.txt', $manifest);
-curl_setopt($curl, CURLOPT_URL, 'http://prd-priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Movie/SP/Low/manifest/moviemanifest');
+curl_setopt($curl, CURLOPT_URL, 'http://prd-priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Movie/SP/Low/manifest/movie2manifest');
 $manifest = curl_exec($curl);
 file_put_contents('data/+manifest_movie_low.txt', $manifest);
 
@@ -476,8 +476,18 @@ if ($manifest[0] !== 'a/masterdata_master_0003.cdb') {
   checkAndUpdateResource($TruthVersion);
   return;
 }
-$bundleHash = $manifest[1];
-$bundleSize = $manifest[3]|0;
+if (count($manifest) === 5) {
+  $bundleHash = $manifest[1];
+  $bundlePath = $manifest[1];
+  $bundleSize = $manifest[3]|0;
+} else if (count($manifest) === 6) {
+  $bundleHash = $manifest[1];
+  $bundlePath = $manifest[2];
+  $bundleSize = $manifest[4]|0;
+} else {
+  _log('unknown manifest format');
+  return;
+}
 if ($last_version['hash'] == $bundleHash) {
   _log("Same hash as last version ${bundleHash}");
   file_put_contents('last_version', json_encode($last_version));
@@ -489,9 +499,8 @@ if ($last_version['hash'] == $bundleHash) {
 $last_version['hash'] = $bundleHash;
 //download bundle
 _log("downloading cdb for TruthVersion ${TruthVersion}, hash: ${bundleHash}, size: ${bundleSize}");
-$bundleFileName = "master_${TruthVersion}.unity3d";
 curl_setopt_array($curl, array(
-  CURLOPT_URL=>'http://prd-priconne-redive.akamaized.net/dl/pool/AssetBundles/'.substr($bundleHash,0,2).'/'.$bundleHash,
+  CURLOPT_URL=>'http://prd-priconne-redive.akamaized.net/dl/pool/AssetBundles/'.substr($bundlePath,0,2).'/'.$bundlePath,
   CURLOPT_RETURNTRANSFER=>true
 ));
 $bundle = curl_exec($curl);
@@ -544,6 +553,8 @@ foreach ($tables as $entry) {
     file_put_contents("data/${tblName}.sql", $entry['sql'].";\n", FILE_APPEND);
   }
 }
+
+/*
 $name = [];
 foreach(execQuery($db, ['SELECT {col} FROM {tbl} WHERE unit_id > 100000 AND unit_id < 200000', 'unit_data', ['unit_id','unit_name']]) as $row) {
   $name[$row['unit_id']+30] = $row['unit_name'];
@@ -578,6 +589,7 @@ foreach ($info as $id => &$item) {
   }
 }
 file_put_contents(RESOURCE_PATH_PREFIX.'spine/classMap.json', json_encode($info));
+*/
 
 unset($name);
 file_put_contents('last_version', json_encode($last_version));

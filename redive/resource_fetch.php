@@ -4,9 +4,9 @@ if (count(get_included_files()) == 1) define ('TEST_SUITE', __FILE__);
 require_once 'UnityAsset.php';
 
 $resourceToExport = [
-  'all' => [
-    [ 'bundleNameMatch'=>'/^a\/all_battleunitprefab_\d+\.unity3d$/', 'customAssetProcessor'=> 'exportPrefab' ],
-  ],
+#  'all' => [
+#    [ 'bundleNameMatch'=>'/^a\/all_battleunitprefab_\d+\.unity3d$/', 'customAssetProcessor'=> 'exportPrefab' ],
+#  ],
   'bg'=> [
     [ 'bundleNameMatch'=>'/^a\/bg_still_unit_\d+\.unity3d$/',       'nameMatch'=>'/^still_unit_(\d+)$/i',     'exportTo'=>'card/full/$1' ]
   ],
@@ -187,9 +187,16 @@ function parseManifest($manifest) {
   $manifest = new MemoryStream($manifest);
   $list=[];
   while (!empty($line = $manifest->line)) {
-    list($name, $hash, $stage, $size) = explode(',', $line);
+    $columns = explode(',', $line);
+    if (count($columns) === 5) {
+      list($name, $hash, $stage, $size) = $columns;
+      $path = $hash;
+    } else if (count($columns) === 6) {
+      list($name, $hash, $path, $stage, $size) = $columns;
+    }
     $list[$name] = [
       'hash' =>$hash,
+      'path' =>$path,
       'size' =>$size
     ];
   }
@@ -241,7 +248,7 @@ function checkSubResource($manifest, $rules) {
     if (($rule = findRule($name, $rules)) !== false && shouldUpdate($name, $info['hash'])) {
       _log('download '. $name.' '.$info['hash']);
       curl_setopt_array($curl, array(
-        CURLOPT_URL=>'http://prd-priconne-redive.akamaized.net/dl/pool/AssetBundles/'.substr($info['hash'],0,2).'/'.$info['hash'],
+        CURLOPT_URL=>'http://prd-priconne-redive.akamaized.net/dl/pool/AssetBundles/'.substr($info['path'],0,2).'/'.$info['path'],
       ));
       $bundleData = curl_exec($curl);
       $remoteTime = curl_getinfo($curl, CURLINFO_FILETIME);
@@ -314,7 +321,7 @@ function checkSoundResource($manifest, $rules) {
     if (($rule = findRule($name, $rules)) !== false && shouldUpdate($name, $info['hash'])) {
       _log('download '. $name.' '.$info['hash']);
       curl_setopt_array($curl, array(
-        CURLOPT_URL=>'http://prd-priconne-redive.akamaized.net/dl/pool/Sound/'.substr($info['hash'],0,2).'/'.$info['hash'],
+        CURLOPT_URL=>'http://prd-priconne-redive.akamaized.net/dl/pool/Sound/'.substr($info['path'],0,2).'/'.$info['path'],
       ));
       $acbData = curl_exec($curl);
       $remoteTime = curl_getinfo($curl, CURLINFO_FILETIME);
@@ -331,7 +338,7 @@ function checkSoundResource($manifest, $rules) {
         $awbInfo = $info['awbInfo'];
         _log('download '. $awbName.' '.$awbInfo['hash']);
         curl_setopt_array($curl, array(
-          CURLOPT_URL=>'http://prd-priconne-redive.akamaized.net/dl/pool/Sound/'.substr($awbInfo['hash'],0,2).'/'.$awbInfo['hash'],
+          CURLOPT_URL=>'http://prd-priconne-redive.akamaized.net/dl/pool/Sound/'.substr($awbInfo['path'],0,2).'/'.$awbInfo['path'],
         ));
         $awbData = curl_exec($curl);
         if (md5($awbData) != $awbInfo['hash']) {
@@ -379,7 +386,7 @@ function checkMovieResource($manifest, $rules) {
       $usmFilePath = 'usm_temp/'.$usmFileName;
       $fh = fopen($usmFilePath, 'w');
       curl_setopt_array($curl, array(
-        CURLOPT_URL=>'http://prd-priconne-redive.akamaized.net/dl/pool/Movie/'.substr($info['hash'],0,2).'/'.$info['hash'],
+        CURLOPT_URL=>'http://prd-priconne-redive.akamaized.net/dl/pool/Movie/'.substr($info['path'],0,2).'/'.$info['path'],
         CURLOPT_RETURNTRANSFER=>false,
         CURLOPT_FILE => $fh
       ));
@@ -518,7 +525,7 @@ function checkAndUpdateResource($TruthVersion) {
   // sound res check
   do {
     curl_setopt_array($curl, array(
-      CURLOPT_URL=>'http://prd-priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Sound/manifest/sound2manifest',
+      CURLOPT_URL=>'http://prd-priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Sound/manifest/soundmanifest',
     ));
     $submanifest = curl_exec($curl);
     $submanifest = parseManifest($submanifest);
@@ -527,7 +534,7 @@ function checkAndUpdateResource($TruthVersion) {
 
   // movie res check
   do {
-    $name = "manifest/moviemanifest";
+    $name = "manifest/movie2manifest";
     curl_setopt_array($curl, array(
       CURLOPT_URL=>'http://prd-priconne-redive.akamaized.net/dl/Resources/'.$TruthVersion.'/Jpn/Movie/SP/High/'.$name,
     ));
