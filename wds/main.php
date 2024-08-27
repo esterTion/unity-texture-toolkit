@@ -293,7 +293,7 @@ class CurlMultiHelper {
 			if ($code != CURLM_OK) {
 				break;
 			}
-			usleep(1000);
+			if (curl_multi_select(static::$mh) === -1) usleep(1000);
 			if ($done = curl_multi_info_read(static::$mh)) {
 				return $done['handle'];
 			}
@@ -312,7 +312,7 @@ class CurlMultiHelper {
 			if ($code != CURLM_OK) {
 				break;
 			}
-			usleep(1000);
+			if (curl_multi_select(static::$mh) === -1) usleep(1000);
 			if ($done = curl_multi_info_read(static::$mh)) {
 				curl_multi_remove_handle(static::$mh, $done['handle']);
 				return curl_multi_getcontent($done['handle']);
@@ -2418,6 +2418,75 @@ class WdsNotationConverter {
 		}
 	}
 
+
+	static function downloadTitles() {
+		chdir(__DIR__);
+		static::loadAddressable();
+		static::initCurl();
+		$downloadedBundles = [];
+		foreach (static::$addressable['2d'][0] as $item) {
+			if (!preg_match('/title_assets_title\/.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
+			$path = static::getAssetPath($item['primaryKey']);
+			$hash = static::getAssetHash($item['primaryKey']);
+			if (!static::shouldDownload($path, $hash)) continue;
+			static::_log('dl '.$path);
+			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, '2d-assets'));
+			$data = CurlMultiHelper::execSingleCurl(static::$ch);
+			@mkdir(dirname($path), 0777, true);
+			file_put_contents($path, $data);
+			static::setCachedHash($path, $hash);
+			$downloadedBundles[] = $path;
+		}
+		return $downloadedBundles;
+	}
+	static function exportTitles() {
+		$downloadedJackets = static::downloadTitles();
+		$currenttime = time();
+		foreach ($downloadedJackets as $bundle) {
+			static::_log('export '.$bundle);
+			$assets = extractBundle(new FileStream($bundle));
+
+			try{
+			
+			foreach ($assets as $asset) {
+				if (substr($asset, -5,5) == '.resS') continue;
+				$asset = new AssetFile($asset);
+		
+				foreach ($asset->preloadTable as &$item) {
+					if ($item->typeString == 'Texture2D') {
+						try {
+							$item = new Texture2D($item, true);
+						} catch (Exception $e) { continue; }
+						$itemname = $item->name;
+						if (!static::shouldExportTexture("$bundle:$itemname", $item)) {
+							continue;
+						}
+						$saveTo = static::getResourcePathPrefix(). 'title/'. $itemname;
+						$param = '-lossless 1';
+						$item->exportTo($saveTo, 'webp', $param);
+						if (filemtime($saveTo. '.webp') > $currenttime)
+						touch($saveTo. '.webp', $currenttime);
+						static::setCachedTextureHash("$bundle:$itemname", $item);
+						unset($item);
+					}
+				}
+				$asset->__desctruct();
+				unset($asset);
+				gc_collect_cycles();
+			}
+
+			} catch(Exception $e) {
+				$asset->__desctruct();
+				unset($asset);
+				_log('Not supported: '. $e->getMessage());
+			}
+
+			foreach ($assets as $asset) {
+				unlink($asset);
+			}
+		}
+	}
+
 	static function downloadCustom() {
 		chdir(__DIR__);
 		static::loadAddressable();
@@ -2544,6 +2613,10 @@ class WdsNotationConverter {
 				}
 				case 'sprite': {
 					static::exportSpriteatlases();
+					break;
+				}
+				case 'title': {
+					static::exportTitles();
 					break;
 				}
 			}
