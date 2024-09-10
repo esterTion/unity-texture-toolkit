@@ -2487,6 +2487,72 @@ class WdsNotationConverter {
 		}
 	}
 
+	static function downloadSkins() {
+		chdir(__DIR__);
+		static::loadAddressable();
+		static::initCurl();
+		$downloadedBundles = [];
+		foreach (static::$addressable['3d'][0] as $item) {
+			if (!preg_match('/skins_assets_skins\/pc_.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
+			$path = static::getAssetPath($item['primaryKey']);
+			$hash = static::getAssetHash($item['primaryKey']);
+			if (!static::shouldDownload($path, $hash)) continue;
+			// 基础脸部及头发模型不在这里更新，只下新衣服
+			if (preg_match('/pc_\d{3}_(00|01)\./', $path, $match)) continue;
+			static::_log('dl '.$path, false);
+			curl_setopt(static::$ch, CURLOPT_URL, static::getAssetUrl($path, '3d-assets'));
+			$data = CurlMultiHelper::execSingleCurl(static::$ch);
+			@mkdir(dirname($path), 0777, true);
+			file_put_contents($path, $data);
+			static::setCachedHash($path, $hash);
+			$downloadedBundles[] = $path;
+		}
+		return $downloadedBundles;
+	}
+	static function exportSkins() {
+		$downloadedSkins = static::downloadSkins();
+		if (empty($downloadedSkins)) return;
+		$currenttime = time();
+		$convertedSkins = [];
+		exec('dotnet Z_tool_WdsSkinExport/WdsSkinExport.dll '.implode(' ', $downloadedSkins), $convertedSkins, $code);
+		$skinCacheListFile = 'skins_assets_skins/skins/skins.json';
+		$skinCacheList = json_decode(file_get_contents($skinCacheListFile), true);
+		foreach ($convertedSkins as $line) {
+			if (substr($line, 0, 3) !== 'pc_') continue;
+			list($skinName, $objList, $textureList) = explode('|', $line);
+			$skinCacheList[$skinName] = [
+				'time' => $currenttime,
+				'obj' => explode(',', $objList),
+				'texture' => explode(',', $textureList),
+			];
+			static::_log('export '.$skinName);
+
+			foreach ($skinCacheList[$skinName]['obj'] as $obj) {
+				$path = 'skins_assets_skins/skins/'.$skinName.'/'.$obj.'.obj';
+				if (!file_exists($path)) continue;
+				$data = file_get_contents($path);
+				file_put_contents($path.'.gz', gzencode($data, 9));
+				unlink($path);
+			}
+		}
+		file_put_contents($skinCacheListFile, json_encode($skinCacheList, JSON_UNESCAPED_UNICODE));
+	}
+	static function cleanOldSkins() {
+		array_map('unlink', glob('skins_assets_skins/*.bundle'));
+		$skinCacheListFile = 'skins_assets_skins/skins/skins.json';
+		$skinCacheList = json_decode(file_get_contents($skinCacheListFile), true);
+		$currenttime = time();
+		foreach ($skinCacheList as $skinName=>$skin) {
+			if ($currenttime - $skin['time'] > 86400 * 30) {
+				static::_log('delete '.$skinName);
+				unset($skinCacheList[$skinName]);
+				array_map('unlink', glob('skins_assets_skins/skins/'.$skinName.'/*'));
+				rmdir('skins_assets_skins/skins/'.$skinName);
+			}
+		}
+		file_put_contents($skinCacheListFile, json_encode($skinCacheList, JSON_UNESCAPED_UNICODE));
+	}
+
 	static function downloadCustom() {
 		chdir(__DIR__);
 		static::loadAddressable();
@@ -2617,6 +2683,11 @@ class WdsNotationConverter {
 				}
 				case 'title': {
 					static::exportTitles();
+					break;
+				}
+				case 'skin': {
+					static::exportSkins();
+					static::cleanOldSkins();
 					break;
 				}
 			}
