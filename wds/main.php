@@ -321,7 +321,7 @@ class CurlMultiHelper {
 	}
 }
 
-class WdsNotationConverter {
+class WdsToolBox {
 	static $assetUrl;
 	static $apiBase;
 	static $assetVersion;
@@ -2158,12 +2158,16 @@ class WdsNotationConverter {
 			$data = curl_multi_getcontent($ch);
 			$httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
 			if ($httpCode != 200) {
-				static::_log("$id $httpCode");
+				static::_log("scene $id $httpCode");
 				return;
 			}
 			$path = "scenes/$id.json";
 			$unpacker->reset($data);
 			$data = $unpacker->unpack();
+			if (empty($data)) {
+				static::_log("scene $id empty");
+				return;
+			}
 			$data = $data[0];
 			MsgPackHelper::applyTypeNameByType($data, 'EpisodeDetailResult[]');
 			$hasNewScene = checkAndCreateFile($path, MsgPackHelper::prettifyJSON($data));
@@ -2357,6 +2361,7 @@ class WdsNotationConverter {
 				}
 				$css = fopen(static::getResourcePathPrefix(). "sprite/$spriteAtlasName.css", 'w');
 				$cssClass = "spriteatlas-$spriteAtlasName";
+				$webpImageUrlBlock = '';
 				fwrite($css, ".$cssClass {");
 				if (count($itemMap['texture']) == 1) {
 					$texture = reset($itemMap['texture']);
@@ -2366,11 +2371,12 @@ class WdsNotationConverter {
 						fwrite($css, "background-image: url('./texture/".pathinfo($saveTo, PATHINFO_BASENAME).".png');");
 					}
 					if (!$texture->webpFailed) {
-						fwrite($css, "background-image: url('./texture/".pathinfo($saveTo, PATHINFO_BASENAME).".webp');");
+						$webpImageUrlBlock = "@supports (gap: 1px) { .$cssClass {background-image: url('./texture/".pathinfo($saveTo, PATHINFO_BASENAME).".webp'); } }\n";
 					}
 					fwrite($css, "--atlas-width:${width}px;--atlas-height:${height}px;");
 				}
 				fwrite($css, "background-repeat: no-repeat;display: inline-block;background-size: calc(var(--atlas-width) / var(--sprite-scale) * var(--target-scale)) calc(var(--atlas-height) / var(--sprite-scale) * var(--target-scale));background-position: calc((0px - var(--sprite-x)) / var(--sprite-scale) * var(--target-scale)) calc((var(--sprite-height) + var(--sprite-y) - var(--atlas-height)) / var(--sprite-scale) * var(--target-scale));width:calc(var(--sprite-width) / var(--sprite-scale) * var(--target-scale));height:calc(var(--sprite-height) / var(--sprite-scale) * var(--target-scale));--target-size: 64;--target-scale: calc(var(--target-size) / 64);}\n");
+				fwrite($css, $webpImageUrlBlock);
 				foreach ($itemMap['atlas'] as $item) {
 					$asset->stream->position = $item->offset;
 					$item = ClassStructHelper::OrganizeStruct(ClassStructHelper::DeserializeStruct($asset->stream, $asset->ClassStructures[687078895]['members']));
@@ -2379,6 +2385,7 @@ class WdsNotationConverter {
 						$key = implode('.', $key);
 						$name = $itemMap['sprite'][$key];
 						$render = $render['data']['second'];
+						$webpImageUrlBlock = '';
 						fwrite($css, ".${cssClass}[data-id=\"$name\"] {");
 						if (count($itemMap['texture']) > 1) {
 							$texture = $itemMap['texture'][$render['texture']['m_PathID']];
@@ -2388,7 +2395,7 @@ class WdsNotationConverter {
 								fwrite($css, "background-image: url('./texture/$spriteAtlasName-".$texture->uniqueName.".png');");
 							}
 							if (!$texture->webpFailed) {
-								fwrite($css, "background-image: url('./texture/$spriteAtlasName-".$texture->uniqueName.".webp');");
+								$webpImageUrlBlock = "@supports (gap: 1px) { .${cssClass}[data-id=\"$name\"] {background-image: url('./texture/$spriteAtlasName-".$texture->uniqueName.".webp'); } }\n";
 							}
 							fwrite($css, "--atlas-width:${width}px;--atlas-height:${height}px;");
 						}
@@ -2398,6 +2405,7 @@ class WdsNotationConverter {
 						fwrite($css, "--sprite-height: ".$render['textureRect']['height']."px;");
 						fwrite($css, "--sprite-scale: ".(max($render['textureRect']['width'], $render['textureRect']['height']) / 64).";");
 						fwrite($css, "}\n");
+						fwrite($css, $webpImageUrlBlock);
 					}
 				}
 				fclose($css);
@@ -2534,6 +2542,9 @@ class WdsNotationConverter {
 				file_put_contents($path.'.gz', gzencode($data, 9));
 				unlink($path);
 			}
+			chdir('skins_assets_skins/skins/'.$skinName);
+			exec("basisu -ktx2 -uastc -y_flip ".implode(' ', array_map(function ($t) { return "$t.png"; }, $skinCacheList[$skinName]['texture'])), $output, $code);
+			chdir(__DIR__);
 		}
 		file_put_contents($skinCacheListFile, json_encode($skinCacheList, JSON_UNESCAPED_UNICODE));
 	}
@@ -2695,7 +2706,7 @@ class WdsNotationConverter {
 	}
 }
 
-WdsNotationConverter::init();
-WdsNotationConverter::main($argc, $argv);
-//WdsNotationConverter::authenticate();
-//WdsNotationConverter::test();
+WdsToolBox::init();
+WdsToolBox::main($argc, $argv);
+//WdsToolBox::authenticate();
+//WdsToolBox::test();
