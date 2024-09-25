@@ -246,6 +246,7 @@ message MasterMissionDetail {
   optional string title = 3; // normal type
   optional string description = 4; // normal type
   optional uint32 maxProgress = 5; // normal type
+  repeated uint32 values = 7; // array
   optional uint32 valueId = 11; // normal type
   optional MasterMissionReward reward = 12; // sub class
   optional MasterMissionDetailReleaseCondition releaseCondition = 13; // sub class
@@ -4729,6 +4730,80 @@ message MasterSpecialStoryPage {
 message MasterSpecialStoryPageList {
   repeated MasterSpecialStoryPage entries = 1; // array
 }
+message uint_MasterMissionDetailList {
+  optional uint32 uint_MasterMissionDetailList_key = 1; // normal type
+  optional MasterMissionDetailList uint_MasterMissionDetailList_value = 2; // sub class
+}
+message MasterMissionDetailMap {
+  repeated uint_MasterMissionDetailList entries = 1; // dictionary
+}
+message MasterMonthlyRankingReward {
+  optional uint32 id = 1; // normal type
+  optional uint32 monthlyRankingId = 2; // normal type
+  optional uint32 fromRank = 3; // normal type
+  optional uint32 toRank = 4; // normal type
+  optional string rewardType = 5; // normal type
+  optional uint32 rewardId = 6; // normal type
+  optional uint32 rewardQuantity = 7; // normal type
+}
+message MasterMonthlyRankingGrade {
+  optional uint32 id = 1; // normal type
+  optional uint32 monthlyRankingId = 2; // normal type
+  optional string gradeAheadType = 3; // normal type
+  optional uint32 pt = 4; // normal type
+  optional string rewardType = 5; // normal type
+  optional uint32 rewardId = 6; // normal type
+  optional uint32 rewardQuantity = 7; // normal type
+  optional bool rankingThresholdFlg = 8; // normal type
+}
+message MasterMonthlyRanking {
+  optional uint32 monthlyRankingId = 1; // normal type
+  optional string monthlyRankingName = 2; // normal type
+  optional string assetBundleName = 3; // normal type
+  optional string bgmAssetBundleName = 4; // normal type
+  optional string bgmFileName = 5; // normal type
+  optional uint64 startAt = 6; // normal type
+  optional uint64 endAt = 7; // normal type
+  optional bool enableFlg = 8; // normal type
+  optional uint64 publicStartAt = 9; // normal type
+  optional uint64 publicEndAt = 10; // normal type
+  optional uint64 distributionStartAt = 11; // normal type
+  optional uint64 distributionEndAt = 12; // normal type
+  optional uint64 receptionEndAt = 13; // normal type
+  optional uint64 aggregateEndAt = 14; // normal type
+  repeated MasterMonthlyRankingReward rewards = 101; // array
+  repeated MasterMonthlyRankingGrade grades = 102; // array
+}
+message MasterMonthlyRankingList {
+  repeated MasterMonthlyRanking entries = 1; // array
+}
+message MasterMonthlyRankingConfig {
+  optional string configKeyType = 1; // normal type
+  optional string value = 2; // normal type
+}
+message string_MasterMonthlyRankingConfig {
+  optional string string_MasterMonthlyRankingConfig_key = 1; // normal type
+  optional MasterMonthlyRankingConfig string_MasterMonthlyRankingConfig_value = 2; // sub class
+}
+message MasterMonthlyRankingConfigMap {
+  repeated string_MasterMonthlyRankingConfig entries = 1; // dictionary
+}
+message MasterDecoEffect {
+  optional uint32 decoEffectId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string decoEffectName = 3; // normal type
+  optional string resourceName = 4; // normal type
+  optional string decoEffectType = 5; // normal type
+  optional string assetBundleName = 6; // normal type
+  optional string description = 7; // normal type
+  optional uint64 startAt = 8; // normal type
+  optional uint64 endAt = 9; // normal type
+  optional uint32 inheritance = 10; // nullable
+  optional bool isDefault = 11; // normal type
+}
+message MasterDecoEffectList {
+  repeated MasterDecoEffect entries = 1; // array
+}
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
   optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
@@ -4996,4 +5071,8 @@ message SuiteMasterGetResponse {
   optional MasterGachaSealExchangeItemMap masterGachaSealExchangeItemMap = 2081; // sub class
   optional MasterSpecialStoryPageList masterSpecialStoryPageList = 2082; // sub class
   optional MasterGenericStoryMap masterSpecialPageGenericStoryMap = 2083; // sub class
+  optional MasterMissionDetailMap masterMissionDetailMap = 54; // sub class
+  optional MasterMonthlyRankingList masterMonthlyRankingList = 2084; // sub class
+  optional MasterMonthlyRankingConfigMap masterMonthlyRankingConfigMap = 2085; // sub class
+  optional MasterDecoEffectList masterDecoEffectList = 2086; // sub class
 }
