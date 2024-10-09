@@ -670,7 +670,7 @@ class WdsToolBox {
 		static::initCurl();
 		$downloadedBundles = [];
 		foreach (static::$addressable['2d'][0] as $item) {
-			if (!preg_match('/charactercardtextures_assets_charactercardtextures\/.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
+			if (!preg_match('/charactercards_assets_charactercard\/.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
 			$path = static::getAssetPath($item['primaryKey']);
 			$hash = static::getAssetHash($item['primaryKey']);
 			if (!static::shouldDownload($path, $hash)) continue;
@@ -907,7 +907,7 @@ class WdsToolBox {
 	}
 	static function exportCardTextures() {
 		$downloadedTextures = static::downloadCardTextures();
-		//$downloadedTextures = glob('charactercardtextures_assets_charactercardtextures/*.bundle');
+		//$downloadedTextures = glob('charactercards_assets_charactercard/*.bundle');
 		$currenttime = time();
 		static::unloadAddressable();
 		foreach ($downloadedTextures as $bundle) {
