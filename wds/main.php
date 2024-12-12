@@ -1863,7 +1863,41 @@ class WdsToolBox {
 
 		static::updateWebpageIndex();
 	}
+	static function stripExpiredMasterEntry($skipCommit = false) {
+		chdir(__DIR__);
+		chdir('master');
+		$lastExpired = '0000-00-00 00:00:00';
+		$stripped = false;
+
+		foreach (glob('*.json') as $f) {
+			$data = file_get_contents($f);
+			if (strpos($data, '"EndDate"') !== false) {
+				$k = 'EndDate';
+			} else if (strpos($data, '"DisplayEndAt"') !== false) {
+				$k = 'DisplayEndAt';
+			} else {
+				continue;
+			}
+			$data = json_decode($data, true);
+			$filtered = [];
+			// 本地+8，改为+9
+			$now = date('Y-m-d H:i:s', time() + 1 * 3600);
+			foreach ($data as $i) {
+				if (!isset($i[$k]) || $i[$k] > $now) $filtered[] = $i;
+				else if ($i[$k] > $lastExpired) $lastExpired = $i[$k];
+			}
+			if (count($filtered) == count($data)) continue;
+			$stripped = true;
+			file_put_contents($f, MsgPackHelper::prettifyJSON($filtered));
+			file_put_contents($f, "\n", FILE_APPEND);
+		}
+		if (!$skipCommit && $stripped) {
+			exec('git add *.json');
+			exec('git commit -m "strip expired entries: '.$lastExpired.'"');
+		}
+	}
 	static function exportMaster($commit, $data) {
+		static::stripExpiredMasterEntry();
 		chdir(__DIR__);
 		// delete old entries
 		chdir('master');
@@ -1886,12 +1920,21 @@ class WdsToolBox {
 			MsgPackHelper::applyTypeNameByTableName($table, $name);
 			file_put_contents("$name.json", MsgPackHelper::prettifyJSON($table));
 			file_put_contents("$name.json", "\n", FILE_APPEND);
+			copy("$name.json", "../master-full/$name.json");
 		}
+
+		static::stripExpiredMasterEntry(true);
 
 		// add new entries
 		exec('git add *.json !version.txt');
 		exec('git commit -m "'.$commit.'"');
 		exec('git push origin master');
+
+		// sync full db
+		chdir('../master-full');
+		exec('git add *.json');
+		exec('git commit -m "'.$commit.'"');
+		exec('git push origin full');
 		chdir('..');
 	}
 	static function reexportMaster() {
