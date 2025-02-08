@@ -1688,7 +1688,7 @@ class WdsToolBox {
 	static function getConfig() {
 		static::initApiCurl();
 		$appVer = static::$appVersion;
-		$apiEndpoint = PersistentStorage::get('api_endpoint', 'https://api.wds-stellarium.com');
+		$apiEndpoint = PersistentStorage::get('api_endpoint', 'https://lb-api.wds-stellarium.com');
 		curl_setopt(static::$apiCh, CURLOPT_URL, "$apiEndpoint/api/Environment?applicationVersion=$appVer&gameVersion=1");
 		curl_setopt(static::$apiCh, CURLOPT_POSTFIELDS, "");
 		$resp = CurlMultiHelper::execSingleCurl(static::$apiCh);
@@ -1870,6 +1870,7 @@ class WdsToolBox {
 		$stripped = false;
 
 		foreach (glob('*.json') as $f) {
+			if (in_array($f, ['LeagueMaster.json', 'StoryEventMaster.json', 'StoryMaster.json', 'SplashMaster.json'])) continue;
 			$data = file_get_contents($f);
 			if (strpos($data, '"EndDate"') !== false) {
 				$k = 'EndDate';
