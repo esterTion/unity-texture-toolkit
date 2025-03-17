@@ -264,6 +264,7 @@ message MasterMission {
   optional MasterMissionDetailList detailList = 18; // sub class
   optional string labelText = 19; // normal type
   optional uint32 typeIndex = 20; // normal type
+  optional uint32 musicId = 21; // normal type
 }
 message MasterMissionList {
   repeated MasterMission entries = 1; // array
@@ -520,6 +521,8 @@ message MasterGachaStepup {
   optional uint32 gachaId = 1; // normal type
   optional uint32 stepNumber = 2; // normal type
   optional string balloonType = 3; // normal type
+  optional string stepGachaType = 4; // normal type
+  optional uint32 stepGachaFilterId = 5; // nullable
 }
 message MasterGachaStepupDetail {
   optional uint32 gachaId = 1; // normal type
@@ -528,6 +531,7 @@ message MasterGachaStepupDetail {
   optional uint32 characterId = 4; // normal type
   optional uint32 rarityIndex = 5; // normal type
   optional uint32 weight = 6; // normal type
+  optional uint32 stepGachaFilterId = 7; // nullable
 }
 message MasterGachaStepupRarityRate {
   optional uint32 gachaId = 1; // normal type
@@ -615,6 +619,7 @@ message MasterGacha {
   optional MasterStarSealExchangeGachaSeal masterStarSealExchangeGachaSeal = 41; // sub class
   optional MasterGachaView3dList view3ds = 42; // sub class
   optional uint32 gachaBonusId = 43; // normal type
+  optional uint32 gachaSelfPickupId = 44; // nullable
 }
 message ulong_MasterGacha {
   optional uint64 ulong_MasterGacha_key = 1; // normal type
@@ -935,6 +940,7 @@ message MasterCommonsLive2d {
   optional string voice = 6; // normal type
   optional string motion = 7; // normal type
   optional string expression = 8; // normal type
+  optional uint32 live2dSpecialTermId = 9; // nullable
 }
 message uint_MasterCommonsLive2d {
   optional uint32 uint_MasterCommonsLive2d_key = 1; // normal type
@@ -1249,6 +1255,7 @@ message MasterCharacterProfileLive2d {
   optional string voice = 5; // normal type
   optional string motion = 6; // normal type
   optional string expression = 7; // normal type
+  optional uint32 live2dSpecialTermId = 8; // nullable
 }
 message uint_MasterCharacterProfileLive2d {
   optional uint32 uint_MasterCharacterProfileLive2d_key = 1; // normal type
@@ -4572,6 +4579,8 @@ message MasterEnableCharacter3dMotion {
   optional string motionType = 2; // normal type
   optional uint32 seq = 3; // normal type
   optional uint64 publishedAt = 4; // normal type
+  optional bool isPhotoStudio = 5; // normal type
+  optional bool isSpin = 6; // normal type
 }
 message MasterEnableCharacter3dMotionList {
   repeated MasterEnableCharacter3dMotion entries = 1; // list
@@ -4803,6 +4812,26 @@ message MasterDecoEffect {
 }
 message MasterDecoEffectList {
   repeated MasterDecoEffect entries = 1; // array
+}
+message MasterPhotoBack {
+  optional uint32 photoBackId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string name = 3; // normal type
+  optional string description = 4; // normal type
+  optional string assetBundleName = 5; // normal type
+  optional string fileName = 6; // normal type
+  optional string normalAssetBundleName = 7; // normal type
+}
+message MasterPhotoBackList {
+  repeated MasterPhotoBack entries = 1; // array
+}
+message MasterGachaSelfPickupSituation {
+  optional uint32 gachaSelfPickupId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional uint32 situationId = 3; // normal type
+}
+message MasterGachaSelfPickupSituationList {
+  repeated MasterGachaSelfPickupSituation entries = 1; // list
 }
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
@@ -5075,4 +5104,6 @@ message SuiteMasterGetResponse {
   optional MasterMonthlyRankingList masterMonthlyRankingList = 2084; // sub class
   optional MasterMonthlyRankingConfigMap masterMonthlyRankingConfigMap = 2085; // sub class
   optional MasterDecoEffectList masterDecoEffectList = 2086; // sub class
+  optional MasterPhotoBackList masterPhotoBackList = 2087; // sub class
+  optional MasterGachaSelfPickupSituationList masterGachaSelfPickupSituationList = 2088; // sub class
 }
