@@ -1870,7 +1870,7 @@ class WdsToolBox {
 		$stripped = false;
 
 		foreach (glob('*.json') as $f) {
-			if (in_array($f, ['LeagueMaster.json', 'StoryEventMaster.json', 'StoryMaster.json', 'SplashMaster.json'])) continue;
+			if (in_array($f, ['LeagueMaster.json', 'StoryEventMaster.json', 'StoryMaster.json', 'SplashMaster.json', 'TripleCastMaster.json'])) continue;
 			$data = file_get_contents($f);
 			if (strpos($data, '"EndDate"') !== false) {
 				$k = 'EndDate';
@@ -2338,6 +2338,7 @@ class WdsToolBox {
 		$downloadedSpriteatlases = static::downloadSpriteatlases();
 		$currenttime = time();
 		foreach ($downloadedSpriteatlases as $bundle) {
+			if (strpos($bundle, 'trophies') !== false) continue;
 			static::_log('export '.$bundle);
 			$assets = extractBundle(new FileStream($bundle));
 
@@ -2743,6 +2744,10 @@ class WdsToolBox {
 				case 'skin': {
 					static::exportSkins();
 					static::cleanOldSkins();
+					break;
+				}
+				case 'test': {
+					static::updateWebpageIndex();
 					break;
 				}
 			}

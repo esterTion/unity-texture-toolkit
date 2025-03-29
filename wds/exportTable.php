@@ -26,7 +26,7 @@ $enumTables = [];
 foreach ($enums[0] as $i=>$enum) {
   $namespace = $enums[1][$i];
   $enumName = $enums[2][$i];
-  preg_match_all('(public const [^ ]+ ([^ ]+) = (\d+);)', $enum, $enumEntries);
+  preg_match_all('(public const [^ ]+ ([^ ]+) = ([\d-]+);)', $enum, $enumEntries);
   $enumTable = [''];
   for ($i=0; $i<count($enumEntries[0]); $i++) {
     $enumTable[$enumEntries[2][$i]] = $enumEntries[1][$i];
@@ -104,11 +104,18 @@ foreach ($classes[0] as $i=>$class) {
   $insert->execute(array_values($type));
   $seenTypes[$type['class']] = $namespace;
 }
+$enumsF = fopen(__DIR__.'/enums.cs', 'w');
 foreach ($usedEnumTables as $enumName=>$enumTable) {
+  fwrite($enumsF, "public enum $enumName\n{\n");
   $enumInsert->execute([
     $enumName,
     json_encode($enumTable, JSON_PRETTY_PRINT),
   ]);
+  foreach ($enumTable as $value=>$name) {
+    if (empty($name)) continue;
+    fwrite($enumsF, "  $name = $value,\n");
+  }
+  fwrite($enumsF, "}\n\n");
 }
 fclose($f);
 file_put_contents(__DIR__.'/types.json', json_encode($types, JSON_PRETTY_PRINT));
