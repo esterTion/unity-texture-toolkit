@@ -194,6 +194,10 @@ class MsgPackHelper {
 
 		$name = preg_replace('(^Nullable<(.+)>$)', '$1', $name);
 		$isArray = substr($name, -2, 2) === '[]';
+		if (in_array($name, ['long[]', 'int[]'])) {
+			sort($data);
+			return;
+		}
 		if ($isArray) $name = substr($name, 0, -2);
 
 		static::$getTypeByTypeStmt->execute([$name]);
@@ -1725,6 +1729,37 @@ class WdsToolBox {
 	// api access /api/data/master
 	// auto reload token
 	static function getMasterDataUrl($retry = false) {
+		static::initApiCurl();
+		$ch = curl_copy_handle(static::$apiCh);
+		curl_setopt_array($ch, [
+			CURLOPT_CUSTOMREQUEST => 'GET',
+			CURLOPT_URL=> static::$apiBase . '/api/Home/GetNotificationsInTitleAsync',
+			CURLOPT_HTTPHEADER => static::getApiHeaders(["X-MasterData-Version: 0"]),
+			CURLOPT_HEADER => true,
+		]);
+		$resp = CurlMultiHelper::execSingleCurl($ch);
+		$headers = substr($resp, 0, strpos($resp, "\r\n\r\n"));
+		if (strpos($headers, '200 Connection Established') !== false) {
+			$resp = substr($resp, strpos($resp, "\r\n\r\n") + 4);
+			$headers = substr($resp, 0, strpos($resp, "\r\n\r\n"));
+		}
+		$headers = explode("\r\n", $headers);
+		$headerMap = [];
+		foreach ($headers as $h) {
+			$key = strtolower(substr($h, 0, strpos($h, ': ')));
+			$value = substr($h, strpos($h, ': ') + 2);
+			$headerMap[$key] = $value;
+		}
+		if (!empty($headerMap[strtolower('X-MasterData-Version')])) {
+			return [
+				'Uri' => $headerMap[strtolower('X-MasterData-Uri')],
+				'SasToken' => $headerMap[strtolower('X-MasterData-SasToken')],
+				'Version' => $headerMap[strtolower('X-MasterData-Version')],
+				'PublishTimestamp' => $headerMap[strtolower('X-MasterData-PublishTimestamp')],
+			];
+		}
+		return null;
+		// *old* real api
 		static::initApiCurl();
 		$token = PersistentStorage::get('login_token');
 		if (empty($token)) {
