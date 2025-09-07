@@ -4833,6 +4833,35 @@ message MasterGachaSelfPickupSituation {
 message MasterGachaSelfPickupSituationList {
   repeated MasterGachaSelfPickupSituation entries = 1; // list
 }
+message MasterLimitedSkin {
+  optional uint32 limitedSkinId = 1; // normal type
+  optional uint32 seq = 2; // normal type
+  optional string limitedSkinName = 3; // normal type
+  optional string description = 4; // normal type
+  optional string backgroundSkinAssetBundleName = 5; // normal type
+  optional string effectSkinAssetBundleName = 6; // normal type
+  optional string laneSkinAssetBundleName = 7; // normal type
+  optional string notesSkinAssetBundleName = 8; // normal type
+  optional string soundEffectSkinAssetBundleName = 9; // normal type
+  optional string judgeSkinAssetBundleName = 10; // normal type
+  optional string directionalFlickAssetBundleName = 11; // normal type
+  optional float noteSyncEdgeMargin = 12; // normal type
+  optional bool changeBackgroundSkinFlg = 13; // normal type
+  optional bool changeEffectSkinFlg = 14; // normal type
+  optional bool changeLaneSkinFlg = 15; // normal type
+  optional bool changeNotesSkinFlg = 16; // normal type
+  optional bool changeSoundEffectSkinFlg = 17; // normal type
+  optional bool changeJudgeSkinFlg = 18; // normal type
+  optional bool changeDirectionalFlickFlg = 19; // normal type
+  optional string thumbnailFileName = 20; // normal type
+}
+message uint_MasterLimitedSkin {
+  optional uint32 uint_MasterLimitedSkin_key = 1; // normal type
+  optional MasterLimitedSkin uint_MasterLimitedSkin_value = 2; // sub class
+}
+message MasterLimitedSkinMap {
+  repeated uint_MasterLimitedSkin entries = 1; // dictionary
+}
 message SuiteMasterGetResponse {
   optional MasterSubscriptionCountBonusRewardList masterSubscriptionCountBonusRewardList = 307; // sub class
   optional MasterTimerWordingCollectionMap masterTimerWordingCollectionMap = 309; // sub class
@@ -5106,4 +5135,5 @@ message SuiteMasterGetResponse {
   optional MasterDecoEffectList masterDecoEffectList = 2086; // sub class
   optional MasterPhotoBackList masterPhotoBackList = 2087; // sub class
   optional MasterGachaSelfPickupSituationList masterGachaSelfPickupSituationList = 2088; // sub class
+  optional MasterLimitedSkinMap masterLimitedSkinMap = 2089; // sub class
 }
