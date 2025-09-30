@@ -227,6 +227,7 @@ message MasterMusicDifficultyGetResponse {
   optional uint32 scoreSS = 10; // normal type
   optional uint64 publishedAt = 11; // normal type
   optional bool enableSpecialNotes = 12; // normal type
+  optional uint32 scoreLevel = 13; // nullable
 }
 message MasterMusicDifficultyListGetResponse {
   repeated MasterMusicDifficultyGetResponse entries = 1; // array
@@ -4723,6 +4724,7 @@ message MasterSpecialStoryPageDetail {
   optional uint32 transitionId = 4; // normal type
   optional uint64 publishedAt = 5; // normal type
   optional uint64 closedAt = 6; // normal type
+  optional uint32 unlockConditions = 7; // normal type
 }
 message MasterSpecialStoryPageDetailList {
   repeated MasterSpecialStoryPageDetail entries = 1; // array
