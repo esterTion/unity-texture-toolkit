@@ -743,7 +743,7 @@ class WdsToolBox {
 		$downloadQueue = [];
 		$anotherIds = [];
 		$multiHelper = new CurlMultiHelper;
-		$multiHelper->maxParallel = 10;
+		$multiHelper->maxParallel = 50;
 		$multiHelper->setupCb = function ($ch) use (&$downloadQueue, &$curlId, &$curlInfo) {
 			if (empty($downloadQueue)) return null;
 			if ($ch == null) {
@@ -811,6 +811,7 @@ class WdsToolBox {
 					$path = $item['path'];
 					$hasNewNotation = checkAndCreateFile($path, static::decryptNotation($data));
 					if ($hasNewNotation) static::_log('save '.$path);
+					else static::_log('skip '.$path, false);
 					break;
 				}
 			}
@@ -1264,6 +1265,23 @@ class WdsToolBox {
 		foreach ($normalNotes as $note) {
 			$noteTime = $note['start'];
 			$noteTimeS = "$noteTime";
+			switch ($note['gimmickType']) {
+				case '0': {break;}
+				case '1':
+				case 'JumpScratch': {
+					$val = $note['gimmickValue'];
+					if ($val < 0) {
+						$note['lane'] = $note['lane'] + $note['width'] + $val;
+						$note['width'] = -$val;
+					} else {
+						$note['width'] = $val;
+					}
+					break;
+				}
+				default: {
+					print_r($note);break;
+				}
+			}
 			list($x, $y) = static::getNotePos($noteTime, $note['lane']);
 			$x = static::roundReal($x);
 			$width = $note['width'] * 20 / 2;
@@ -2353,7 +2371,8 @@ class WdsToolBox {
 		chdir(__DIR__);
 		static::loadAddressable();
 		static::initCurl();
-		$downloadedBundles = [];
+		$downloadedBundles = static::loadPendingBundles('spriteatlases');
+		if (!empty($downloadedBundles)) return $downloadedBundles;
 		foreach (static::$addressable['2d'][0] as $item) {
 			if (!preg_match('/spriteatlases_assets_spriteatlases\/.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
 			$path = static::getAssetPath($item['primaryKey']);
@@ -2367,6 +2386,7 @@ class WdsToolBox {
 			static::setCachedHash($path, $hash);
 			$downloadedBundles[] = $path;
 		}
+		static::storePendingBundles('spriteatlases', $downloadedBundles);
 		return $downloadedBundles;
 	}
 	static function exportSpriteatlases() {
@@ -2374,6 +2394,7 @@ class WdsToolBox {
 		$currenttime = time();
 		foreach ($downloadedSpriteatlases as $bundle) {
 			if (strpos($bundle, 'trophies') !== false) continue;
+			if (strpos($bundle, 'albumdecorationmaterials') !== false) continue;
 			static::_log('export '.$bundle);
 			$assets = extractBundle(new FileStream($bundle));
 
@@ -2430,7 +2451,8 @@ class WdsToolBox {
 						if (filemtime($saveTo. '.png') > $currenttime)
 						touch($saveTo. '.png', $currenttime);
 					}
-					$item->exportTo($saveTo, 'webp', '-preset drawing');
+					// $item->exportTo($saveTo, 'webp', '-preset drawing');
+					exec("cwebp -quiet -low_memory $saveTo.png -o $saveTo.webp", $output, $code);
 					if (!file_exists($saveTo. '.webp') || filesize($saveTo. '.webp') < 1000) {
 						$item->webpFailed = true;
 					} else {
@@ -2504,6 +2526,7 @@ class WdsToolBox {
 				unlink($asset);
 			}
 		}
+		static::clearPendingBundles('spriteatlases');
 	}
 
 
@@ -2511,7 +2534,8 @@ class WdsToolBox {
 		chdir(__DIR__);
 		static::loadAddressable();
 		static::initCurl();
-		$downloadedBundles = [];
+		$downloadedBundles = static::loadPendingBundles('titles');
+		if (!empty($downloadedBundles)) return $downloadedBundles;
 		foreach (static::$addressable['2d'][0] as $item) {
 			if (!preg_match('/title_assets_title\/.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
 			$path = static::getAssetPath($item['primaryKey']);
@@ -2525,6 +2549,7 @@ class WdsToolBox {
 			static::setCachedHash($path, $hash);
 			$downloadedBundles[] = $path;
 		}
+		static::storePendingBundles('titles', $downloadedBundles);
 		return $downloadedBundles;
 	}
 	static function exportTitles() {
@@ -2573,13 +2598,15 @@ class WdsToolBox {
 				unlink($asset);
 			}
 		}
+		static::clearPendingBundles('titles');
 	}
 
 	static function downloadSkins() {
 		chdir(__DIR__);
 		static::loadAddressable();
 		static::initCurl();
-		$downloadedBundles = [];
+		$downloadedBundles = static::loadPendingBundles('skins');
+		if (!empty($downloadedBundles)) return $downloadedBundles;
 		foreach (static::$addressable['3d'][0] as $item) {
 			if (!preg_match('/skins_assets_skins\/pc_.+_[0-9a-f]+\.bundle/', $item['primaryKey'])) continue;
 			$path = static::getAssetPath($item['primaryKey']);
@@ -2595,11 +2622,15 @@ class WdsToolBox {
 			static::setCachedHash($path, $hash);
 			$downloadedBundles[] = $path;
 		}
+		static::storePendingBundles('skins', $downloadedBundles);
 		return $downloadedBundles;
 	}
 	static function exportSkins() {
 		$downloadedSkins = static::downloadSkins();
-		if (empty($downloadedSkins)) return;
+		if (empty($downloadedSkins)) {
+			static::clearPendingBundles('skins');
+			return;
+		}
 		$currenttime = time();
 		$convertedSkins = [];
 		exec('dotnet Z_tool_WdsSkinExport/WdsSkinExport.dll '.implode(' ', $downloadedSkins), $convertedSkins, $code);
@@ -2627,6 +2658,7 @@ class WdsToolBox {
 			chdir(__DIR__);
 		}
 		file_put_contents($skinCacheListFile, json_encode($skinCacheList, JSON_UNESCAPED_UNICODE));
+		static::clearPendingBundles('skins');
 	}
 	static function cleanOldSkins() {
 		array_map('unlink', glob('skins_assets_skins/*.bundle'));
@@ -2642,6 +2674,21 @@ class WdsToolBox {
 			}
 		}
 		file_put_contents($skinCacheListFile, json_encode($skinCacheList, JSON_UNESCAPED_UNICODE));
+	}
+
+	static function loadPendingBundles($name) {
+		$f = "pending-$name.json";
+		if (!file_exists($f)) return [];
+		$pendingBundles = json_decode(file_get_contents($f), true);
+		return $pendingBundles ?: [];
+	}
+	static function storePendingBundles($name, $bundles) {
+		$f = "pending-$name.json";
+		file_put_contents($f, json_encode($bundles));
+	}
+	static function clearPendingBundles($name) {
+		$f = "pending-$name.json";
+		if (file_exists($f)) unlink($f);
 	}
 
 	static function downloadCustom() {
