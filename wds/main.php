@@ -493,7 +493,14 @@ class WdsToolBox {
 	static function getSceneUrl($id) {
 		$base = static::$masterUrl;
 		$base = PersistentStorage::get('masterUrlOverride', $base);
-		return "$base/scenes/$id.bin";
+		$select = static::$storyDb->prepare('SELECT `filename` FROM `story_file` WHERE `id` = ? LIMIT 1');
+		$select->execute([$id]);
+		$result = $select->fetch(PDO::FETCH_NUM);
+		if (empty($result)) {
+			return NULL;
+		}
+		$filename = $result[0];
+		return "$base/scenes/$filename.bin";
 	}
 
 	static $splitEffectElements = null;
@@ -612,9 +619,11 @@ class WdsToolBox {
 	}
 
 	static $cacheDb;
+	static $storyDb;
 	static function initCache() {
 		if (!empty(static::$cacheDb)) return;
 		static::$cacheDb = new PDO('sqlite:'.__DIR__.'/cacheHash.db');
+		static::$storyDb = new PDO('sqlite:'.__DIR__.'/cacheStory.db');
 	}
 	static function getCachedHash($path) {
 		static::initCache();
@@ -1937,7 +1946,7 @@ class WdsToolBox {
 			// 本地+8，改为+9
 			$now = date('Y-m-d H:i:s', time() + 1 * 3600);
 			foreach ($data as $i) {
-				if (!isset($i[$k]) || $i[$k] > $now) $filtered[] = $i;
+				if (!isset($i[$k]) || $i[$k] === '0001-01-01 00:00:00' || $i[$k] > $now) $filtered[] = $i;
 				else if ($i[$k] > $lastExpired) $lastExpired = $i[$k];
 			}
 			if (count($filtered) == count($data)) continue;
@@ -2238,16 +2247,22 @@ class WdsToolBox {
 		$multiHelper = new CurlMultiHelper;
 		$multiHelper->maxParallel = 20;
 		$multiHelper->setupCb = function ($ch) use (&$sceneIds, &$curlId, &$curlInfo) {
-			if (empty($sceneIds)) return null;
 			if ($ch == null) {
 				$ch = curl_copy_handle(static::$ch);
 			}
-			$nextItem = array_shift($sceneIds);
-			curl_setopt($ch, CURLOPT_URL, static::getSceneUrl($nextItem));
-			curl_setopt($ch, CURLOPT_PRIVATE, $curlId);
-			$curlInfo[$curlId] = $nextItem;
-			$curlId++;
-			return $ch;
+			while (true) {
+				if (empty($sceneIds)) return null;
+				$nextItem = array_shift($sceneIds);
+				$url = static::getSceneUrl($nextItem);
+				if (!$url) {
+					continue;
+				}
+				curl_setopt($ch, CURLOPT_URL, $url);
+				curl_setopt($ch, CURLOPT_PRIVATE, $curlId);
+				$curlInfo[$curlId] = $nextItem;
+				$curlId++;
+				return $ch;
+			}
 		};
 		$multiHelper->finishCb = function ($ch) use (&$curlInfo, &$unpacker) {
 			$curlId = curl_getinfo($ch, CURLINFO_PRIVATE);
@@ -2392,6 +2407,8 @@ class WdsToolBox {
 	static function exportSpriteatlases() {
 		$downloadedSpriteatlases = static::downloadSpriteatlases();
 		$currenttime = time();
+		$currentAtlasVersions = json_decode(file_get_contents(static::getResourcePathPrefix(). 'sprite/atlas-versions.json'), true);
+		$now = date('Ymd_His', $currenttime);
 		foreach ($downloadedSpriteatlases as $bundle) {
 			if (strpos($bundle, 'trophies') !== false) continue;
 			if (strpos($bundle, 'albumdecorationmaterials') !== false) continue;
@@ -2404,6 +2421,7 @@ class WdsToolBox {
 				'atlas' => [],
 				'sprite' => [],
 			];
+			$currentAtlasVersions[$spriteAtlasName] = $now;
 
 			// clean old texture
 			array_map('unlink', glob(static::getResourcePathPrefix(). "sprite/texture/$spriteAtlasName-*.*"));
@@ -2527,6 +2545,7 @@ class WdsToolBox {
 			}
 		}
 		static::clearPendingBundles('spriteatlases');
+		file_put_contents(static::getResourcePathPrefix(). 'sprite/atlas-versions.json', json_encode($currentAtlasVersions));
 	}
 
 
