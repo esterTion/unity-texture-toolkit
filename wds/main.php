@@ -2450,27 +2450,106 @@ class WdsToolBox {
 				if (empty($itemMap['texture'])) break;
 				if (empty($itemMap['atlas'])) break;
 				if (empty($itemMap['sprite'])) break;
-				foreach ($itemMap['texture'] as $item) {
-					$pathId = $item->m_PathID;
+				// 大图拆分至2048x
+				foreach ($itemMap['texture'] as $k=>$item) {
 					try {
-						$item = new Texture2D($item, true);
+						$item1 = new Texture2D($item, false);
+					} catch (Exception $e) { continue; }
+					$width = $item1->width;
+					$height = $item1->height;
+					if ($width >= 4096 || $height >= 4096) {
+						$itemMap['texture'][$k]->split = true;
+						$splitList = [];
+						for ($i = 0; $i < $width; $i += 2048) {
+							for ($j = 0; $j < $height; $j += 2048) {
+								$k1 = $k . '-' . $i . '-' . $j;
+								$clone = clone $item;
+								$clone->split = false;
+								$clone->splitBox = [$i, $i + min(2048, $width - $i), $j, $j + min(2048, $height - $j)];
+								$clone->splitX = $width;
+								$clone->splitY = $height;
+								$clone->splitX2 = 0;
+								$clone->splitY2 = 0;
+								$itemMap['texture'][$k1] = $clone;
+								$splitList[] = $k1;
+							}
+						}
+						$itemMap['texture'][$k]->splitList = $splitList;
+					} else {
+						$itemMap['texture'][$k]->split = false;
+					}
+				}
+				foreach ($itemMap['atlas'] as $k=>$item) {
+					$asset->stream->position = $item->offset;
+					$item = ClassStructHelper::OrganizeStruct(ClassStructHelper::DeserializeStruct($asset->stream, $asset->ClassStructures[687078895]['members']));
+					foreach ($item['m_RenderDataMap'] as $kr => $render) {
+						$render = $render['data']['second'];
+						$texture = $itemMap['texture'][$render['texture']['m_PathID']];
+						if (!$texture->split) continue;
+						$x = $render['textureRect']['x'];
+						$y = $render['textureRect']['y'];
+						$w = $render['textureRect']['width'];
+						$h = $render['textureRect']['height'];
+						$cx = $render['textureRect']['x'] + $render['textureRect']['width'] / 2;
+						$cy = $render['textureRect']['y'] + $render['textureRect']['height'] / 2;
+						foreach ($texture->splitList as $k1) {
+							$split = $itemMap['texture'][$k1];
+							$box = $split->splitBox;
+							if ($cx >= $box[0] && $cx <= $box[1] && $cy >= $box[2] && $cy <= $box[3]) {
+								$split->splitX = min($split->splitX, floor($x));
+								$split->splitY = min($split->splitY, floor($y));
+								$split->splitX2 = max($split->splitX2, ceil($x + $w));
+								$split->splitY2 = max($split->splitY2, ceil($y + $h));
+								$item['m_RenderDataMap'][$kr]['data']['second']['texture']['m_PathID'] = $k1;
+								break;
+							}
+						}
+					}
+					$itemMap['atlas'][$k] = $item;
+				}
+				foreach ($itemMap['texture'] as $item0) {
+					if ($item0->split) continue;
+					$pathId = $item0->m_PathID;
+					try {
+						$item = new Texture2D($item0, true);
 					} catch (Exception $e) { continue; }
 					$hash = dechex(crc32($item->imageData));
 					// 64 signed int to hex
 					$uniqueName = bin2hex(pack('q', $pathId)).'.'.$hash;
-					$item->uniqueName = $uniqueName;
 					$item->pngFailed = false;
 					$item->webpFailed = false;
+					$convertArgs = [];
+					if (isset($item0->splitX2)) {
+						$w = $item0->splitX2 - $item0->splitX;
+						$h = $item0->splitY2 - $item0->splitY;
+						$x = $item0->splitX;
+						$y = $item0->splitY;
+						$tag = $item0->splitBox[0].'-'.$item0->splitBox[2];
+						if ($w <= 0 || $h <= 0) {
+							continue;
+						}
+						$convertArgs[] = '-vf crop='.$w.':'.$h.':'.$x.':'.($item->height - $y - $h);
+						$uniqueName .= '-'.$tag;
+						$pathId .= '-'.$tag;
+						$item->splitX = $x;
+						$item->splitY = $y;
+						$item->splitW = $w;
+						$item->splitH = $h;
+					}
+					$item->uniqueName = $uniqueName;
+					static::_log($uniqueName.' '. implode(' ', $convertArgs), false);
 					$saveTo = static::getResourcePathPrefix(). "sprite/texture/$spriteAtlasName-$uniqueName";
-					$item->exportTo($saveTo, 'png');
+					$item->exportTo($saveTo, 'png', implode(' ', $convertArgs));
 					if (!file_exists($saveTo. '.png') || filesize($saveTo. '.png') < 1000) {
 						$item->pngFailed = true;
 					} else {
 						if (filemtime($saveTo. '.png') > $currenttime)
 						touch($saveTo. '.png', $currenttime);
 					}
-					// $item->exportTo($saveTo, 'webp', '-preset drawing');
-					exec("cwebp -quiet -low_memory $saveTo.png -o $saveTo.webp", $output, $code);
+					$convertArgs[] = '-preset drawing';
+					$item->exportTo($saveTo, 'webp', implode(' ', $convertArgs));
+					$item->imageData = NULL;
+					// exec("cwebp -quiet -low_memory $saveTo.png -o $saveTo.webp", $output, $code);
 					if (!file_exists($saveTo. '.webp') || filesize($saveTo. '.webp') < 1000) {
 						$item->webpFailed = true;
 					} else {
@@ -2498,8 +2577,6 @@ class WdsToolBox {
 				fwrite($css, "background-repeat: no-repeat;display: inline-block;background-size: calc(var(--atlas-width) / var(--sprite-scale) * var(--target-scale)) calc(var(--atlas-height) / var(--sprite-scale) * var(--target-scale));background-position: calc((0px - var(--sprite-x)) / var(--sprite-scale) * var(--target-scale)) calc((var(--sprite-height) + var(--sprite-y) - var(--atlas-height)) / var(--sprite-scale) * var(--target-scale));width:calc(var(--sprite-width) / var(--sprite-scale) * var(--target-scale));height:calc(var(--sprite-height) / var(--sprite-scale) * var(--target-scale));--target-size: 64;--target-scale: calc(var(--target-size) / 64);}\n");
 				fwrite($css, $webpImageUrlBlock);
 				foreach ($itemMap['atlas'] as $item) {
-					$asset->stream->position = $item->offset;
-					$item = ClassStructHelper::OrganizeStruct(ClassStructHelper::DeserializeStruct($asset->stream, $asset->ClassStructures[687078895]['members']));
 					foreach ($item['m_RenderDataMap'] as $render) {
 						$key = $render['data']['first']['first'];
 						$key = implode('.', $key);
@@ -2507,10 +2584,18 @@ class WdsToolBox {
 						$render = $render['data']['second'];
 						$webpImageUrlBlock = '';
 						fwrite($css, ".${cssClass}[data-id=\"$name\"] {");
+						$x = $render['textureRect']['x'];
+						$y = $render['textureRect']['y'];
 						if (count($itemMap['texture']) > 1) {
 							$texture = $itemMap['texture'][$render['texture']['m_PathID']];
 							$width = $texture->width;
 							$height = $texture->height;
+							if (isset($texture->splitX)) {
+								$x -= $texture->splitX;
+								$y -= $texture->splitY;
+								$width = $texture->splitW;
+								$height = $texture->splitH;
+							}
 							if (!$texture->pngFailed) {
 								fwrite($css, "background-image: url('./texture/$spriteAtlasName-".$texture->uniqueName.".png');");
 							}
@@ -2519,8 +2604,8 @@ class WdsToolBox {
 							}
 							fwrite($css, "--atlas-width:${width}px;--atlas-height:${height}px;");
 						}
-						fwrite($css, "--sprite-x: ".$render['textureRect']['x']."px;");
-						fwrite($css, "--sprite-y: ".$render['textureRect']['y']."px;");
+						fwrite($css, "--sprite-x: ".$x."px;");
+						fwrite($css, "--sprite-y: ".$y."px;");
 						fwrite($css, "--sprite-width: ".$render['textureRect']['width']."px;");
 						fwrite($css, "--sprite-height: ".$render['textureRect']['height']."px;");
 						fwrite($css, "--sprite-scale: ".(max($render['textureRect']['width'], $render['textureRect']['height']) / 64).";");
@@ -2537,7 +2622,7 @@ class WdsToolBox {
 			} catch(Exception $e) {
 				$asset->__desctruct();
 				unset($asset);
-				_log('Not supported: '. $e->getMessage());
+				static::_log('Not supported: '. $e->getMessage());
 			}
 
 			foreach ($assets as $asset) {
